@@ -1,3 +1,9 @@
+Sun May 12 00:46:05 1996  Marc Horowitz  <marc@mit.edu>
+
+	* kdb.h: convert to use new krb5_dbe_* tl_data functions.
+
+	* adm.h (struct __krb5_realm_params): add realm_acl_file
+
 Thu Mar 28 17:57:04 1996  Theodore Y. Ts'o  <tytso@dcl>
 
 	* AddressXlation.h: Updated to use latest versions from the Apple's

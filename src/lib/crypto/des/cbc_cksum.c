@@ -51,8 +51,6 @@ mit_des_cbc_checksum(in, in_length, key, key_size, cksum)
     krb5_checksum FAR * cksum;
 {
     struct mit_des_ks_struct       *schedule;      /* pointer to key schedules */
-    krb5_octet 	*contents;
-
     if (key_size != sizeof(mit_des_cblock))
 	return KRB5_BAD_KEYSIZE;
 
@@ -75,16 +73,10 @@ mit_des_cbc_checksum(in, in_length, key, key_size, cksum)
         ;
     }
 
-    if (!(contents = (krb5_octet *) malloc(sizeof(mit_des_cblock)))) {
-	cleanup();
-        return ENOMEM;
-    }
-
-    mit_des_cbc_cksum(in, contents, in_length, schedule, key);
-
     cksum->checksum_type = CKSUMTYPE_DESCBC;
     cksum->length = sizeof(mit_des_cblock);
-    cksum->contents = contents;
+    mit_des_cbc_cksum(in, cksum->contents, in_length, schedule, key);
+
     cleanup();
 
     return 0;

@@ -1,0 +1,8 @@
+Tue Jul  9 19:30:40 1996  Marc Horowitz  <marc@mit.edu>
+
+	* configure.in (DEPLIBS): AC_SUBST() it, to hack around an
+ 	incorrect assumption in aclocal.m4
+	* Makefile.in (DONE): add rules and macros to support shared
+ 	libraries
+
+

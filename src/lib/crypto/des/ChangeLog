@@ -1,7 +1,7 @@
-Wed Apr 10 17:46:40 1996  Theodore Y. Ts'o  <tytso@dcl>
+Wed Apr 17 19:25:01 1996  Marc Horowitz  <marc@mit.edu>
 
-	* Makefile.in (SRCS,OBJS): Added afsstring2key.c to the list of
-		files to be compiled.
+	* cbc_cksum.c (mit_des_cbc_checksum): don't allocate the checksum
+	contents.  The caller is supposed to do this.
 
 Sat Mar 30 22:56:48 1996  Theodore Y. Ts'o  <tytso@dcl>
 

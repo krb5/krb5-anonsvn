@@ -1,0 +1,8 @@
+Fri Jul 12 15:24:38 1996  Marc Horowitz  <marc@mit.edu>
+
+	* randkey-test.c, lock-test.c, iter-test.c, init-test.c,
+ 	handle-test.c, destroy-test.c: change <ovsec_admin/foo.h> and
+ 	"../foo.h" to <kadm5/foo>
+
+	* Makefile.ov (runtest): some versions of runtest don't like
+ 	digits in command-line variable settings, so don't use them.

@@ -1,3 +1,8 @@
+Fri Jul 12 21:16:50 1996  Marc Horowitz  <marc@mit.edu>
+
+	* ktf_g_name.c (krb5_ktfile_get_name): include the prefix in the
+ 	returned name.
+
 Tue Mar 19 22:28:43 1996  Richard Basch  <basch@lehman.com>
 
 	* ktf_g_ent.c (krb5_ktfile_get_entry): all des enctypes are equivalent
