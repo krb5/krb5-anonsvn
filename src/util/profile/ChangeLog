@@ -1,3 +1,108 @@
+2002-05-16 Alexandra Ellwood <lxs@mit.edu>
+	* prof_file.c, prof_init.c, prof_int.h, prof_set.c, profile.hin:
+	Removed use of FSSpecs by the profile library other than FSSpec 
+	functions already exported. (Apple doesn't want this, and it causes 
+	serious performance problems for krb5_init_context on Mac OS X).  
+	Fixed code which uses paths to actually share data properly (these
+	bugs were also causing some of our performance problems).  This also 
+	fixes the bug where if you move your prefs out of /Library/Preferences
+	and copy new ones in, some apps don't notice.
+
+2002-04-03 Alexandra Ellwood <lxs@mit.edu>
+    * profile.hin: Updated C++ protection to not interfere with emacs 
+    auto indentation
+    
+2002-03-28 Alexandra Ellwood <lxs@mit.edu>
+    * profile.hin: Conditionalized pragmas for Metrowerks
+
+2002-03-14 Alexandra Ellwood <lxs@mit.edu>
+    * prof_get.c: made conf_yes and conf_no const to improve load time 
+    on Mach-O
+
+2002-03-07	Alexandra Ellwood <lxs@mit.edu>
+    * profile.hin: Added check for CFM compiles.  Removed dependency on 
+    PRAGMA_* macros.
+
+2002-03-06	Alexandra Ellwood <lxs@mit.edu>
+    prof_file.c, prof_init.c: Updated header paths for Mac OS X
+
+2002-03-03	Alexandra Ellwood <lxs@mit.edu>
+    profile.pbexp: removed library initializer
+
+2002-02-28	Alexandra Ellwood <lxs@mit.edu>
+    prof_file.c: Fixed SHARE_TREE_DATA code so it compiles on X.  Fixed warning.
+    prof_init.c: Removed Mac OS 9 code.
+    prof_int.h: Removed Mac OS 9 code.  Updated Mac OS X header paths.
+    prof_threads.h: Fixed prof_mutex typedef so it compiles on Mac OS X.
+    profile.hin: Updated header paths.  Turned on SHARE_TREE_DATA for Mac OS X. 
+
+2002-01-22	Alexandra Ellwood <lxs@mit.edu>
+
+	* prof_init.c, prof_tree.c: Fixed calls to profile_update_file_data to handle
+    the possibility that we have lost permission to read one of the configuration 
+    files in the file list.  We should only fail catastrophically (EACCES) if we 
+    can't read all of the files in the profile.
+
+2002-01-08	Miro Jurisic <meeroh@mit.edu>
+	* prof_file.c, prof_file.h, profil.hin: Preserve resource fork of the profile
+	file when modifying an existing one on Mac OS 9 and X.
+
+2001-03-20	Alexandra Ellwood <lxs@mit.edu>
+
+	* profile.hin: Changed KerberosConditionalMacros.h to KerberosSupport.h
+		because it is more correct.
+
+2001-02-27	Alexandra Ellwood <lxs@mit.edu>
+
+	* prof_parse.c: Fixed a bug in profile_parse_file's support of
+    foreign newlines.  We weren't taking into account fgets truncating
+    the string at BUF_SIZE bytes.
+
+2001-02-27	Alexandra Ellwood <lxs@mit.edu>
+
+	* prof_init.c, prof_int.h, profile.hin: Updated Mac OS #defines 
+	and #includes for new header layout and Mac OS X frameworks
+
+2000-10-26  Miro Jurisic <meeroh@mit.edu>
+
+        * prof_int.h, prof_parse.c:
+        Added support for foreign newlines
+
+2000-10-16  Miro Jurisic <meeroh@mit.edu>
+
+        * profile.exp, prof_init.c, profile.hin:
+        Fixed #ifdefs and exports to that Mac OS 9 builds work again
+
+2000-10-16  Miro Jurisic <meeroh@mit.edu>
+
+        * profile.pbexp, prof_file.c, prof_init.c, profile.hin:
+        Support Mac FSSpecs and POSIX paths under Mac OS X
+
+2000-10-02  Alexandra Ellwood <lxs@mit.edu>
+
+        * profile.pbexp: added a Mac OS X export file.  This
+        will eventually be replaced by a script that generates it.
+
+2000-07-06  Miro Jurisic  <meeroh@mit.edu>
+
+	* prof_set.c (rw_setup): Initialize retval before using it
+
+2000-06-14  Miro Jurisic  <meeroh@mit.edu>
+
+	* prof_file.c (profile_flush_data):  
+	Return ENOENT when file is not found on MacOS (not ENFILE)
+
+2000-03-24  Miro Jurisic  <meeroh@mit.edu>
+	* Makefile.in, prof_file.c, prof_int.h, pros_set.c, 
+	prof_threads.c, prof_threads.h: Added first attempt at thread
+	synchronization for global state.
+
+2000-03-15  Miro Jurisic  <meeroh@mit.edu>
+	* prof_err.et, prof_file.c, prof_init.c, prof_int.h, prof_set.c,
+	prof_tree.c: Added preliminary version of code which allows multiple
+	profiles to share the same in-memory structures (with copy-on-write).
+	Initial checkin on meeroh-profile-sharing-optimization branch.
+
 1999-10-26  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in: Clean up usage of CFLAGS, CPPFLAGS, DEFS, DEFINES,
