@@ -20,6 +20,7 @@ all-windows: libupdate
 # destination to make a link...
 
 all-unix::
+	$(RM) ../include/db.h ../include/db-config.h ../lib/libdb.a
 	ln -s ../util/db2/obj/db.h ../include
 	ln -s ../util/db2/obj/db-config.h ../include
 	ln -s ../util/db2/obj/libdb.a ../lib
