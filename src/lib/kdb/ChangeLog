@@ -1,5 +1,11 @@
 Sun May 12 01:03:07 1996  Marc Horowitz  <marc@mit.edu>
 
+	* kdb_xdr.c: reworked all of the krb5_dbe_* tl_data functions.
+  	This was necessary so that the admin system could store it's own
+ 	tl_data, without needing code here.  This has the side-effect of
+ 	eliminating some structures which added no value, therefore
+ 	changing about a half-dozen files elsewhere in the tree.
+
 	* kdb_cpw.c (add_key_rnd): handle kvno incrementing in the caller,
  	not here.
 	(krb5_dbe_crk): increment the kvno here, not in add_key_rnd

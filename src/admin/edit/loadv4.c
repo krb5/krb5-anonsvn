@@ -467,7 +467,8 @@ Principal *princ;
     int nentries = 1;
     des_cblock v4key;
     char *name;
-    krb5_tl_mod_princ	mod_princ;
+    krb5_timestamp	mod_time;
+    krb5_principal	mod_princ;
     krb5_keysalt	keysalt;
 
     /* don't convert local TGT if we created a TGT already.... */
@@ -518,7 +519,7 @@ Principal *princ;
 	free(name);
     }
 
-    if (retval = krb5_build_principal(context, &mod_princ.mod_princ,
+    if (retval = krb5_build_principal(context, &mod_princ,
 				      strlen(realm),
 				      realm, princ->mod_name,
 				      princ->mod_instance[0] ? princ->mod_instance : 0,
@@ -526,7 +527,7 @@ Principal *princ;
 	krb5_free_principal(context, entry.princ);
 	return retval;
     }
-    mod_princ.mod_date = princ->mod_date;
+    mod_time = princ->mod_date;
 
     entry.max_life = princ->max_life * 60 * 5;
     entry.max_renewable_life = rblock.max_rlife;
@@ -552,7 +553,7 @@ Principal *princ;
     retval = krb5_dbe_create_key_data(context, &entry);
     if (retval) {
 	krb5_free_principal(context, entry.princ);
-	krb5_free_principal(context, mod_princ.mod_princ);
+	krb5_free_principal(context, mod_princ);
 	return retval;
     }
 
@@ -564,10 +565,11 @@ Principal *princ;
 					 princ->key_version,
 					 &entry.key_data[0]);
     if (!retval)
-	retval = krb5_dbe_encode_mod_princ_data(context, &mod_princ, &entry);
+	retval = krb5_dbe_update_mod_princ_data(context, &entry,
+						mod_time, mod_princ);
     if (retval) {
 	krb5_db_free_principal(context, &entry, 1);
-	krb5_free_principal(context, mod_princ.mod_princ);
+	krb5_free_principal(context, mod_princ);
 	return retval;
     }
     memset((char *)v4key, 0, sizeof(v4key));
@@ -586,7 +588,7 @@ Principal *princ;
     }
 
     krb5_db_free_principal(context, &entry, 1);
-    krb5_free_principal(context, mod_princ.mod_princ);
+    krb5_free_principal(context, mod_princ);
 
     return retval;
 }
@@ -602,7 +604,8 @@ struct realm_info *pblock;
     krb5_error_code retval;
     krb5_keyblock *rkey;
     int nentries = 1;
-    krb5_tl_mod_princ mod_princ;
+    krb5_timestamp mod_time;
+    krb5_principal mod_princ;
 
     memset((char *) &entry, 0, sizeof(entry));
     if (retval = krb5_copy_principal(context, princ, &entry.princ))
@@ -611,23 +614,14 @@ struct realm_info *pblock;
     entry.max_renewable_life = pblock->max_rlife;
     entry.len = KRB5_KDB_V1_BASE_LENGTH;
     entry.expiration = pblock->expiration;
-    if (retval = krb5_copy_principal(context, &db_create_princ,
-				     &mod_princ.mod_princ)) {
-	krb5_free_principal(context, entry.princ);
-	return(retval);
-    }
     
-    if ((retval = krb5_timeofday(context, &mod_princ.mod_date)) ||
-	(retval = krb5_copy_principal(context, &db_create_princ,
-				      &mod_princ.mod_princ))) {
-	krb5_free_principal(context, mod_princ.mod_princ);
+    if ((retval = krb5_timeofday(context, &mod_time))) {
 	krb5_db_free_principal(context, &entry, 1);
 	return retval;
     }
     entry.attributes = pblock->flags;
 
     if (retval = krb5_dbe_create_key_data(context, &entry)) {
-	krb5_free_principal(context, mod_princ.mod_princ);
 	krb5_db_free_principal(context, &entry, 1);
 	return(retval);
     }
@@ -639,7 +633,6 @@ struct realm_info *pblock;
 						 &master_keyblock,
 						 (krb5_keysalt *) NULL, 1,
 						 &entry.key_data[0])) {
-	    krb5_free_principal(context, mod_princ.mod_princ);
 	    krb5_db_free_principal(context, &entry, 1);
 	    return retval;
 	}
@@ -647,7 +640,6 @@ struct realm_info *pblock;
     case RANDOM_KEY:
 	if (retval = krb5_random_key(context, pblock->eblock, pblock->rseed,
 				     &rkey)) {
-	    krb5_free_principal(context, mod_princ.mod_princ);
 	    krb5_db_free_principal(context, &entry, 1);
 	    return retval;
 	}
@@ -655,7 +647,6 @@ struct realm_info *pblock;
 						 rkey,
 						 (krb5_keysalt *) NULL, 1,
 						 &entry.key_data[0])) {
-	    krb5_free_principal(context, mod_princ.mod_princ);
 	    krb5_db_free_principal(context, &entry, 1);
 	    return(retval);
 	}
@@ -667,11 +658,11 @@ struct realm_info *pblock;
 	break;
     }
 
-    retval = krb5_dbe_encode_mod_princ_data(context, &mod_princ, &entry);
+    retval = krb5_dbe_update_mod_princ_data(context, &entry,
+					    mod_time, &db_create_princ);
     if (!retval)
 	retval = krb5_db_put_principal(context, &entry, &nentries);
     krb5_db_free_principal(context, &entry, 1);
-    krb5_free_principal(context, mod_princ.mod_princ);
     return retval;
 }
 

@@ -1,5 +1,10 @@
 Sun May 12 00:27:44 1996  Marc Horowitz  <marc@mit.edu>
 
+	* loadv4.c (enter_in_v5_db, add_principal), kdb5_edit.c
+ 	(create_db_entry, modent), dumpv4.c (dump_v4_iterator), dump.c
+ 	(dump_k5beta_iterator, process_k5beta_record): convert to use new
+ 	krb5_dbe_* tl_data functions.
+
 	* cpw.c (enter_pwd_key): krb5_dbe_cpw() takes a kvno now.
 
 Tue May  7 23:16:57 1996  Marc Horowitz  <marc@mit.edu>
