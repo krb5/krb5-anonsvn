@@ -40,6 +40,13 @@ check-unix:: check-postrecurse
 check-prerecurse:
 check-postrecurse:
 
+Makefiles:: Makefiles-prerecurse
+Makefiles:: Makefiles-recurse
+Makefiles:: Makefiles-postrecurse
+
+Makefiles-prerecurse:
+Makefiles-postrecurse:
+
 # Directory syntax:
 R=/
 C=./

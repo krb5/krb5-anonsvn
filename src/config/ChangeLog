@@ -1,3 +1,7 @@
+Sun Dec 29 22:40:14 1996  Tom Yu  <tlyu@mit.edu>
+
+	* pre.in: Add missing Makefiles rules.
+
 Sun Dec 29 21:24:01 1996  Tom Yu  <tlyu@mit.edu>
 
 	* lib.in: fix typo in profiled lib build
