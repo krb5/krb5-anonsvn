@@ -117,8 +117,6 @@ c2n["_"]=63
 	print "# define KRB5_CALLCONV_C" > outfile
 	print "# define KRB5_DLLIMP" > outfile
 	print "# define KRB5_EXPORTVAR" > outfile
-	print "# define INTERFACE" > outfile
-	print "# define INTERFACE_C" > outfile
 	print "# define FAR" > outfile
 	print "# define NEAR" > outfile
 	print "# endif" > outfile
@@ -192,8 +190,6 @@ c2n["_"]=63
 	skipone=0
 }
 END {
-
-
 	print "    0" > outfile
 	print "};" > outfile
 	print "" > outfile
@@ -209,11 +205,11 @@ END {
 	print "extern KRB5_DLLIMP struct et_list KRB5_EXPORTVAR *_et_list;" > outfile
 	print "" > outfile
 	if (tab_base_high == 0) {
-	    print "static const struct error_table et = { text, " \
+	    print "const struct error_table et_" table_name "_error_table = { text, " \
 		sprintf("%dL, %d };", tab_base_sign*tab_base_low, \
 		table_item_count) > outfile
 	} else {
-	    print "static const struct error_table et = { text, " \
+	    print "const struct error_table et_" table_name "_error_table = { text, " \
 		sprintf("%d%06dL, %d };", tab_base_sign*tab_base_high, \
 		tab_base_low, table_item_count) > outfile
 	}
@@ -223,10 +219,8 @@ END {
 	print "void initialize_" table_name "_error_table (NOARGS) {" > outfile
 	print "    if (!link.table) {" > outfile
 	print "        link.next = _et_list;" > outfile
-	print "        link.table = &et;" > outfile
+	print "        link.table = &et_" table_name "_error_table ;" > outfile
 	print "        _et_list = &link;" > outfile
 	print "    }" > outfile
 	print "}" > outfile
-	
-
 }
