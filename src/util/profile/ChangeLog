@@ -1,3 +1,6 @@
+2002-03-03	Alexandra Ellwood <lxs@mit.edu>
+    profile.pbexp: removed library initializer
+
 2002-02-28	Alexandra Ellwood <lxs@mit.edu>
     prof_file.c: Fixed SHARE_TREE_DATA code so it compiles on X.  Fixed warning.
     prof_init.c: Removed Mac OS 9 code.
