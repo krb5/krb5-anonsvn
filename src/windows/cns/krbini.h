@@ -3,7 +3,11 @@
 
 /* Kerberos Windows initialization file */
 #define KERBEROS_INI    "kerberos.ini"
+#ifdef CYGNUS
 #define KERBEROS_HLP    "kerbnet.hlp"
+#else
+#define KERBEROS_HLP	"krb5clnt.hlp"
+#endif
 #define INI_DEFAULTS    "Defaults"
 #define   INI_USER        "User"          /* Default user */
 #define   INI_INSTANCE    "Instance"      /* Default instance */
