@@ -1,3 +1,8 @@
+Thu Feb  6 15:32:46 1997  Tom Yu  <tlyu@mit.edu>
+
+	* pre.in: Add definitions for KDB5_DEPLIBS, KDB5_LIBS for
+	convenience.
+
 Wed Feb  5 23:20:53 1997  Tom Yu  <tlyu@mit.edu>
 
 	* pre.in: Fix up TCL_* variables to work with changes to
