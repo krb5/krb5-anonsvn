@@ -71,7 +71,7 @@ static void
         vsprintf (errbuf + strlen (errbuf), fmt, args);
     }
 #if defined(_MSDOS) || defined(_WIN32)
-    MessageBox (NULL, errbuf, "Kerboros", MB_ICONEXCLAMATION);
+    MessageBox (NULL, errbuf, "Kerberos", MB_ICONEXCLAMATION);
 #else
 #ifdef _MACINTOSH
 {

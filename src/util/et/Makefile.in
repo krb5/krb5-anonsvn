@@ -44,7 +44,7 @@ STEXT=@STEXT@
 all-windows:: $(OBJFILE)
 	copy com_err.h $(BUILDTOP)\include
 
-##DOS$(OBJFILE):: $(LIBOBJS)
+##DOS$(OBJFILE): $(LIBOBJS)
 ##DOS	$(RM) $(OBJFILE)
 ##DOS	$(LIBECHO) *.obj > $(OBJFILE)
 
