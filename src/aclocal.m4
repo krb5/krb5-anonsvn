@@ -16,8 +16,8 @@ case "$ac_reltopdir" in
 esac
 ac_topdir=$srcdir/$ac_reltopdir
 ac_config_fragdir=$ac_reltopdir/config
-ac_prepend=$ac_config_fragdir/pre.in
-ac_postpend=$ac_config_fragdir/post.in
+krb5_prepend_frags=$ac_config_fragdir/pre.in
+krb5_append_frags=$ac_config_fragdir/post.in
 BUILDTOP=$ac_reltopdir
 SRCTOP=$srcdir/$ac_reltopdir
 if test -d "$srcdir/$ac_config_fragdir"; then
@@ -59,16 +59,15 @@ case "$ac_cv_path_install" in
 	;;
 esac
 ])dnl
+
 dnl
 dnl DO_SUBDIRS
 dnl recurse into subdirs by specifying the recursion targets
 dnl the rules are in post.in but the target needs substitution
 AC_DEFUN([DO_SUBDIRS],
-[ALL_RECURSE="all-recurse"
-CLEAN_RECURSE="clean-recurse"
-INSTALL_RECURSE="install-recurse"
-CHECK_RECURSE="check-recurse"
-MAKEFILES_RECURSE="Makefiles-recurse"])
+[# this is a noop now
+])
+
 dnl
 dnl drop in standard rules for all configure files -- CONFIG_RULES
 dnl
@@ -85,11 +84,7 @@ AC_CONST dnl
 WITH_NETLIB dnl
 KRB_INCLUDE dnl
 AC_ARG_PROGRAM dnl
-AC_SUBST(ALL_RECURSE)
-AC_SUBST(CLEAN_RECURSE)
-AC_SUBST(INSTALL_RECURSE)
-AC_SUBST(CHECK_RECURSE)
-AC_SUBST(MAKEFILES_RECURSE)
+AC_SUBST(subdirs)
 ])dnl
 
 dnl This is somewhat gross and should go away when the build system
@@ -506,7 +501,7 @@ define(V5_AC_OUTPUT_MAKEFILE,
 ifelse($2, , filelist="", filelist="$2")
 dnl OPTIMIZE THIS FOR COMMON CASE!!
 for x in $ac_v5_makefile_dirs; do
-  filelist="$filelist $x/Makefile.tmp:$ac_prepend:$x/Makefile.in:$ac_postpend"
+  filelist="$filelist $x/Makefile.tmp:$krb5_prepend_frags:$x/Makefile.in:$krb5_append_frags"
 done
 AC_OUTPUT($filelist,
 [EOF
@@ -1122,3 +1117,146 @@ else
 	AC_MSG_RESULT("Not looking for Tcl library")
 fi
 ])dnl
+
+dnl
+dnl KRB5_BUILD_LIBRARY
+dnl
+dnl Pull in the necessary stuff to create the libraries.
+
+AC_DEFUN(KRB5_BUILD_LIBRARY,
+[AC_REQUIRE([KRB5_LIB_AUX])
+AC_REQUIRE([AC_LN_S])
+krb5_append_frags=$ac_config_fragdir/lib.in:$krb5_append_frags
+AC_SUBST(LIBLIST)
+AC_SUBST(LIBLINKS)
+AC_SUBST(LDCOMBINE)
+AC_SUBST(SONAMEFLAG)
+AC_SUBST(STLIBEXT)
+AC_SUBST(SHLIBEXT)
+AC_SUBST(SHLIBVEXT)
+AC_SUBST(PFLIBEXT)])
+
+dnl
+dnl KRB5_BUILD_LIBOBJS
+dnl
+dnl Pull in the necessary stuff to build library objects.
+
+AC_DEFUN(KRB5_BUILD_LIBOBJS,
+[AC_REQUIRE([KRB5_LIB_AUX])
+krb5_append_frags=$ac_config_fragdir/libobj.in:$krb5_append_frags
+AC_SUBST(OBJLISTS)
+AC_SUBST(STOBJEXT)
+AC_SUBST(SHOBJEXT)
+AC_SUBST(PFOBJEXT)
+AC_SUBST(PICFLAGS)
+AC_SUBST(PROFFLAGS)])
+
+dnl
+dnl KRB5_LIB_AUX
+dnl
+dnl Parse configure options related to library building.
+
+AC_DEFUN(KRB5_LIB_AUX,
+[# Check whether to build static libraries.
+AC_ARG_ENABLE([static],
+[  --disable-static        don't build static libraries],
+[if test "$enableval" = no; then
+	AC_MSG_RESULT([Disabling static libraries.])
+	LIBLINKS=
+	LIBLIST=
+	OBJLISTS=
+else
+	LIBLIST='lib$(LIB)$(STLIBEXT)'
+	LIBLINKS='$(TOPLIBD)/lib$(LIB)$(STLIBEXT)'
+	OBJLISTS=OBJS.ST
+fi],
+[LIBLIST='lib$(LIB)$(STLIBEXT)'
+LIBLINKS='$(TOPLIBD)/lib$(LIB)$(STLIBEXT)'
+OBJLISTS=OBJS.ST])dnl
+
+# Check whether to build shared libraries.
+AC_ARG_ENABLE([shared],
+[  --enable-shared         build shared libraries],
+[if test "$enableval" = yes; then
+	case "$SHLIBEXT" in
+	.so-nobuild)
+		AC_MSG_RESULT([Shared libraries not supported on this architecture.])
+		;;
+	*)
+		AC_MSG_RESULT([Enabling shared libraries])
+		LIBLIST="$LIBLIST "'lib$(LIB)$(SHLIBEXT)'
+		LIBLINKS="$LIBLINKS "'$(TOPLIBD)/lib$(LIB)$(SHLIBEXT) $(TOPLIBD)/lib$(LIB)$(SHLIBVEXT)'
+		OBJLISTS="$OBJLISTS OBJS.SH"
+		;;
+	esac
+fi])dnl
+
+# Check whether to build profiled libraries.
+AC_ARG_ENABLE([profiled],
+[  --enable-profiled       build profiled libraries],
+[if test "$enableval" = yes; then
+	case $PFLIBEXT in
+	.po-nobuild)
+		AC_MSG_RESULT([Profiled libraries not supported on this architecture.])
+		;;
+	*)
+		AC_MSG_RESULT([Enabling profiled libraries.])
+		LIBLIST="$LIBLIST "'lib$(LIB)$(PFLIBEXT)'
+		LIBLINKS="$LIBLINKS "'$(TOPLIBD)/lib$(LIB)$(PFLIBEXT)'
+		OBJLISTS="$OBJLISTS OBJS.PF"
+		;;
+	esac
+fi])])
+
+dnl
+dnl KRB5_LIB_PARAMS
+dnl
+dnl Determine parameters related to libraries, e.g. various extensions.
+
+AC_DEFUN(KRB5_LIB_PARAMS,
+[AC_CHECKING([host system type])
+AC_CACHE_VAL(krb5_cv_host,
+[AC_CANONICAL_HOST
+krb5_cv_host=$host])
+AC_MSG_RESULT($krb5_cv_host)
+#
+# Set up some defaults.
+#
+STLIBEXT=.a
+# Default to being unable to build shared libraries.
+SHLIBEXT=.so-nobuild
+SHLIBVEXT=.so.v-nobuild
+# Most systems support profiled libraries.
+PFLIBEXT=_p.a
+
+STOBJEXT=.o
+SHOBJEXT=.so
+PFOBJEXT=.po
+# Set up architecture-specific variables.
+case $krb5_cv_host in
+alpha-dec-osf*)
+	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
+	SHLIBEXT=.so
+	# Alpha OSF/1 doesn't need separate PIC objects
+	SHOBJEXT=.o
+	LDCOMBINE='ld -shared -expect_unresolved \*'
+	PROFFLAGS=-pg
+	;;
+*-*-netbsd*)
+	PICFLAGS=-fpic
+	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
+	SHLIBEXT=.so
+	LDCOMBINE='ld -Bshareable'
+	PROFFLAGS=-pg
+	;;
+*-*-solaris*)
+	PICFLAGS=-fpic
+	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
+	SHLIBEXT=.so
+	LDCOMBINE='$(CC) -G'
+	SONAMEFLAG='-h lib$(LIBNAME).$(LIBMAJOR).$(LIBMINOR)'
+	PROFFLAGS=-pg
+	;;
+esac])
+
+])
