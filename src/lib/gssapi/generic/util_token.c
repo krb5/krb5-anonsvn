@@ -151,27 +151,32 @@ void g_make_token_header(mech, body_size, buf, tok_type)
    *(*buf)++ = (unsigned char) (tok_type&0xff);
 }
 
-/* given a buffer containing a token, reads and verifies the token,
-   leaving buf advanced past the token header, and setting body_size
-   to the number of remaining bytes */
-
-int g_verify_token_header(mech, body_size, buf, tok_type, toksize)
+/*
+ * Given a buffer containing a token, reads and verifies the token,
+ * leaving buf advanced past the token header, and setting body_size
+ * to the number of remaining bytes.  Returns 0 on success,
+ * G_BAD_TOK_HEADER for a variety of errors, and G_WRONG_MECH if the
+ * mechanism in the token does not match the mech argument.  buf and
+ * *body_size are left unmodified on error.
+ */
+int g_verify_token_header(mech, body_size, buf_in, tok_type, toksize)
      gss_OID mech;
      int *body_size;
-     unsigned char **buf;
+     unsigned char **buf_in;
      int tok_type;
      int toksize;
 {
+   char *buf = *buf_in;
    int seqsize;
    gss_OID_desc toid;
    int ret = 0;
 
    if ((toksize-=1) < 0)
       return(G_BAD_TOK_HEADER);
-   if (*(*buf)++ != 0x60)
+   if (*buf++ != 0x60)
       return(G_BAD_TOK_HEADER);
 
-   if ((seqsize = der_read_length(buf, &toksize)) < 0)
+   if ((seqsize = der_read_length(&buf, &toksize)) < 0)
       return(G_BAD_TOK_HEADER);
 
    if (seqsize != toksize)
@@ -179,17 +184,17 @@ int g_verify_token_header(mech, body_size, buf, tok_type, toksize)
 
    if ((toksize-=1) < 0)
       return(G_BAD_TOK_HEADER);
-   if (*(*buf)++ != 0x06)
+   if (*buf++ != 0x06)
       return(G_BAD_TOK_HEADER);
  
    if ((toksize-=1) < 0)
       return(G_BAD_TOK_HEADER);
-   toid.length = *(*buf)++;
+   toid.length = *buf++;
 
    if ((toksize-=toid.length) < 0)
       return(G_BAD_TOK_HEADER);
-   toid.elements = *buf;
-   (*buf)+=toid.length;
+   toid.elements = buf;
+   buf+=toid.length;
 
    if (! g_OID_equal(&toid, mech)) 
       ret = G_WRONG_MECH;
@@ -197,11 +202,15 @@ int g_verify_token_header(mech, body_size, buf, tok_type, toksize)
    if ((toksize-=2) < 0)
       return(G_BAD_TOK_HEADER);
 
-   if ((*(*buf)++ != ((tok_type>>8)&0xff)) ||
-       (*(*buf)++ != (tok_type&0xff)))
+   if ((*buf++ != ((tok_type>>8)&0xff)) ||
+       (*buf++ != (tok_type&0xff)))
       return(G_BAD_TOK_HEADER);
 
-   *body_size = toksize;
+   /* Why is G_WRONG_MECH the only case that does not return immediately? */
+   if (!ret) {
+	*buf_in = buf;
+	*body_size = toksize;
+   }
 
    return(ret);
 }
