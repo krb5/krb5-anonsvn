@@ -1,3 +1,8 @@
+Tue Jun 18 20:45:55 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* Makefile.in, configure.in: various hacks for allowing util to be
+		configured almost standalone
+
 Thu Jun 13 22:13:51 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* configure.in: remove ref to ET_RULES

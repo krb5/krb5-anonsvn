@@ -1,4 +1,7 @@
+BUILDTOP=./..
+SRCTOP=@top_srcdir@/..
 CFLAGS = $(CCOPTS)
+SUBDIRS=et ss profile pty
 
 MAC_SUBDIRS = profile et
 
@@ -7,7 +10,7 @@ HOST_TYPE=@HOST_TYPE@
 HAVE_GCC=@HAVE_GCC@
 SLIBSH=sed -e 's,@''CC''@,$(CC),g' -e 's,@''HOST_TYPE''@,$(HOST_TYPE),g' -e 's,@''HAVE_GCC''@,$(HAVE_GCC),g'
 
-all-unix:: libupdate makeshlib
+all-unix:: libupdate makeshlib @AIX_BINCMDS@
 all-mac::
 all-windows: libupdate
 
@@ -28,3 +31,8 @@ clean::
 
 install::
 	@echo nothing to install in util
+
+all-unix:: all-recurse
+clean-unix:: clean-recurse
+install-unix:: install-recurse
+check-unix:: check-recurse

@@ -1,3 +1,5 @@
+BUILDTOP=./../..
+SRCTOP=@top_srcdir@/..
 CFLAGS = $(CCOPTS) $(DEFS) $(LOCALINCLUDE)
 SED = sed
 
@@ -6,15 +8,11 @@ SED = sed
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
-
-LIBDONE=DONE
-LIB_SUBDIRS=.
-INSTALLFILE = cp
+#@SHARED_RULE@
 
 LINTFLAGS=-uhvb 
 LINTFILES= error_message.c et_name.c init_et.c com_err.c
-LIBOBJS= error_message.o et_name.o init_et.o com_err.o
+OBJS= error_message.o et_name.o init_et.o com_err.o
 # for et_lex.lex.c include in error_table.y
 LOCALINCLUDE=-I. -I$(srcdir)
 
@@ -54,7 +52,7 @@ com_err.o: com_err.c
 # real entries...
 #
 
-all-unix:: compile_et includes shared
+all-unix:: compile_et shared libcom_err.a
 all-mac:: libcom_err.a
 shared:
 	 mkdir shared
@@ -96,25 +94,27 @@ install:: mit-sipb-copyright.h
 #	$(INSTALL_DATA) $(srcdir)/compile_et.1 $(DESTDIR)$(CLIENT_MANDIR)/compile_et.1
 #
 
-## install_library_target(com_err,$(LIBOBJS),$(LINTFILES),)
+## install_library_target(com_err,$(OBJS),$(LINTFILES),)
 
 
 all-mac:: libcom_err.$(STEXT)
 
-libcom_err.$(STEXT): $(LIBOBJS)
-	$(ARCHIVE) $@ $(LIBOBJS)
+# libcom_err.$(STEXT): $(OBJS)
+
+libcom_err.a: $(OBJS)
+	$(ARCHIVE) $@ $(OBJS)
 	$(RANLIB) $@
 
-DONE:: $(LIBOBJS)
+DONE:: $(OBJS)
 	 $(RM) DONE
-	 echo $(LIBOBJS) >DONE
+	 @echo $(OBJS) >DONE
 
 clean-unix::
-	$(RM) $(LIBOBJS) DONE
+	$(RM) $(OBJS) DONE
 
 clean-mac::
 	$(RM) libcom_err.a
-	$(RM) $(LIBOBJS)
+	$(RM) $(OBJS)
 
 install::
 	$(INSTALL_DATA) libcom_err.a $(DESTDIR)$(KRB5_LIBDIR)/libcom_err.a
@@ -142,8 +142,8 @@ clean-windows::
 com_err.ps : com_err.dvi
 com_err.dvi: com_err.texinfo
 
-libcom_err.o:	$(LIBOBJS)
-	ld -r -s -o libcom_err.o $(LIBOBJS)
+libcom_err.o:	$(OBJS)
+	ld -r -s -o libcom_err.o $(OBJS)
 	chmod -x libcom_err.o
 
 

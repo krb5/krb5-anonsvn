@@ -12,9 +12,10 @@ HOST_TYPE=$krb5_cv_host
 AC_SUBST(HOST_TYPE)
 case $HOST_TYPE in
 *-*-aix*)
-       AppendRule(all::aix.bincmds)
-        ;;
+  AIX_BINCMDS=aix.bincmds
+  ;;
 esac
+AC_SUBST(AIX_BINCMDS)
 SHLIB_TAIL_COMP=$krb5_cv_shlibs_tail_comp
 AC_SUBST(SHLIB_TAIL_COMP)
 
@@ -27,6 +28,58 @@ else
  if test "$dbval" = db; then db=berk_db; fi
 fi
 
-CONFIG_DIRS(et ss profile $db pty)
-DO_SUBDIRS
-V5_AC_OUTPUT_MAKEFILE
+dnl used by several things
+AC_PROG_AWK
+AC_PROG_RANLIB
+AC_PROG_ARCHIVE
+AC_PROG_ARCHIVE_ADD
+
+dnl BEG et/configure.in
+dnl
+DECLARE_SYS_ERRLIST
+dnl
+dnl Fancy caching of perror result...
+AC_MSG_CHECKING(for perror declaration)
+AC_CACHE_VAL(krb5_cv_decl_perror,
+[AC_HEADER_EGREP(perror, errno.h, 
+  krb5_cv_decl_perror=yes, krb5_cv_decl_perror=no)])dnl
+AC_MSG_RESULT($krb5_cv_decl_perror)
+if test $krb5_cv_decl_perror = yes; then
+	AC_DEFINE(HDR_HAS_PERROR)
+fi
+dnl
+AC_FUNC_CHECK(strerror,AC_DEFINE(HAS_STRERROR))
+AC_HEADER_STDARG
+AC_HAVE_HEADERS(stdlib.h)
+dnl
+dnl END et/configure.in
+
+dnl BEG ss/configure.in
+dnl
+AC_PROG_YACC
+HAVE_YYLINENO
+AC_FUNC_CHECK(strdup,AC_DEFINE(HAS_STRDUP))
+CHECK_DIRENT
+CHECK_WAIT_TYPE
+CHECK_SIGNALS
+CHECK_SIGPROCMASK
+AC_RETSIGTYPE
+AC_HEADER_STDARG
+AC_CHECK_HEADERS(stdlib.h)
+dnl
+dnl END ss/configure.in
+
+dnl BEG profile/configure.in
+dnl
+AC_CHECK_SIZEOF(short)
+AC_CHECK_SIZEOF(int)
+AC_CHECK_SIZEOF(long)
+AC_HAVE_FUNCS(stat)
+dnl
+dnl END profile/configure.in
+
+AC_CONFIG_SUBDIRS(pty)
+AC_OUTPUT(Makefile:../config/pre.in+/Makefile.in+../config/post.in
+  et/Makefile:../config/pre.in+et/Makefile.in+../config/post.in
+  ss/Makefile:../config/pre.in+ss/Makefile.in+../config/post.in
+  profile/Makefile:../config/pre.in+profile/Makefile.in+../config/post.in)

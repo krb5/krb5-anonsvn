@@ -1,3 +1,5 @@
+BUILDTOP=./../..
+SRCTOP=@top_srcdir@/..
 CFLAGS = $(CCOPTS) $(DEFS) $(LOCALINCLUDE)
 
 ##DOSBUILDTOP = ..\..
@@ -7,7 +9,7 @@ LOCALINCLUDE=-I. -I$(srcdir)/../et
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
+#@SHARED_RULE@
 
 OBJS = prof_tree.$(OBJEXT) \
 	prof_file.$(OBJEXT) \
@@ -25,8 +27,11 @@ LIBS = ../et/libcom_err.$(LIBEXT)
 
 install::
 
-all-max:: all-unix
-all-unix:: shared includes libprofile.a test_parse test_profile
+all-mac:: all-unix
+all-unix:: shared profile.h libprofile.a test_parse test_profile DONE
+
+DONE: $(OBJS) $(srcdir)/Makefile.in
+	@echo $(OBJS) > DONE
 
 shared:
 	mkdir shared
@@ -66,7 +71,7 @@ prof_err.c: $(srcdir)/prof_err.et
 
 prof_err.o: prof_err.c
 	$(CC) $(CFLAGS) -c prof_err.c
-@SHARED_RULE_LOCAL@
+#@SHARED_RULE_LOCAL@
 
 clean-mac:: clean-unix
 clean-unix::

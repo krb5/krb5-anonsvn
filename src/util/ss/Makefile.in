@@ -1,3 +1,5 @@
+BUILDTOP=./../..
+SRCTOP=@top_srcdir@/..
 CFLAGS = $(CCOPTS) $(DEFS) $(LOCALINCLUDE)
 SED = sed
 

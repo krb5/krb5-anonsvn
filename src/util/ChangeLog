@@ -1,3 +1,8 @@
+Tue Jun 18 20:44:42 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* Makefile.in, configure.in: various hacks to allow util to be
+		built almost standalone
+
 Mon May 20 11:05:49 1996  Tom Yu  <tlyu@dragons-lair.MIT.EDU>
 
 	* libupdate.sh: allow to deal with multiple directories at once

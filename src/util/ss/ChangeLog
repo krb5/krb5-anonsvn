@@ -1,3 +1,7 @@
+Tue Jun 18 20:46:35 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* Makefile.in: hack up somewhat in prep for toplevel autoconf
+
 Mon Jun 17 23:52:09 1996  Tom Yu  <tlyu@mit.edu>
 
 	* configure.in: remove refs to CopySrcHeader, LinkFileDir
