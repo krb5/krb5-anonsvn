@@ -4,6 +4,7 @@
 
 #include <time.h>
 #include "prof_err.h"
+#include "autoconf.h"
 
 #if defined(__STDC__) || defined(_MSDOS) || defined(_WIN32)
 #define PROTOTYPE(x) x
@@ -11,17 +12,6 @@
 #define PROTOTYPE(x) ()
 #endif
 
-#if defined(_MSDOS) || defined(_WIN32) || defined(_MACINTOSH)
-#include <win-mac.h>
-#endif
-
-#ifndef KRB5_CALLCONV
-#define KRB5_CALLCONV
-#define KRB5_CALLCONV_C
-#define KRB5_DLLIMP
-#define FAR
-#define NEAR
-#endif
 
 typedef long errcode_t;
 
