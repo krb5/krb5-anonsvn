@@ -201,7 +201,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
 	     return(GSS_S_DEFECTIVE_TOKEN);
 	} else {
 	     if (! cred->prerfc_mech) {
-		  *minor_error = G_WRONG_MECH;
+		  *minor_status = G_WRONG_MECH;
 		  return(GSS_S_DEFECTIVE_TOKEN);
 	     }
 
@@ -209,7 +209,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
 	}
    } else {
 	if (! cred->rfc_mech) {
-	     *minor_error = G_WRONG_MECH;
+	     *minor_status = G_WRONG_MECH;
 	     return(GSS_S_DEFECTIVE_TOKEN);
 	}
 
