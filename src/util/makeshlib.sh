@@ -75,17 +75,22 @@ mips-sni-sysv4)
 		sed -e "s;^;$i/shared/;" -e "s; ; $i/shared/;g" $i/DONE
 	done`
  
-	optflags=""
-	if test "$HAVE_GCC"x = "x" ; then
-		optflags="-h $library"
-	else
-		# XXX assumes that we're either using
-		# recent gld (binutils 2.7?) or else using native ld
-		optflags="-Wl,-h -Wl,$library"
-	fi
+#	optflags=""
+#	if test "$HAVE_GCC"x = "x" ; then
+#		optflags="-h $library"
+#	else
+#		# XXX assumes that we're either using
+#		# recent gld (binutils 2.7?) or else using native ld
+#		optflags="-Wl,-h -Wl,$library"
+#	fi
+#	echo $CC -G $ldflags -o $library $optflags $FILES $libdirfl $liblist 
+#	$CC -G $ldflags -o $library $optflags $FILES $libdirfl $liblist
 
-	echo $CC -G $ldflags -o $library $optflags $FILES $libdirfl $liblist 
-	$CC -G $ldflags -o $library $optflags $FILES $libdirfl $liblist
+	LD=/usr/ccs/bin/ld
+	optflags="-h $library"
+	echo $LD -G $ldflags -o $library $optflags $FILES $libdirfl $liblist 
+	$LD -G $ldflags -o $library $optflags $FILES $libdirfl $liblist
+
 	stat=$?
 	;;
 *-*-sunos*)
