@@ -96,31 +96,9 @@ kadm5_ret_t kadm5_init_with_skey(char *client_name, char *keytab,
 				 krb5_ui_4 api_version,
 				 void **server_handle)
 {
-     extern char *krb5_defkeyname;
-     char *defkeyname_orig, *ktname_orig;
-     kadm5_ret_t retval;
-
-     if (keytab != NULL) {
-	  defkeyname_orig = krb5_defkeyname;
-	  ktname_orig = getenv("KRB5_KTNAME");
-
-	  krb5_defkeyname = keytab;
-	  (void) setenv("KRB5_KTNAME", keytab, 1);
-     }
-
-     retval = _kadm5_init_any(client_name, INIT_SKEY, keytab, NULL,
-				   service_name, params, struct_version,
-				   api_version, server_handle);
-
-     if (keytab != NULL) {
-	  krb5_defkeyname = defkeyname_orig;
-	  if (ktname_orig)
-	       (void) setenv("KRB5_KTNAME", ktname_orig, 1);
-	  else
-	       (void) unsetenv("KRB5_KTNAME");
-     }
-
-     return retval;
+     return _kadm5_init_any(client_name, INIT_SKEY, keytab, NULL,
+			    service_name, params, struct_version,
+			    api_version, server_handle);
 }
 
 /*
@@ -358,20 +336,28 @@ static kadm5_ret_t _kadm5_init_any(char *client_name,
 		    break;
 	  }
      } else if (init_type == INIT_SKEY) {
-	  for (i=0; preauth_search_list[i] >= 0; i++) {
-	       code = krb5_get_in_tkt_with_skey(handle->context,
-						0, /* no options */
-						0, /* default addresses */
-						NULL,
-						NULL, /* XXX preauth */
-						NULL, /* def keytab */
-						ccache,
-						&creds,
-						NULL);
-	       if (code != KRB5KDC_ERR_PREAUTH_FAILED &&
-		   code != KRB5KDC_ERR_PREAUTH_REQUIRED &&
-		   code != KRB5KRB_ERR_GENERIC)
-		    break;
+	  krb5_keytab kt = NULL;
+
+	  if (pass && (code = krb5_kt_resolve(handle->context, pass, &kt)))
+	       ;
+	  else {
+	       for (i=0; preauth_search_list[i] >= 0; i++) {
+		    code = krb5_get_in_tkt_with_keytab(handle->context,
+						       0, /* no options */
+						       0, /* default addrs */
+						       NULL,
+						       NULL, /* XXX preauth */
+						       kt,
+						       ccache,
+						       &creds,
+						       NULL);
+		    if (code != KRB5KDC_ERR_PREAUTH_FAILED &&
+			code != KRB5KDC_ERR_PREAUTH_REQUIRED &&
+			code != KRB5KRB_ERR_GENERIC)
+			 break;
+	       }
+
+	       if (pass) krb5_kt_close(handle->context, kt);
 	  }
      }
 
