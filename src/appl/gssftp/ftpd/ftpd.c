@@ -923,7 +923,7 @@ done:
 	(*closefunc)(fin);
 }
 
-store(name, mode, unique)
+store_file(name, mode, unique)
 	char *name, *mode;
 	int unique;
 {
