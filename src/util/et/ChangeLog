@@ -1,3 +1,8 @@
+Wed Jun 19 21:03:37 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* error_message.c, internal.h: cpp symbol policing.  Also fix
+		possible problem with sys_errlist.
+
 Tue Jun 18 20:45:29 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* Makefile.in: various hacks to allow util to be configured almost

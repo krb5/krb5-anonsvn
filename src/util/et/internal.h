@@ -5,11 +5,11 @@
 
 #include <errno.h>
 
-#ifdef NEED_SYS_ERRLIST
+#ifndef SYS_ERRLIST_DECLARED
 extern char const * const sys_errlist[];
 extern const int sys_nerr;
 #endif
 
-#if defined(__STDC__) && !defined(HDR_HAS_PERROR) && !defined(_MSDOS) && !defined(WIN32)
+#if defined(__STDC__) && !defined(PERROR_DECLARED) && !defined(_MSDOS) && !defined(WIN32)
 void perror (const char *);
 #endif
