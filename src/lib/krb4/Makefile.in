@@ -1,8 +1,8 @@
 CFLAGS = $(CCOPTS) $(DEFS) $(DEFINES)
 DEFINES=-I$(srcdir)/../../include/kerberosIV
+KLIB=libkrb4.$(STEXT)
 
-##DOSBUILDTOP = ..\..\..
-##DOSLIBNAME=..\krb5.lib
+##DOSBUILDTOP = ..\..
 
 EHDRDIR=$(BUILDTOP)$(S)include
 
@@ -39,12 +39,16 @@ OBJS	= \
 	rd_priv.$(OBJEXT) \
 	rd_safe.$(OBJEXT) \
 	send_to_kdc.$(OBJEXT) \
-	stime.$(OBJEXT) \
 	rd_preauth.$(OBJEXT) \
 	mk_preauth.$(OBJEXT) \
-	unix_time.$(OBJEXT) \
-	$(CACHEOBJS) $(SETENVOBJS) $(STRCASEOBJS) $(SHMOBJS) \
-	$(LIB_KRB_HOSTOBJS) $(SERVER_KRB_OBJS) $(NETIO_OBJS) $(REALMDBOBJS)
+	stime.$(OBJEXT) \
+	$(CACHEOBJS) $(LIB_KRB_HOSTOBJS) \
+	$(OSOBJS) $(SETENVOBJS) $(STRCASEOBJS) $(SHMOBJS) \
+	$(SERVER_KRB_OBJS) $(NETIO_OBJS) $(REALMDBOBJS)
+
+OSOBJS = unix_time.$(OBJEXT)
+##DOSOSOBJS= win_time.obj win_glue.obj win_store.obj
+#XDOS	memcache.obj win_glue.obj win_store.obj
 
 SRCS = \
 	$(srcdir)/cr_auth_repl.c \
@@ -112,6 +116,7 @@ CACHEOBJS=tf_util.$(OBJEXT) dest_tkt.$(OBJEXT) in_tkt.$(OBJEXT) \
 	tkt_string.$(OBJEXT) g_tf_fname.$(OBJEXT) g_tf_realm.$(OBJEXT) \
 	g_cred.$(OBJEXT) save_creds.$(OBJEXT)
 
+
 #
 # These objects implement Kerberos realm<->host database lookup.
 # They read config files and/or network databases in various ways
@@ -140,6 +145,7 @@ SERVER_KRB_OBJS=klog.$(OBJEXT) kuserok.$(OBJEXT) log.$(OBJEXT) \
 		rd_req.$(OBJEXT) g_svc_in_tkt.$(OBJEXT) recvauth.$(OBJEXT) \
 		krb_err.$(OBJEXT) ad_print.$(OBJEXT) cr_death_pkt.$(OBJEXT) \
 		kparse.$(OBJEXT) put_svc_key.$(OBJEXT) sendauth.$(OBJEXT)
+
 #
 # These objects are included on Unix and Windows (for kstream and kadm)
 # but not under Mac (there are no file descriptors).
@@ -155,17 +161,11 @@ NETIO_OBJS=netread.$(OBJEXT) netwrite.$(OBJEXT)
 LIB_KRB_HOSTSRCS=$(srcdir)/unix_glue.c
 LIB_KRB_HOSTOBJS=unix_glue.$(OBJEXT)
 
-LIBNAME=libkrb4.$(STEXT)
-
 ARCHIVEARGS= $@ $(OBJS)
 
 CODE=$(SRCS) Makefile.in krb_err.et
 
 all:: all-really
-
-#### include configury here
-##DOS!include ..\..\config\common
-##DOS!include ..\..\config\mt-win
 
 # We only have a final value of $(WHAT) at this point, and Microsoft
 # NMAKE expands the macros in dependency lines before it finishes reading
@@ -199,7 +199,7 @@ depend:: $(CODE)
 
 DEFINES=$(FALLBACK) $(OLD_SRVTAB) $(OLD_KLOGIN) -I$(srcdir)/../../include/kerberosIV
 
-$(LIBNAME): $(OBJS)
+$(KLIB): $(OBJS)
 	$(RM) $@
 	$(ARCHIVE) $(ARCHIVEARGS)
 	$(RANLIB) $@
@@ -207,44 +207,25 @@ $(LIBNAME): $(OBJS)
 #
 # What we build for `all' and `install' targets on Windows
 #
-all-windows: winsock.lib kerberos.lib kerberos.dll
+all-windows:: krb4.lib
 
-install-windows:
-	copy winsock.lib  ..\..\floppy
-	copy kerberos.lib ..\..\floppy
-	copy kerberos.dll ..\..\floppy
+clean-windows::
+	$(RM) krb4.lst *.obj msvc.pdb
 
-#
-# The "Import Library" definitions for MS-Windows
-#
-kerberos.lib: kerberos.dll
-	implib /nologo $@ $(@R).dll
+krb4.lib: krb4.lst
+##WIN16##	$(LIBCMD) /out:krb4.lib /nologo -+@krb4.lst
+##WIN32##	$(LIBCMD) /out:krb4.lib /nologo @krb4.lst
 
-winsock.lib:  winsock.def
-	implib /nologo winsock.lib winsock.def
+krb4.lst: $(OBJS)
+	$(LIBECHO) *.obj >$@
 
-#
-# The Kerberos "Dynamic Link Library" for MS-Windows
-#
-kerberos.dll: kerberos.def winsock.lib \
-	$(DES_LIB_FOR_DLL) $(KADM_LIB_FOR_DLL) $(KSTREAM_LIB_FOR_DLL) \
-	$(LIBNAME)
-	$(RM) $@
-# this a.def and a.dll stuff is for line-too-long crap
-	copy kerberos.def a.def
-	copy $(DES_LIB_FOR_DLL)     a.lib
-	copy $(KADM_LIB_FOR_DLL)    b.lib
-	copy $(KSTREAM_LIB_FOR_DLL) c.lib
-	link /nologo /noe debug, $@,,\
-		$(LIBNAME) a.lib b.lib c.lib\
-		winsock ldllcew libw, $(@R).def
-	del a.lib
-	del b.lib
-	del c.lib
-	rc /p /k $@
+install-windows::
+#	copy winsock.lib  ..\..\floppy
+#	copy kerberos.lib ..\..\floppy
+#	copy kerberos.dll ..\..\floppy
 
 clean:: 
-	-$(RM) $(LIBNAME)
+	-$(RM) $(KLIB)
 	-$(RM) *.$(OBJEXT)
 
 clean-:: clean-unix
@@ -254,20 +235,19 @@ clean-unix::
 	-$(RM) ../../include/krb_err.h
 	-$(RM) shared/*
 
-clean-windows::
-	-$(RM) kerberos.lib
-	-$(RM) kerberos.bak
-	-$(RM) kerberos.dll
-	-$(RM) kerberos.lst
-	-$(RM) kerberos.map
-	-$(RM) libkrb.lst
-	-$(RM) libkrb.bak
-	-$(RM) winsock.lib
-	-$(RM) msvc.pdb
-	-$(RM) proj.err
-	-$(RM) ..\..\floppy\winsock.lib
-	-$(RM) ..\..\floppy\kerberos.lib
-	-$(RM) ..\..\floppy\kerberos.dll
+#clean-windows::
+#	-$(RM) krb4.lib
+#	-$(RM) krb4.bak
+#	-$(RM) krb4.dll
+#	-$(RM) krb4.lst
+#	-$(RM) krb4.map
+#	-$(RM) krb4.lst
+#	-$(RM) winsock.lib
+#	-$(RM) msvc.pdb
+#	-$(RM) proj.err
+#	-$(RM) ..\..\floppy\winsock.lib
+#	-$(RM) ..\..\floppy\krb4.lib
+#	-$(RM) ..\..\floppy\krb4.dll
 
 
 

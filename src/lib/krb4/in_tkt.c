@@ -11,13 +11,28 @@
 #include "mit-copyright.h"
 #include <stdio.h>
 #include <string.h>
-#include "krb.h"
-#include <sys/file.h>
 #include <fcntl.h>
+#include "krb.h"
+
+#ifdef _WINDOWS
+#include <win-mac.h>
+
+typedef long uid_t;
+#define getuid() 0
+#define geteuid() 0
+#define setuid(a) 0
+#define setreuid(a,b) 0
+
+#else /* ! _WINDOWS */
+
+#include <sys/file.h>
 #include <sys/stat.h>
 #ifdef TKT_SHMEM
 #include <sys/param.h>
 #endif
+
+#endif /* _WINDOWS */
+
 
 extern int krb_debug;
 
@@ -80,14 +95,14 @@ in_tkt(pname,pinst)
 
 	for (i = 0; i < buf.st_size; i += sizeof(charbuf))
 	    if (write(fd, charbuf, sizeof(charbuf)) != sizeof(charbuf)) {
-#ifndef NO_FSYNC
+#ifdef HAVE_FSYNC
 		(void) fsync(fd);
 #endif
 		(void) close(fd);
 		goto out;
 	    }
 	
-#ifndef NO_FSYNC
+#ifdef HAVE_FSYNC
 	(void) fsync(fd);
 #endif
 	(void) close(fd);

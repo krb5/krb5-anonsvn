@@ -121,7 +121,7 @@ krb_set_key(key,cvt)
  * Mutual authentication is not implemented.
  */
 
-int INTERFACE
+KRB5_DLLIMP int KRB5_CALLCONV
 krb_rd_req(authent,service,instance,from_addr,ad,fn)
     register KTEXT authent;	/* The received message */
     char *service;		/* Service name */

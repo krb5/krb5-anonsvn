@@ -40,7 +40,7 @@ else
 	AC_DEFINE(BITS32)
 fi
 AC_DEFINE(KRB4_USE_KEYTAB)
-AC_HAVE_FUNCS(strsave seteuid setreuid setresuid)
+AC_HAVE_FUNCS(strsave seteuid setreuid setresuid fsync)
 AC_PROG_AWK
 V5_SHARED_LIB_OBJS
 SubdirLibraryRule([$(OBJS)])

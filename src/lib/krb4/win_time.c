@@ -25,23 +25,33 @@
  * to using the AT hardware clock and converting it to Unix time.
  */
 
-unsigned KRB_INT32
+unsigned KRB4_32
 win_time_gmt_unixsec (usecptr)
-	unsigned KRB_INT32	*usecptr;
+	unsigned KRB4_32	*usecptr;
 {
+	struct _timeb now;
+#ifdef _WIN32
+	KRB4_32 sec, usec;
+#else
 	struct tm tm;
+	time_t time;
 	union _REGS inregs;
 	union _REGS outregs;
-	struct _timeb now;
-	time_t time;
+#endif
 
 	_ftime(&now);
 
-	#if 0
-		if (usecptr)
-			*usecptr = now.millitm * 1000;
-	#endif
+#ifdef _WIN32
 
+	sec = now.time;
+	usec = now.millitm * 1000;
+
+	if (usecptr)
+	    *usecptr = usec;
+
+	return sec;
+
+#else
 	/* Get time from AT hardware clock INT 0x1A, AH=2 */
 	memset(&inregs, 0, sizeof(inregs));
 	inregs.h.ah = 2;
@@ -68,36 +78,12 @@ win_time_gmt_unixsec (usecptr)
     	tm.tm_wday = 0;
 	tm.tm_yday = 0;
 	tm.tm_isdst = now.dstflag;
-
+	
 	time = mktime(&tm);
 
 	if (usecptr)
 		*usecptr = 0;
 
 	return time + CONVERT_TIME_EPOCH;
-}
-
-
-/*
- * This routine figures out the current time epoch and returns the
- * conversion factor.  It exists because 
- * Microloss screwed the pooch on the time() and _ftime() calls in
- * its release 7.0 libraries.  They changed the epoch to Dec 31, 1899!
- * Idiots...   We try to cope.
- */
-
-static struct tm jan_1_70 = {0, 0, 0, 1, 0, 70};
-static long epoch = 0;
-static int epoch_set = 0;
-
-long
-win_time_get_epoch()
-{
-
-	if (!epoch_set) {
-		epoch = - mktime (&jan_1_70);	/* Seconds til 1970 localtime */
-		epoch += timezone;		/* Seconds til 1970 GMT */
-		epoch_set = 1;
-	}
-	return epoch;
+#endif
 }

@@ -15,8 +15,6 @@
 #include <ctype.h>
 #ifdef HAS_STDLIB_H
 #include <stdlib.h>
-#else
-extern char *malloc();
 #endif
 #define	DEFINE_SOCKADDR		/* Ask for MAXHOSTNAMELEN */
 #include "krb.h"
@@ -41,7 +39,7 @@ extern char *malloc();
 
 static char ret_realm[REALM_SZ+1];
 
-char * INTERFACE
+KRB5_DLLIMP char * KRB5_CALLCONV
 krb_realmofhost(host)
 char *host;
 {
@@ -66,7 +64,7 @@ char *host;
 
 			rev_type = h->h_addrtype;
 			rev_len = h->h_length;
-			rev_addr = malloc(rev_len);
+			rev_addr = (char *)malloc(rev_len);
 			if (rev_addr != NULL) {
 				memcpy(rev_addr, h->h_addr_list[0], rev_len);
 				h = gethostbyaddr(rev_addr, rev_len, rev_type);

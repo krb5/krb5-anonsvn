@@ -8,6 +8,24 @@
 		Cygnus Support.
 */
 
+#if defined(unix) || defined(_WINDOWS)
+#define _nmalloc malloc
+#define _nfree free
+#define _nrealloc realloc
+
+#define noErr 0
+#define memFullErr ENOMEM
+
+#define OFFSETOF(x) x
+
+typedef char *	NPSTR
+typedef char **	Handle;
+typedef int	Size;
+typedef int	OSErr;
+
+#define WM_KERBEROS_CHANGED	"Kerberos Changed"
+#endif /* unix || _WINDOWS */
+
 struct Session {
 	char		name[ANAME_SZ];
 	char		instance[INST_SZ];
