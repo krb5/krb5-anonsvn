@@ -1,3 +1,9 @@
+Thu Sep 17 18:21:51 1998  Tom Yu  <tlyu@mit.edu>
+
+	* kdc_util.c (kdc_get_server_key): Fix to not use cached tgs key
+	to prevent lossage when it might be out of date by always fetching
+	the correct kvno for the ticket out of the database.
+
 Tue Sep  1 19:34:30 1998  Tom Yu  <tlyu@mit.edu>
 
 	* kerberos_v4.c (compat_decrypt_key): Add
