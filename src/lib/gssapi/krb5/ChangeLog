@@ -1,3 +1,11 @@
+Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
+
+        * Makefile.in: win32 build
+
+	* gssapiP_krb5.h krb5_gss_glue.c:
+	DLL export all public GSSAPI interfaces; adjusted some other function's
+	declarations accordingly (KRB5_CALLCONV, FAR keywords added)
+
 Sat Oct 19 00:38:22 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* ser_sctx.c (kg_oid_externalize, kg_oid_internalize,
