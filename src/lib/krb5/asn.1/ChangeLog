@@ -1,3 +1,8 @@
+Thu Jan  2 16:56:10 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in:
+	* configure.in: Update to new library build procedure.
+
 Thu Nov 14 20:57:55 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* asn1_k_encode.c (asn1_encode_principal_name): Be liberal about

@@ -5,9 +5,45 @@ KRB5_RUN_ENV = @KRB5_RUN_ENV@
 ##DOSLIBNAME=..\krb5.lib
 ##DOSDBFLAGS=
 
-.c.o:
-	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
+STLIBOBJS= \
+	an_to_ln.o	\
+	def_realm.o	\
+	DNR.o	\
+	ccdefname.o	\
+	free_krbhs.o	\
+	free_hstrl.o	\
+	full_ipadr.o	\
+	get_krbhst.o	\
+	gen_port.o	\
+	genaddrs.o	\
+	gen_rname.o	\
+	gmt_mktime.o	\
+	hostaddr.o	\
+	hst_realm.o	\
+	init_os_ctx.o	\
+	krbfileio.o	\
+	ktdefname.o	\
+	kuserok.o	\
+	mk_faddr.o	\
+	localaddr.o	\
+	locate_kdc.o	\
+	lock_file.o	\
+	macsock.o	\
+	net_read.o	\
+	net_write.o	\
+	osconfig.o	\
+	port2ip.o	\
+	promptusr.o	\
+	read_msg.o	\
+	read_pwd.o	\
+	realm_dom.o	\
+	sendto_kdc.o	\
+	sn2princ.o	\
+	timeofday.o	\
+	toffset.o	\
+	unlck_file.o	\
+	ustime.o	\
+	write_msg.o
 
 OBJS= \
 	an_to_ln.$(OBJEXT)	\
@@ -89,14 +125,9 @@ SRCS= \
 	$(srcdir)/ustime.c	\
 	$(srcdir)/write_msg.c
 
-all-unix:: shared $(OBJS)
-
-all-mac:: $(OBJS)
+all-unix:: all-libobjs
 
 all-windows:: $(OBJS)
-
-shared:
-	mkdir shared
 
 TEST_PROGS= t_std_conf t_an_to_ln
 
@@ -151,8 +182,6 @@ check-unix::
 clean:: 
 	$(RM) $(TEST_PROGS) test.out t_std_conf.o t_an_to_ln.o
 
-clean-unix::
-	$(RM) shared/*
-clean-mac::
+clean-unix:: clean-libobjs
 clean-windows::
 

@@ -3,9 +3,22 @@ CFLAGS = $(CCOPTS) $(DEFS)
 ##DOSBUILDTOP = ..\..\..\..
 ##DOSLIBNAME=..\..\krb5.lib
 
-.c.o:
-	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
+STLIBOBJS = \
+	ktf_add.o	\
+	ktf_close.o	\
+	ktf_endget.o	\
+	ktf_g_ent.o	\
+	ktf_g_name.o	\
+	ktf_next.o	\
+	ktf_resolv.o	\
+	ktf_remove.o	\
+	ktf_ssget.o	\
+	ktf_util.o	\
+	ktf_ops.o	\
+	ktf_wops.o	\
+	ktf_wreslv.o	\
+	ktf_defops.o	\
+	ser_ktf.o
 
 SRCS= \
 	$(srcdir)/ktf_add.c \
@@ -41,15 +54,9 @@ OBJS = \
 	ktf_defops.$(OBJEXT)	\
 	ser_ktf.$(OBJEXT)
 
-all-unix:: shared $(OBJS)
-all-mac:: $(OBJS)
+all-unix:: all-libobjs
 all-windows:: $(OBJS)
 
-shared:
-	mkdir shared
+clean-unix:: clean-libobjs
 
-clean-unix::
-	$(RM) shared/*
-
-clean-mac::
 clean-windows::

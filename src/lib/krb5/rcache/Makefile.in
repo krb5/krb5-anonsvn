@@ -3,9 +3,13 @@ CFLAGS = $(CCOPTS) $(DEFS)
 ##DOSBUILDTOP = ..\..\..
 ##DOSLIBNAME=..\krb5.lib
 
-.c.o:
-	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
+STLIBOBJS = \
+	rc_base.o	\
+	rc_dfl.o 	\
+	rc_io.o		\
+	rcdef.o		\
+	rc_conv.o	\
+	ser_rc.o
 
 OBJS=	\
 	rc_base.$(OBJEXT)	\
@@ -23,15 +27,9 @@ SRCS=	\
 	$(srcdir)/rc_conv.c	\
 	$(srcdir)/ser_rc.c
 
-all-unix:: shared $(OBJS)
-all-mac:: $(OBJS)
+all-unix:: all-libobjs
 all-windows:: $(OBJS)
 
-shared:
-	mkdir shared
-
-clean-mac::
 clean-windows::
 
-clean-unix::
-	$(RM) shared/*
+clean-unix:: clean-libobjs

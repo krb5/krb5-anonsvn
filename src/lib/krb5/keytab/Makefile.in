@@ -5,9 +5,13 @@ CFLAGS = $(CCOPTS) $(DEFS)
 
 MAC_SUBDIRS = file
 
-.c.o:
-	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
+STLIBOBJS= \
+	ktadd.o		\
+	ktbase.o	\
+	ktdefault.o	\
+	ktfr_entry.o	\
+	ktremove.o	\
+	read_servi.o
 
 OBJS=	\
 	ktadd.$(OBJEXT)		\
@@ -25,21 +29,15 @@ SRCS=	\
 	$(srcdir)/ktremove.c	\
 	$(srcdir)/read_servi.c
 
-shared:
-	mkdir shared
-
-all-unix:: shared $(OBJS)
-all-mac:: $(OBJS)
+all-unix:: all-libobjs
 all-windows:: $(OBJS)
 	cd file
 	@echo Making in keytab\file
 	-$(MAKE) -$(MFLAGS)
 	cd ..
 
-clean-unix::
-	$(RM) shared/*
+clean-unix:: clean-libobjs
 
-clean-mac::
 clean-windows::
 	cd file
 	@echo Making clean in keytab\file

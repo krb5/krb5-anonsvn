@@ -1,3 +1,8 @@
+Thu Jan  2 17:07:07 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in:
+	* configure.in: Update to new library build procedure.
+
 Fri Dec 13 14:55:43 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* krb5_err.et: Added the error codes KRB5_APPL_EXPIRED and
