@@ -866,7 +866,9 @@ krb5_read_realm_params(kcontext, realm, kdcprofile, kdcenv, rparamp)
     }
 
     /* Get the value for the supported enctype/salttype matrix */
-    hierarchy[2] = "supported_enctypes";
+    /* XXX This is so that the kdc will search a different
+       enctype list than kadmind */
+    hierarchy[2] = "kdc_supported_enctypes";
     if (!krb5_aprof_get_string(aprofile, hierarchy, TRUE, &svalue)) {
 	krb5_string_to_keysalts(svalue,
 				", \t",	/* Tuple separators	*/
