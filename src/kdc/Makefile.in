@@ -6,7 +6,7 @@ all:: krb5kdc
 
 DEFINES = -DBACKWARD_COMPAT $(KRB4DEF)
 
-LOCALINCLUDE = @KRB4_INCLUDE@ -I.
+LOCALINCLUDE = @KRB4_INCLUDES@ -I.
 SRCS= \
 	kdc5_err.c \
 	$(srcdir)/dispatch.c \
