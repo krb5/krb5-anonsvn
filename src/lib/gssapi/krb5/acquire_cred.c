@@ -267,7 +267,8 @@ krb5_gss_acquire_cred(minor_status, desired_name, time_req,
    krb5_context context;
    size_t i;
    krb5_gss_cred_id_t cred;
-   gss_OID_set mechs;
+   gss_OID_set valid_mechs, ret_mechs;
+   int req_old, req_new;
    OM_uint32 ret;
    krb5_error_code code;
 
@@ -294,11 +295,26 @@ krb5_gss_acquire_cred(minor_status, desired_name, time_req,
    /* verify that the requested mechanism set is the default, or
       contains krb5 */
 
-   if (desired_mechs != GSS_C_NULL_OID_SET) {
-      for (i=0; i<desired_mechs->count; i++)
+   if (desired_mechs == GSS_C_NULL_OID_SET) {
+      valid_mechs = gss_mech_set_krb5_both;
+   } else {
+      req_old = 0;
+      req_new = 0;
+
+      for (i=0; i<desired_mechs->count; i++) {
+	 if (g_OID_equal(gss_mech_krb5_old, &(desired_mechs->elements[i])))
+	    req_old++;
 	 if (g_OID_equal(gss_mech_krb5, &(desired_mechs->elements[i])))
-	    break;
-      if (i == desired_mechs->count) {
+	    req_new++;
+      }
+
+      if (req_old && req_new) {
+	 valid_mechs = gss_mech_set_krb5_both;
+      } else if (req_old) {
+	 valid_mechs = gss_mech_set_krb5_old;
+      } else if (req_new) {
+	 valid_mechs = gss_mech_set_krb5;
+      } else {
 	 *minor_status = 0;
 	 return(GSS_S_BAD_MECH);
       }
@@ -315,6 +331,9 @@ krb5_gss_acquire_cred(minor_status, desired_name, time_req,
 
    cred->usage = cred_usage;
    cred->princ = NULL;
+   cred->actual_mechs = valid_mechs;
+   cred->prerfc_mech = req_old;
+   cred->rfc_mech = req_new;
 
    cred->keytab = NULL;
    cred->ccache = NULL;
@@ -405,7 +424,7 @@ krb5_gss_acquire_cred(minor_status, desired_name, time_req,
    /* create mechs */
 
    if (actual_mechs) {
-      if (! g_copy_OID_set(gss_mech_set_krb5, &mechs)) {
+      if (! g_copy_OID_set(cred->actual_mechs, &ret_mechs)) {
 	 if (cred->ccache)
 	    (void)krb5_cc_close(context, cred->ccache);
 	 if (cred->keytab)
@@ -421,8 +440,8 @@ krb5_gss_acquire_cred(minor_status, desired_name, time_req,
    /* intern the credential handle */
 
    if (! kg_save_cred_id((gss_cred_id_t) cred)) {
-      free(mechs->elements);
-      free(mechs);
+      free(ret_mechs->elements);
+      free(ret_mechs);
       if (cred->ccache)
 	 (void)krb5_cc_close(context, cred->ccache);
       if (cred->keytab)
@@ -439,7 +458,7 @@ krb5_gss_acquire_cred(minor_status, desired_name, time_req,
    *minor_status = 0;
    *output_cred_handle = (gss_cred_id_t) cred;
    if (actual_mechs)
-      *actual_mechs = mechs;
+      *actual_mechs = ret_mechs;
 
    return(GSS_S_COMPLETE);
 }

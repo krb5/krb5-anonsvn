@@ -84,7 +84,7 @@ krb5_gss_inquire_cred(minor_status, cred_handle, name, lifetime_ret,
    }
 
    if (mechanisms)
-      if (! g_copy_OID_set(gss_mech_set_krb5, &mechs)) {
+      if (! g_copy_OID_set(cred->actual_mechs, &mechs)) {
 	 krb5_free_principal(context, ret_name);
 	 *minor_status = ENOMEM;
 	 return(GSS_S_FAILURE);

@@ -1,5 +1,14 @@
 Thu Jun 20 23:15:57 1996  Marc Horowitz  <marc@mit.edu>
 
+	* acquire_cred.c (krb5_gss_acquire_cred), gssapiP_krb5.h (struct
+ 	_krb5_gss_cred_it_rec), gssapi_krb5.c (gss_mech_set_krb5*),
+ 	inq_cred.c (krb5_gss_inquire_cred): gss_acquire_cred needs to be
+ 	able to deal with both mech oid's.  It should return in
+ 	actual_mechs the intersection of the set passed in and the
+ 	{old,new} mechs, or if the default was requested, it should return
+ 	both mech oid's.  This state should be stored in the credential
+ 	handle, and regurgitated by gss_inquire_cred.
+
 	* accept_sec_context.c (krb5_gss_accept_sec_context): make sure
  	that the oid in the token is compatible with the mechanisms
  	specified by the credential.
