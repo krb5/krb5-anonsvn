@@ -24,14 +24,14 @@ unwraps wrapped packets and calls the appropriate server subroutine
 #include <sys/types.h>
 #include <netdb.h>
 #include <sys/socket.h>
+#include "kadm_server.h"
 #include <kadm.h>
 #include <kadm_err.h>
 #include <krb_err.h>
 #include <syslog.h>
-#include "kadm_server.h"
 
 #ifdef OVSEC_KADM
-#include <ovsec_admin/admin.h>
+#include <kadm5/admin.h>
 extern void *ovsec_handle;
 #endif
 

@@ -27,8 +27,8 @@
 
 #ifdef OVSEC_KADM
 #include <com_err.h>
-#include <ovsec_admin/admin.h>
-#include <ovsec_admin/chpass_util_strings.h>
+#include <kadm5/admin.h>
+#include <kadm5/chpass_util_strings.h>
 #include <krb5/kdb.h>
 extern void *ovsec_handle;
 #endif

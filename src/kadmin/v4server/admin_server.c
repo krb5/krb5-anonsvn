@@ -43,7 +43,7 @@
 #include <syslog.h>
 
 #ifdef OVSEC_KADM
-#include <ovsec_admin/admin.h>
+#include <kadm5/admin.h>
 void *ovsec_handle;
 kadm5_config_params params;
 #endif
