@@ -1,5 +1,7 @@
 Thu Jul 18 19:14:51 1996  Marc Horowitz  <marc@mit.edu>
 
+	* keytab.c (etype_string): ifdef out des3 reference
+
 	* configure.in: removed SS_RULES
 
 Mon Jul 15 16:56:43 1996  Barry Jaspan  <bjaspan@mit.edu>

@@ -9,7 +9,6 @@ AC_HAVE_FUNCS(ftime timezone)
 AC_CHECK_LIB(ndbm,main)
 AC_CHECK_LIB(dbm,main)
 AC_REPLACE_FUNCS([setenv memmove])
-SS_RULES
 KRB_INCLUDE
 ISODE_INCLUDE
 WITH_KRB5ROOT
