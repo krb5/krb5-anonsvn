@@ -64,6 +64,12 @@ char copyright[] =
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#ifdef HAVE_SYS_SELECT_H
+#include <sys/select.h>
+#endif
+#if HAVE_SYS_TIME_H
+#include <sys/time.h>
+#endif
 
 #ifdef POSIX_TERMIOS
 #include <termios.h>
@@ -621,7 +627,7 @@ main(argc, argv)
 	  ioctl(rem, FIOSSAIOOWN, &pid);
 	}
 #else
-#ifdef HAVE_SETOWN
+#if 0
     (void) fcntl(rem, F_SETOWN, getpid());
 #endif
 #endif
@@ -1234,9 +1240,7 @@ sigjmp_buf rcvtop;
 jmp_buf rcvtop;
 #endif
 
-krb5_sigtype
-  oob(signo)
-int signo;
+void oob()
 {
 #ifndef POSIX_TERMIOS
     int out = FWRITE;
@@ -1253,6 +1257,15 @@ int signo;
     struct sgttyb sb;
 #endif
 #endif
+    fd_set remset;
+    struct timeval tv;
+    tv.tv_usec = 10000;
+    tv.tv_sec = 0;
+    FD_ZERO(&remset);
+    FD_SET(rem, &remset);
+mark = 0;
+    /* If we don't have OOB data yet,
+       * see if our buffer is full and drain it. */
     
     while (recv(rem, &mark, 1, MSG_OOB) < 0)
       switch (errno) {
@@ -1363,22 +1376,7 @@ int signo;
 #endif
     }
     
-    /*
-     * oob does not do FLUSHREAD (alas!)
-     */
     
-    /*
-     * If we filled the receive buffer while a read was pending,
-     * longjmp to the top to restart appropriately.  Don't abort
-     * a pending write, however, or we won't know how much was written.
-     */
-#ifdef POSIX_SETJMP
-    if (rcvd && rcvstate == READING)
-	siglongjmp(rcvtop, 1);
-#else
-    if (rcvd && rcvstate == READING)
-	longjmp(rcvtop, 1);
-#endif
 }
 
 
@@ -1398,6 +1396,7 @@ reader(oldmask)
 #else
     int pid = -getpid();
 #endif
+fd_set readset, excset;
     int n, remaining;
     char *bufp = rcvbuf;
 
@@ -1409,34 +1408,14 @@ reader(oldmask)
     sa.sa_handler = SIG_IGN;
     (void) sigaction(SIGTTOU, &sa, (struct sigaction *)0);
 
-#ifdef SA_RESTART
-    /* Because SIGURG will be coming in during a read,
-     * we want to restart the syscall afterwards. */
-    sa.sa_flags |= SA_RESTART;
-#endif
-    sa.sa_handler = oob;
-    (void) sigaction(SIGURG, &sa, (struct sigaction *)0);
 #else    
     (void) signal(SIGTTOU, SIG_IGN);
-    (void) signal(SIGURG, oob);
 #endif
     
     ppid = getppid();
-#ifdef HAVE_SETOWN
-    (void) fcntl(rem, F_SETOWN, pid);
-#endif
-#ifdef POSIX_SETJMP
-    (void) sigsetjmp(rcvtop, 1);
-#else
-    (void) setjmp(rcvtop);
-#endif
-#ifdef POSIX_SIGNALS
-    sigprocmask(SIG_SETMASK, oldmask, (sigset_t*)0);
-#else
-#ifndef sgi
-    (void) sigsetmask(oldmask);
-#endif
-#endif /* POSIX_SIGNALS */
+FD_ZERO(&readset);
+    FD_ZERO(&excset);
+
     for (;;) {
 	while ((remaining = rcvcnt - (bufp - rcvbuf)) > 0) {
 	    rcvstate = WRITING;
@@ -1450,11 +1429,21 @@ reader(oldmask)
 	}
 	bufp = rcvbuf;
 	rcvcnt = 0;
-	rcvstate = READING;
-	rcvcnt = des_read(rem, rcvbuf, sizeof (rcvbuf));
+	 rcvstate = READING;
+FD_set(rem,&readset);
+	FD_SET(rem,&excset);
+	if (select(rem+1, &readset, 0, &excset, 0) > 0 ) {
+if (FD_ISET(rem, &excset))
+  oob();
+if (FD_ISET(rem, &readset)) {
+	  	rcvcnt = des_read(rem, rcvbuf, sizeof (rcvbuf));
 	if (rcvcnt == 0)
 	  return (0);
-	if (rcvcnt < 0) {
+	if (rcvcnt < 0)
+	  goto error;
+}
+	} else
+		  error: {
 	    if (errno == EINTR)
 	      continue;
 	    perror("read");

@@ -1,3 +1,10 @@
+Wed Jan 17 15:14:33 1996  Sam Hartman  <hartmans@tertius.mit.edu>
+
+	* krlogin.c ((reader): Use select to find out-of-band data, not signals.
+	(oob): No longer a signal handler; just a function.
+
+	* configure.in :  Include sys/time.h check
+
 Mon Jan 15 16:16:07 1996  Sam Hartman  <hartmans@tertius.mit.edu>
 
 	* login.c (main): ttyslot usable here as well
