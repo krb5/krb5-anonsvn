@@ -199,8 +199,8 @@ errcode_t profile_ser_size(unused, profile, sizep)
     for (pfp = profile->first_file; pfp; pfp = pfp->next) {
 	required += sizeof(prof_int32);
 #ifdef PROFILE_USES_PATHS
-	if (pfp->filespec)
-	    required += strlen(pfp->filespec);
+	if (pfp->data->filespec)
+	    required += strlen(pfp->data->filespec);
 #else
 	required += sizeof (profile_filespec_t);
 #endif
@@ -250,11 +250,11 @@ errcode_t profile_ser_externalize(unused, profile, bufpp, remainp)
 	    pack_int32(fcount, &bp, &remain);
 	    for (pfp = profile->first_file; pfp; pfp = pfp->next) {
 #ifdef PROFILE_USES_PATHS
-		slen = (pfp->filespec) ?
-		    (prof_int32) strlen(pfp->filespec) : 0;
+		slen = (pfp->data->filespec) ?
+		    (prof_int32) strlen(pfp->data->filespec) : 0;
 		pack_int32(slen, &bp, &remain);
 		if (slen) {
-		    memcpy(bp, pfp->filespec, (size_t) slen);
+		    memcpy(bp, pfp->data->filespec, (size_t) slen);
 		    bp += slen;
 		    remain -= (size_t) slen;
 		}

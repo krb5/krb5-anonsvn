@@ -213,8 +213,8 @@ errcode_t profile_open_file(filespec, ret_prof)
 	retval = profile_update_file_data(data);
 	if (retval) {
 		profile_close_file(prf);
-		prf = nil;
-		data = nil;
+		prf = NULL;
+		data = NULL;
 		goto end;
 	}
 	
@@ -237,7 +237,7 @@ end:
 		if (data != NULL) {
 #ifdef PROFILE_USES_PATHS
 			if (data -> filespec != NULL) 
-				free (data -> filespec)
+				free (data -> filespec);
 #endif /* PROFILE_USES_PATHS */
 			free (data);
 		}
@@ -380,10 +380,10 @@ errcode_t profile_flush_file_data(data)
 	new_file = old_file = 0;
 	new_file = malloc(strlen(data->filespec) + 5);
 	if (!new_file)
-		goto errout;
+		goto end;
 	old_file = malloc(strlen(data->filespec) + 5);
 	if (!old_file)
-		goto errout;
+		goto end;
 
 	sprintf(new_file, "%s.$$$", data->filespec);
 	sprintf(old_file, "%s.bak", data->filespec);
@@ -462,12 +462,16 @@ void profile_free_file(prf)
 	prf_file_t prf;
 {
 	if (prf->data) {
+#ifdef SHARE_TREE_DATA
 		prof_mutex_lock (&g_shared_trees_mutex);
 		prf->data->refcount--;
 		if (prf->data->refcount == 0) {
+#endif
 			profile_free_file_data(prf->data);
+#ifdef SHARE_TREE_DATA
 		}
 		prof_mutex_unlock (&g_shared_trees_mutex);
+#endif
 	}
 		
 	free(prf);
