@@ -1,3 +1,7 @@
+Sun May 12 01:17:05 1996  Marc Horowitz  <marc@mit.edu>
+
+	* configure.in: USE_KADM_LIBRARY replaced by USE_KADMSRV_LIBRARY
+
 Wed Feb 28 13:07:28 1996  Ezra Peisach  <epeisach@kangaroo.mit.edu>
 
 	* main.c: Move com_err.h after k5-int.h include.
