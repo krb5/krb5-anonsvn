@@ -84,9 +84,9 @@ kadm5_ret_t glob_to_regexp(char *glob, char *realm, char **regexp)
      /* A character of glob can turn into two in regexp, plus ^ and $ */
      /* and trailing null.  If glob has no @, also allocate space for */
      /* the realm. */
-     append_realm = (realm != NULL) && (strchr(glob, '@') != NULL);
+     append_realm = (realm != NULL) && (strchr(glob, '@') == NULL);
      p = (char *) malloc(strlen(glob)*2+ 3 +
-			 (append_realm ? 0 : (strlen(realm)+1)));
+			 (append_realm ? (strlen(realm)+1) : 0));
      if (p == NULL)
 	  return ENOMEM;
      *regexp = p;
@@ -118,7 +118,7 @@ kadm5_ret_t glob_to_regexp(char *glob, char *realm, char **regexp)
 	  glob++;
      }
 
-     if (! append_realm) {
+     if (append_realm) {
 	  *p++ = '@';
 	  strcpy(p, realm);
 	  p += strlen(realm);
