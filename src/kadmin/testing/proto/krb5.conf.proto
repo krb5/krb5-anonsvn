@@ -1,0 +1,16 @@
+[libdefaults]
+	default_realm = __REALM__
+
+[realms]
+	__REALM__ = {
+		kdc = localhost:1750
+		admin_server = localhost:1751
+	}
+
+[domain_realm]
+	localhost = __REALM__
+
+[logging]
+	admin_server = SYSLOG=ERR:LOCAL6
+	kdc = SYSLOG=ERR:LOCAL6
+	default = SYSLOG=ERR:LOCAL6

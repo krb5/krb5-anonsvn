@@ -1,0 +1,8 @@
+Wed Jul 10 01:26:47 1996  Marc Horowitz  <marc@mit.edu>
+
+	* Makefile.in, configure.in: added autoconf support
+
+Tue Jul  9 17:12:08 1996  Marc Horowitz  <marc@mit.edu>
+
+	* ovsec_adm_import.c, import.c: renamed <ovsec_admin/foo.h> to
+ 	<kadm5/foo.h>	
