@@ -1,3 +1,9 @@
+Mon Jul  8 17:06:00 1996  Barry Jaspan  <bjaspan@mit.edu>
+
+	* kdb_dbm.c: Create DB_OPENCLOSE, which opens and closes the
+ 	databases for each lock.  This is slower than the previous method,
+ 	but unlike the previous method it works.
+
 Sun May 12 01:03:07 1996  Marc Horowitz  <marc@mit.edu>
 
 	* kdb_xdr.c: reworked all of the krb5_dbe_* tl_data functions.
