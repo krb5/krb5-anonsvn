@@ -88,7 +88,7 @@ long pty_update_utmp (process_type, pid, username, line, host, flags)
 #else
     strncpy(ent.ut_name, username, sizeof(ent.ut_name));
 #endif
-    if(username)
+    if(username[0])
 	strncpy(userbuf, username, sizeof(userbuf));
     else userbuf[0] = '\0';
 
@@ -102,14 +102,14 @@ long pty_update_utmp (process_type, pid, username, line, host, flags)
  * out the utmp structure and change the username pointer so  it is used by
  * update_wtmp.*/
 #ifdef WTMP_REQUIRES_USERNAME
-    if (( !username) && (flags&PTY_UTMP_USERNAME_VALID)
+    if (( !username[0]) && (flags&PTY_UTMP_USERNAME_VALID)
 	&&line)  
 	{
 struct utmp *utptr;
 strncpy(ut.ut_line, line, sizeof(ut.ut_line));
 utptr = getutline(&ut);
 if (utptr)
-    strncpy(userbuf,ut.ut_user,sizeof(ut.ut_user));
+  strncpy(userbuf,utptr->ut_user,sizeof(ut.ut_user));
 	}
 #endif
     
@@ -160,5 +160,5 @@ close(fd);
 	
 #endif /* HAVE_SETUTENT */
 
-    return ptyint_update_wtmp(&ent, host);
+    return ptyint_update_wtmp(&ent, host, userbuf);
 }
