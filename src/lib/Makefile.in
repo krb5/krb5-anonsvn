@@ -44,7 +44,7 @@ KLIBS = krb5\krb5.lib crypto\crypto.lib \
 
 
 
-$(KLIB): Makefile $(KLIBS) $(WLIB) $(KDEF) win_glue.obj
+$(KLIB): $(KLIBS) $(WLIB) $(KDEF) win_glue.obj
 ##WIN16##	link /co /seg:400 /noe /nod /nol \
 ##WIN16##	   win_glue, $*.dll, $*.map, \
 ##WIN16##	   $(KLIBS) $(WINLIBS), $(KDEF)
@@ -53,7 +53,7 @@ $(KLIB): Makefile $(KLIBS) $(WLIB) $(KDEF) win_glue.obj
 ##WIN32##	link $(WINDLLFLAGS) /def:$(KDEF) /out:$*.dll \
 ##WIN32##	   win_glue.obj $(KLIBS) $(WINLIBS)
 
-$(GLIB): Makefile $(GLIBS) $(KLIB) $(GDEF) win_glue.obj
+$(GLIB): $(GLIBS) $(KLIB) $(GDEF) win_glue.obj
 ##WIN16##	link /co /seg:400 /noe /nod /nol \
 ##WIN16##	   win_glue, $*.dll, $*.map, \
 ##WIN16##	   $(GLIBS) $(KLIB) $(WINLIBS), $(GDEF)

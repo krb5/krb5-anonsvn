@@ -1,9 +1,12 @@
-Wed Jan 29 20:59:20 EST 1997	Richard Basch	<basch@lehman.com>
+Thu Jan 30 21:27:07 1997  Richard Basch  <basch@lehman.com>
 
-	* Makefile.in:
-		Link against MSVCRT.LIB to force the use of the
-		runtime C library instead of a possibly incompatible
-		static C library (for Borland C++)
+	* krb5_16.def krb5_32.def: 
+		Export krb5_decrypt, krb5_encrypt,
+		krb5_string_to_key, krb5_process_key, krb5_finish_key,
+		krb5_init_random_key, krb5_finish_random_key,
+		krb5_random_key, krb5_eblock_enctype
+	* Makefile.in
+		Win32 - Link against MSVCRT.LIB (runtime library)
 
 Fri Jul 12 20:32:29 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
