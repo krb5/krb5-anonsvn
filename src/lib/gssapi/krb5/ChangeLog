@@ -1,3 +1,9 @@
+Thu Jul 18 19:48:48 1996  Marc Horowitz  <marc@mit.edu>
+
+	* init_sec_context.c (krb5_gss_init_sec_context),
+ 	accept_sec_context.c (krb5_gss_accept_sec_context): ifdef'd out
+ 	reference to 3des.
+
 Fri Jul  5 15:27:29 1996  Marc Horowitz  <marc@mit.edu>
 
 	* gssapi_krb5.h: Add declarations for _old mech set, and _both

@@ -1,3 +1,7 @@
+Thu Jul 18 19:43:26 1996  Marc Horowitz  <marc@mit.edu>
+
+	* configure.in: removed ET_RULES, replaced with AC_PROG_AWK
+
 Wed Jul 10 01:26:47 1996  Marc Horowitz  <marc@mit.edu>
 
 	* Makefile.in, configure.in: added autoconf support
