@@ -36,7 +36,7 @@
 #include <kdc.h>
 
 #include <stdio.h>
-#include "kdb5_edit.h"
+#include "kdb5_util.h"
 
 struct dump_record {
 	char	*comerr_name;
