@@ -1,0 +1,7 @@
+Fri Jul 12 15:30:15 1996  Marc Horowitz  <marc@mit.edu>
+
+	* unix.exp (KDB5_EDIT): renamed to KDBFIVE_EDIT, sincesome
+ 	versions of runtest don't like digits in command-line variable
+ 	settings, so don't use them.  See ../Makefile.ov
+
+

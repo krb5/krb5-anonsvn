@@ -1,3 +1,23 @@
+Fri Jul 12 15:06:48 1996  Marc Horowitz  <marc@mit.edu>
+
+	* svr_iters.c (glob_to_regexp:append_realm): the semantics and
+ 	code were somewhat confused.  they are now fixed.
+
+	* logger.c (HAVE_*): turn all the "#if HAVE_*" into
+	"#ifdef HAVE_*"
+
+	* configure.in (AC_CHECK_FUNCS): check for the functions which
+ 	logger.c checks for.
+
+	* svr_principal.c (kadm5_get_principal): due to the the api
+ 	versioning, it is possible for this function to be called with a
+ 	three argument prototype.  in this case, do not modify mask,
+ 	because this will clobber the stack on some platforms.
+
+	* client_principal.c (kadm5_create_principal): be more careful
+ 	about what sorts of things are referenced, passed down, and passed
+ 	back if the caller is api v1.
+
 Wed Jul 10 01:29:34 1996  Marc Horowitz  <marc@mit.edu>
 
 	* configure.in: added autoconf support

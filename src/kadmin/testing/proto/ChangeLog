@@ -1,0 +1,5 @@
+Fri Jul 12 14:46:17 1996  Marc Horowitz  <marc@mit.edu>
+
+	* kdc.conf.proto: put the stash file in /krb5, so that the root
+ 	dir does not need to be writeable.  also, the admin system
+ 	requires a reference in the conf file to admin_keytab
