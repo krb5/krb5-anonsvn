@@ -218,6 +218,7 @@ KADMCLNT_DEPLIBS	= $(KADMCLNT_DEPLIBS) $(KADM_COMM_DEPLIBS)
 
 DB_LIB		= $(TOPLIBD)/libdb.a
 SS_LIB		= $(TOPLIBD)/libss.a
+KDB5_LIB	= -lkdb5
 KRB4_LIB	= @KRB4_LIB@	# -lkrb4
 DES425_LIB	= @DES425_LIB@	# -ldes425
 KRB5_BASE_LIBS	= -lkrb5 -lcrypto -lcom_err $(LIBS)
@@ -225,7 +226,7 @@ KRB4COMPAT_LIBS	= $(KRB4_LIB) -lkrb5 $(DES425_LIB) -lcrypto -lcom_err $(LIBS)
 KRB5_KDC_LIBS	= -lkdb5 $(DB_LIB) $(KRB4COMPAT_LIBS)
 GSS_LIBS	= -lgssapi_krb5
 GSSRPC_LIBS	= -lgssrpc -ldyn $(GSS_LIBS)
-KADM_COMM_LIBS	= -lutil -lkdb5 $(DB_LIB) $(GSSRPC_LIBS)
+KADM_COMM_LIBS	= -lkrb5util -lkdb5 $(DB_LIB) $(GSSRPC_LIBS)
 KADMSRV_LIBS	= -lkadm5srv $(KADM_COMM_LIBS)
 KADMCLNT_LIBS	= -lkadm5clnt $(KADM_COMM_LIBS)
 
