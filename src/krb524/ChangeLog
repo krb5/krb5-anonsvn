@@ -1,3 +1,11 @@
+Tue Sep  1 19:35:44 1998  Tom Yu  <tlyu@mit.edu>
+
+	* cnv_tkt_skey.c (krb524_convert_tkt_skey): Add
+	ENCTYPE_LOCAL_DES3_HMAC_SHA1 to the list of enctypes to bash.
+
+	* krb524d.c (do_connection): Add ENCTYPE_LOCAL_DES3_HMAC_SHA1 to
+	the list of enctypes to search.
+
 Wed Aug 19 13:40:28 1998  Tom Yu  <tlyu@mit.edu>
 
 	* cnv_tkt_skey.c (krb524_convert_tkt_skey): Call krb_cr_tkt_krb5

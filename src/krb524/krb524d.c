@@ -297,6 +297,10 @@ krb5_error_code do_connection(s, context)
 				   0, /* highest kvno */
 				   &v4_service_key, &v4kvno)) &&
 	 (ret = lookup_service_key(context, v5tkt->server,
+				   ENCTYPE_LOCAL_DES3_HMAC_SHA1,
+				   0,
+				   &v4_service_key, &v4kvno)) &&
+	 (ret = lookup_service_key(context, v5tkt->server,
 				   ENCTYPE_DES3_HMAC_SHA1,
 				   0,
 				   &v4_service_key, &v4kvno)) &&
