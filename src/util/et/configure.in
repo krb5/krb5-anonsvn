@@ -23,7 +23,7 @@ dnl
 AC_FUNC_CHECK(strerror,AC_DEFINE(HAS_STRERROR))
 AC_HEADER_STDARG
 AC_HAVE_HEADERS(stdlib.h)
-CopySrcHeader(com_err.h,$(BUILDTOP)/include)
+dnl com_err.h -> $(BUILDTOP)/include
 V5_SHARED_LIB_OBJS
 V5_MAKE_SHARED_LIB(libcom_err,0.1,[$](TOPLIBD), ../util/et)
 V5_AC_OUTPUT_MAKEFILE
