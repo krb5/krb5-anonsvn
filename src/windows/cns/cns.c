@@ -1534,12 +1534,10 @@ kwin_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
   }
 
   switch (message) {
+
     HANDLE_MSG(hwnd, WM_GETMINMAXINFO, kwin_getminmaxinfo);
-
     HANDLE_MSG(hwnd, WM_DESTROY, kwin_destroy);
-
     HANDLE_MSG(hwnd, WM_MEASUREITEM, ticket_measureitem);
-
     HANDLE_MSG(hwnd, WM_DRAWITEM, ticket_drawitem);
 
   case WM_SETCURSOR:
@@ -1550,11 +1548,8 @@ kwin_wnd_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
     HANDLE_MSG(hwnd, WM_SIZE, kwin_size);
-
     HANDLE_MSG(hwnd, WM_SYSCOMMAND, kwin_syscommand);
-
     HANDLE_MSG(hwnd, WM_TIMER, kwin_timer);
-
     HANDLE_MSG(hwnd, WM_PAINT, kwin_paint);
     
   case WM_ERASEBKGND:
@@ -1579,7 +1574,6 @@ kwin_dlg_proc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
   switch (message) {
     HANDLE_MSG(hwnd, WM_INITDIALOG, kwin_initdialog);
-
     HANDLE_MSG(hwnd, WM_COMMAND, kwin_command);
   }
 
@@ -2214,7 +2208,7 @@ k5_name_from_ccache(krb5_ccache k5_ccache)
   krb5_principal princ;
   char name[ANAME_SZ];
   char realm[REALM_SZ];
-  char *defname;
+  char FAR *defname;
 
   if (code = krb5_cc_get_principal(k5_context, k5_ccache, &princ))
     return FALSE;
