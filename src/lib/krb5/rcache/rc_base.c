@@ -4,8 +4,6 @@ Copyright 1990, Daniel J. Bernstein. All rights reserved.
 Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 */
 
-#include <string.h>
-#include <malloc.h>
 #ifdef SEMAPHORE
 #include <semaphore.h>
 #endif

@@ -6,8 +6,6 @@ Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 
 #ifndef KRB5_RC_DFL_H
 #define KRB5_RC_DFL_H
-#include "krb5/krb5.h"
-#include "rc_base.h"
 
 krb5_rc_ops krb5_rc_dfl_ops; /* initialized to the following */
 

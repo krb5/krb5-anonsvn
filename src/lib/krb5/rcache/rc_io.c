@@ -4,28 +4,27 @@ Copyright 1990, Daniel J. Bernstein. All rights reserved.
 Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 */
 
-#include <sys/types.h>
-#include <sys/file.h>
-#ifdef BSD
-#include <limits.h>
-#endif
-#include <string.h>
 #include <stdio.h> /* for P_tmpdir */
-#include <malloc.h>
-#include <errno.h>
-extern int errno; /* this should be in errno.h, but isn't on some systems */
-#define FREE(x) ((void) free((char *) (x)))
 
+#include "rc_base.h"
+#include "rc_dfl.h"
 #include "rc_io.h"
-#include "krb5/krb5_err.h"
+#include "rc_io.h"
+#include <krb5/sysincl.h>
 
-#define UNIQUE1 getpid() /* hopefully unique number */
-#define UNIQUE2 time(0) /* hopefully unique number */
+extern int errno; /* this should be in errno.h, but isn't on some systems */
+
+#define FREE(x) ((void) free((char *) (x)))
+#define UNIQUE getpid() /* hopefully unique number */
 
 int dirlen = 0;
 char *dir;
 
-#define GETDIR { if (!dirlen) getdir(); }
+/* The do ... while(0) is required to insure that GETDIR looks like a
+   single statement in all situations (just {}'s may cause troubles in
+   certain situations, such as nested if/else clauses. */
+
+#define GETDIR do { if (!dirlen) getdir(); } while(0)
 
 static void getdir()
 {
@@ -56,21 +55,21 @@ char **fn;
    (void) strcpy(d->fn,dir);
    (void) strcat(d->fn,"/");
    (void) strcat(d->fn,*fn);
-   d->fd = open(d->fn,O_WRONLY | O_CREAT | O_TRUNC,0600);
+   d->fd = open(d->fn,O_WRONLY | O_CREAT | O_TRUNC | O_EXCL,0600);
   }
  else
   {
-      /* each %d's is max 11 digits (-, 10 digits of 32-bit number)
-	 11 * 2 = 22, + /krb5_RC + aaa = 33, +2 for slop */
-   if (!(d->fn = malloc(35 + dirlen)))
+      /* %d is max 11 digits (-, 10 digits of 32-bit number)
+	 11 + /krb5_RC + aaa = 24, +6 for slop */
+   if (!(d->fn = malloc(30 + dirlen)))
      return KRB5_RC_IO_MALLOC;
    if (fn)
      if (!(*fn = malloc(35)))
       { FREE(d->fn); return KRB5_RC_IO_MALLOC; }
-   (void) sprintf(d->fn,"%s/krb5_RC%d%d",dir,UNIQUE1,UNIQUE2);
+   (void) sprintf(d->fn,"%s/krb5_RC%d",dir,UNIQUE);
    c = d->fn + strlen(d->fn);
    (void) strcpy(c,"aaa");
-   while ((d->fd = open(d->fn,O_WRONLY | O_CREAT | O_TRUNC,0600)) == -1)
+   while ((d->fd = open(d->fn,O_WRONLY|O_CREAT|O_TRUNC|O_EXCL,0600)) == -1)
     {
      if ((c[2]++) == 'z')
       {

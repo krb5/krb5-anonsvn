@@ -4,18 +4,11 @@ Copyright 1990, Daniel J. Bernstein. All rights reserved.
 Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 */
 
-#include <string.h>
-#include <malloc.h>
-#ifdef notdef
-extern int free(char *);
-#endif
 #define FREE(x) ((void) free((char *) (x)))
-#include "krb5/krb5.h"
-#include <stdio.h>
-#include "krb5/libos-proto.h"
 #include "rc_base.h"
 #include "rc_dfl.h"
 #include "rc_io.h"
+#include <krb5/libos-proto.h>
 
 /*
 If NOIOSTUFF is defined at compile time, dfl rcaches will be per-process.
