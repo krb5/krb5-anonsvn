@@ -86,7 +86,7 @@ got_it:
     }
 }
 
-#ifndef USE_DIRENT_H
+#ifndef HAVE_DIRENT_H
 #include <sys/dir.h>
 #else
 #include <dirent.h>

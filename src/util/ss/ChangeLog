@@ -1,3 +1,7 @@
+Wed Jun 19 21:07:17 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* help.c: cpp symbol police
+
 Tue Jun 18 20:46:35 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* Makefile.in: hack up somewhat in prep for toplevel autoconf
