@@ -1,0 +1,6 @@
+thisconfigdir=.
+BUILDTOP=$(REL)$(U)
+CFLAGS = $(CCOPTS)
+
+all::
+
