@@ -24,7 +24,7 @@ static errcode_t rw_setup(profile)
 	profile_t	profile;
 {
    	prf_file_t	file;
-	errcode_t	retval;
+	errcode_t	retval = 0;
 	
 	if (!profile)
 		return PROF_NO_PROFILE;

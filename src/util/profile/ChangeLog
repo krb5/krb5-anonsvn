@@ -1,3 +1,7 @@
+2000-07-06  Miro Jurisic  <meeroh@mit.edu>
+
+	* prof_set.c (rw_setup): Initialize retval before using it
+
 2000-06-14  Miro Jurisic  <meeroh@mit.edu>
 
 	* prof_file.c (profile_flush_data):  
