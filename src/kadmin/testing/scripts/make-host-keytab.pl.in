@@ -8,8 +8,8 @@ $top = undef;
 $usage = "Usage: $whoami [ -server server ] [ -princ principal ]
 		[ -top dirname ] [ -verbose ] filename
 	Server defaults to the local host.
-	Default principals are host/hostname@SECURE-TEST.OV.COM and
-	  test/hostname@SECURE-TEST.OV.COM.
+	Default principals are host/hostname\@SECURE-TEST.OV.COM and
+	  test/hostname\@SECURE-TEST.OV.COM.
 	If any principals are specified, the default principals are
 	  not added to the srvtab.
 	The string \"xCANONHOSTx\" in a principal specification will be
@@ -40,8 +40,8 @@ while (($_ = $ARGV[0]) && /^-/) {
     }
 }
 
-@princs = ("host/xCANONHOSTx@SECURE-TEST.OV.COM",
-	   "test/xCANONHOSTx@SECURE-TEST.OV.COM")
+@princs = ("host/xCANONHOSTx\@SECURE-TEST.OV.COM",
+	   "test/xCANONHOSTx\@SECURE-TEST.OV.COM")
     if (! @princs);
 
 $ktfile = shift(@ARGV) || die "need a keytab file\n";
@@ -71,7 +71,7 @@ $SRVTCL = ($ENV{'SRVTCL'} || "$TESTDIR/util/ovsec_kadm_srv_tcl");
 $TCLUTIL = ($ENV{'TCLUTIL'} || "$TESTDIR/tcl/util.t");
 # This'll be wrong sometimes
 $RSH_CMD = ($ENV{'RSH_CMD'} || '/usr/ucb/rsh');
-$EDIT_KEYTAB = ($ENV{'EDIT_KEYTAB'} || "$top/keytab/ovsec_edit_keytab.local");
+$EDIT_KEYTAB = ($ENV{'EDIT_KEYTAB'} || "$top/keytab/kadm5_keytab.local");
 
 if ($server) {
 # XXX Using /usr/ucb/rsh for now.
