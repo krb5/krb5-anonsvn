@@ -1,3 +1,7 @@
+Sun Dec 29 21:22:21 1996  Tom Yu  <tlyu@mit.edu>
+
+	* aclocal.m4: Add support for installing libraries.
+
 Fri Dec 27 16:54:41 1996  Tom Yu  <tlyu@mit.edu>
 
 	* aclocal.m4: Fix up solaris shared lib generation flags.

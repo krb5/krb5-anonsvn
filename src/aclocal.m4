@@ -1126,15 +1126,18 @@ dnl Pull in the necessary stuff to create the libraries.
 AC_DEFUN(KRB5_BUILD_LIBRARY,
 [AC_REQUIRE([KRB5_LIB_AUX])
 AC_REQUIRE([AC_LN_S])
+AC_CHECK_PROG(AR, ar, ar, false)
+# add frag for building libraries
 krb5_append_frags=$ac_config_fragdir/lib.in:$krb5_append_frags
 AC_SUBST(LIBLIST)
 AC_SUBST(LIBLINKS)
 AC_SUBST(LDCOMBINE)
-AC_SUBST(SONAMEFLAG)
+AC_SUBST(LDCOMBINE_TAIL)
 AC_SUBST(STLIBEXT)
 AC_SUBST(SHLIBEXT)
 AC_SUBST(SHLIBVEXT)
-AC_SUBST(PFLIBEXT)])
+AC_SUBST(PFLIBEXT)
+AC_SUBST(LIBINSTLIST)])
 
 dnl
 dnl KRB5_BUILD_LIBOBJS
@@ -1143,6 +1146,7 @@ dnl Pull in the necessary stuff to build library objects.
 
 AC_DEFUN(KRB5_BUILD_LIBOBJS,
 [AC_REQUIRE([KRB5_LIB_AUX])
+# add frag for building library objects
 krb5_append_frags=$ac_config_fragdir/libobj.in:$krb5_append_frags
 AC_SUBST(OBJLISTS)
 AC_SUBST(STOBJEXT)
@@ -1157,10 +1161,13 @@ dnl
 dnl Parse configure options related to library building.
 
 AC_DEFUN(KRB5_LIB_AUX,
-[# Check whether to build static libraries.
+[AC_REQUIRE([KRB5_LIB_PARAMS])
+# Check whether to build static libraries.
 AC_ARG_ENABLE([static],
-[  --disable-static        don't build static libraries],
-[if test "$enableval" = no; then
+[  --disable-static        don't build static libraries], ,
+[enableval=yes])
+
+if test "$enableval" = no; then
 	AC_MSG_RESULT([Disabling static libraries.])
 	LIBLINKS=
 	LIBLIST=
@@ -1169,10 +1176,9 @@ else
 	LIBLIST='lib$(LIB)$(STLIBEXT)'
 	LIBLINKS='$(TOPLIBD)/lib$(LIB)$(STLIBEXT)'
 	OBJLISTS=OBJS.ST
-fi],
-[LIBLIST='lib$(LIB)$(STLIBEXT)'
-LIBLINKS='$(TOPLIBD)/lib$(LIB)$(STLIBEXT)'
-OBJLISTS=OBJS.ST])dnl
+	LIBINSTLIST=install-static
+	DEPLIBEXT='$(STLIBEXT)'
+fi
 
 # Check whether to build shared libraries.
 AC_ARG_ENABLE([shared],
@@ -1180,16 +1186,22 @@ AC_ARG_ENABLE([shared],
 [if test "$enableval" = yes; then
 	case "$SHLIBEXT" in
 	.so-nobuild)
-		AC_MSG_RESULT([Shared libraries not supported on this architecture.])
+		AC_MSG_WARN([shared libraries not supported on this architecture])
 		;;
 	*)
-		AC_MSG_RESULT([Enabling shared libraries])
+		AC_MSG_RESULT([Enabling shared libraries.])
 		LIBLIST="$LIBLIST "'lib$(LIB)$(SHLIBEXT)'
 		LIBLINKS="$LIBLINKS "'$(TOPLIBD)/lib$(LIB)$(SHLIBEXT) $(TOPLIBD)/lib$(LIB)$(SHLIBVEXT)'
 		OBJLISTS="$OBJLISTS OBJS.SH"
+		LIBINSTLIST="$LIBINSTLIST install-shared"
+		DEPLIBEXT='$(SHLIBEXT)'
 		;;
 	esac
 fi])dnl
+
+if test -z "$LIBLIST"; then
+	AC_MSG_ERROR([must enable one of shared or static libraries])
+fi
 
 # Check whether to build profiled libraries.
 AC_ARG_ENABLE([profiled],
@@ -1204,6 +1216,7 @@ AC_ARG_ENABLE([profiled],
 		LIBLIST="$LIBLIST "'lib$(LIB)$(PFLIBEXT)'
 		LIBLINKS="$LIBLINKS "'$(TOPLIBD)/lib$(LIB)$(PFLIBEXT)'
 		OBJLISTS="$OBJLISTS OBJS.PF"
+		LIBINSTLIST="$LIBINSTLIST install-profiled"
 		;;
 	esac
 fi])])
@@ -1256,13 +1269,11 @@ alpha-dec-osf*)
 		LDCOMBINE='$(CC) -shared'
 	else
 		PICFLAGS=-Kpic
-		LDCOMBINE='$(CC) -dy -G -z text'
+		# Solaris cc doesn't default to stuffing the SONAME field...
+		LDCOMBINE='$(CC) -dy -G -z text -h lib$(LIBNAME).$(LIBMINOR).$(LIBMAJOR)'
 	fi
 	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
 	SHLIBEXT=.so
-	SONAMEFLAG='-h lib$(LIBNAME).$(LIBMAJOR).$(LIBMINOR)'
 	PROFFLAGS=-pg
 	;;
 esac])
-
-])
