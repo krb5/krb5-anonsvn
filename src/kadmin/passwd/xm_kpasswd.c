@@ -8,7 +8,7 @@
 
 static char rcsid_2[] = "$Id$";
 
-#include <ovsec_admin/admin.h>
+#include <kadm5/admin.h>
 #include <krb5.h>
 
 #include "kpasswd_strings.h"
