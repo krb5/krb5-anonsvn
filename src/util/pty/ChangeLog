@@ -1,3 +1,8 @@
+Sun Dec 29 21:32:41 1996  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in: Update to set STLIBOBJS instead of LIBSRCS; also
+	clean up a little bit.
+
 Fri Dec 27 17:09:46 1996  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in: Fix to use OBJS.ST rather than ./OBJS.ST.

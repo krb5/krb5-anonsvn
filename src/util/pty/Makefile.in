@@ -7,9 +7,9 @@ LIB=pty
 LIBMAJOR=1
 LIBMINOR=0
 
-LIBSRCS= cleanup.c getpty.c init_slave.c open_ctty.c open_slave.c \
-	update_utmp.c update_wtmp.c vhangup.c void_assoc.c pty_err.c \
-	logwtmp.c init.c
+STLIBOBJS= cleanup.o getpty.o init_slave.o open_ctty.o open_slave.o \
+	update_utmp.o update_wtmp.o vhangup.o void_assoc.o pty_err.o \
+	logwtmp.o init.o
 
 STOBJLISTS=OBJS.ST
 
@@ -34,6 +34,8 @@ all-unix:: includes pty_err.h
 
 all-unix:: all-liblinks
 
+install-unix:: install-libs
+
 clean-unix::
 	$(RM) libpty.a $(BUILDTOP)/include/libpty.h pty_err.c pty_err.h
 clean-unix:: clean-liblinks clean-libs clean-libobjs
@@ -47,9 +49,6 @@ clean-mac::
 	$(RM) libpty.a
 	$(RM) $(LIBOBJS)
 
-install::
-	$(INSTALL_DATA) libpty.a $(DESTDIR)$(KRB5_LIBDIR)/libpty.a
-	$(RANLIB)    $(DESTDIR)$(KRB5_LIBDIR)/libpty.a
 ## 
 
 clean-unix:: clean-files
@@ -68,7 +67,5 @@ clean-files::
 		eddep makedep *.ln
 
 pty_err.o: pty_err.c
-	$(CC) $(CFLAGS) -c $*.c
-
-pty_err.h:: pty_err.et
-pty_err.c:: pty_err.et
+pty_err.h: pty_err.et
+pty_err.c: pty_err.et
