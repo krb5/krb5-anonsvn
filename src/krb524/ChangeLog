@@ -1,3 +1,7 @@
+Tue Jul  9 16:14:33 1996  Barry Jaspan  <bjaspan@mit.edu>
+
+	* krb524d.c: use kadm5 instead of kdb
+
 Tue Mar 19 17:07:44 1996  Richard Basch  <basch@lehman.com>
 
 	* conv_creds.c (krb524_convert_creds_plain):
