@@ -50,8 +50,8 @@ profile_init(files, ret_profile)
 	    for (fs = files; !PROFILE_LAST_FILESPEC(*fs); fs++) {
 /*                printf ("profile_init (%s)\n", *fs); */
 		retval = profile_open_file(*fs, &new_file);
-		/* if this file is missing, skip to the next */
-		if (retval == ENOENT) {
+		/* if this file is missing or if its perms have changed, skip to the next */
+		if (retval == ENOENT || retval == EACCES) {
 			continue;
 		}
 		if (retval) {
