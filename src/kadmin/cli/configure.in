@@ -8,7 +8,6 @@ AC_HAVE_FUNCS(ftime timezone)
 AC_CHECK_LIB(ndbm,main)
 AC_CHECK_LIB(dbm,main)
 AC_REPLACE_FUNCS([setenv memmove strftime])
-SS_RULES
 KRB_INCLUDE
 USE_KADMCLNT_LIBRARY
 USE_GSSAPI_LIBRARY

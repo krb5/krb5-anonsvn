@@ -1,3 +1,7 @@
+Thu Jul 18 19:12:02 1996  Marc Horowitz  <marc@mit.edu>
+
+	* configure.in: $krb524 works with the admin system, now
+
 Tue Jul  9 14:32:14 1996  Marc Horowitz  <marc@mit.edu>
 
 	* aclocal.m4 (USE_ANAME, USE_KDB5_LIBRARY, KRB5_LIBRARIES): change
