@@ -1,3 +1,9 @@
+Sun May 12 00:54:35 1996  Marc Horowitz  <marc@mit.edu>
+
+	* Makefile.in, configure.in: gssapi_krb5.h should be installed
+ 	inside the tree.  This is really only half the work, as it should
+ 	be installed outside of the tree, too.
+
 Sat Apr 20 00:02:51 1996  Marc Horowitz  <marc@mit.edu>
 
 	* accept_sec_context.c, export_sec_context.c, gssapiP_krb5.h,
