@@ -8,6 +8,12 @@ DUMMY=${SRVTCL=$TESTDIR/util/ovsec_kadm_srv_tcl}; export SRVTCL
 DUMMY=${LOCAL_MAKE_KEYTAB=$TESTDIR/scripts/make-host-keytab.pl}
 DUMMY=${STOP_SERVERS_LOCAL=$TESTDIR/scripts/stop_servers_local}
 
+if [ -d /usr/tmp ]; then
+	usrtmp=/usr/tmp
+else
+	usrtmp=/var/tmp
+fi
+
 $STOP_SERVERS_LOCAL -start_servers
 
 # If it's set, set it to true
@@ -21,7 +27,7 @@ else
 	REDIRECT='>/dev/null'
 fi
 
-v4files=/bin/false
+v4files=false
 while :; do
 	case $1 in
 	-keysalt)
@@ -41,11 +47,11 @@ while :; do
 		fi
 		;;
 	-v4files)
-		if [ "`whoami" != "root" ]; then
+		if [ "`whoami`" != "root" ]; then
 			echo "You must be root to use -v4files!" 1>&2
 			exit 1
 		fi
-		v4files=/bin/true
+		v4files=true
 		;;
 	*)
 		break
@@ -111,7 +117,7 @@ kdc_start_file=/tmp/kdc_server_start.$$
 rm -f $kdc_start_file
 
 (trap "" 2; cd $TOP/../kdc; ./krb5kdc; touch $kdc_start_file) \
-	< /dev/null > /usr/tmp/kdc-log 2>&1 &
+	< /dev/null > $usrtmp/kdc-log 2>&1 &
 
 s=10
 max_s=60
@@ -122,7 +128,7 @@ while true; do
 	rm -f $adm_start_file
 
 	(sleep 5; cd $TOP/server; ./kadmind $ovadm_args; \
-		touch $adm_start_file) < /dev/null > /usr/tmp/kadm-log 2>&1 &
+		touch $adm_start_file) < /dev/null > $usrtmp/kadm-log 2>&1 &
 
 	# wait until they start
 

@@ -8,14 +8,14 @@ VERBOSE=${VERBOSE_TEST:+true}
 # Otherwise, set it to false
 DUMMY=${VERBOSE:=false}
 
-v4files=/bin/false
+v4files=false
 while [ $# -gt 0 ] ; do
 	case $1 in
 		-start_servers)
 			start_servers=$1
 			;;
 		-v4files)
-			v4files=/bin/true
+			v4files=true
 			;;
 		*) 
 			TOP=$1
