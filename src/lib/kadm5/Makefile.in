@@ -88,7 +88,7 @@ SRVOBJS = $(GENOBJS) \
 	adb_free.$(OBJEXT) \
 	adb_openclose.$(OBJEXT)
 
-CLNTOBJS = $(GENOBJS) \
+CLNTOBJS = $(GENOBJS) @LIBOBJS@ \
 	clnt_policy.$(OBJEXT) \
 	client_rpc.$(OBJEXT) \
 	client_principal.$(OBJEXT) \

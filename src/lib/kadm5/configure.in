@@ -6,6 +6,7 @@ AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_LEX
 AC_CHECK_HEADERS(syslog.h)
+AC_REPLACE_FUNCS(setenv)
 AC_CHECK_FUNCS(compile step re_comp re_exec regcomp regexec openlog syslog closelog strftime vsprintf)
 ET_RULES
 V5_SHARED_LIB_OBJS
