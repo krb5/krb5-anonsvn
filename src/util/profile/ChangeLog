@@ -1,3 +1,8 @@
+2001-03-20	Alexandra Ellwood <lxs@mit.edu>
+
+	* profile.hin: Changed KerberosConditionalMacros.h to KerberosSupport.h
+		because it is more correct.
+
 2001-02-27	Alexandra Ellwood <lxs@mit.edu>
 
 	* prof_parse.c: Fixed a bug in profile_parse_file's support of
