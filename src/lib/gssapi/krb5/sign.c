@@ -22,6 +22,10 @@
 
 #include "gssapiP_krb5.h"
 
+/*
+ * $Id$
+ */
+
 OM_uint32
 krb5_gss_sign(ctx, minor_status, context_handle,
 	      qop_req, message_buffer, 

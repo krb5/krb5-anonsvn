@@ -20,21 +20,30 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+ * $Id$
+ */
+
 #include "gssapiP_krb5.h"
 
-/** exported constants defined in gssapi_krb5.h **/
+/** exported constants defined in gssapi_krb5{,_nx}.h **/
 
 /* these are bogus, but will compile */
 
 /*
- * The OID of the krb5 mechanism, assigned by IETF, is:
- * 	1.3.5.1.5.2
+ * The OID of the draft krb5 mechanism, assigned by IETF, is:
+ * 	iso(1) org(3) dod(5) internet(1) security(5)
+ *	kerberosv5(2) = 1.3.5.1.5.2
  * The OID of the krb5_name type is:
  * 	iso(1) member-body(2) US(840) mit(113554) infosys(1) gssapi(2)
- * 	krb5(2) krb5_name(1) = 1.2.840.113554.2.1.2.1
+ * 	krb5(2) krb5_name(1) = 1.2.840.113554.1.2.2.1
  * The OID of the krb5_principal type is:
  * 	iso(1) member-body(2) US(840) mit(113554) infosys(1) gssapi(2)
- * 	krb5(2) krb5_principal(2) = 1.2.840.113554.2.1.2.2
+ * 	krb5(2) krb5_principal(2) = 1.2.840.113554.1.2.2.2
+ * The OID of the proposed standard krb5 mechanism is:
+ * 	iso(1) member-body(2) US(840) mit(113554) infosys(1) gssapi(2)
+ * 	krb5(2) = 1.2.840.113554.1.2.2
+ *	
  */
 
 /*
@@ -45,7 +54,7 @@
  */
 
 static const gss_OID_desc oids[] = {
-   /* this OID is from Ted.  It's not official yet, but it's close. */
+   /* XXXX this OID is from Ted.  It's not official yet, but it's close. */
    {5, "\053\005\001\005\002"},
    {10, "\052\206\110\206\367\022\001\002\002\001"},
    {10, "\052\206\110\206\367\022\001\002\002\002"},

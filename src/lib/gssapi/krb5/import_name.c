@@ -21,6 +21,7 @@
  */
 
 #include "gssapiP_krb5.h"
+
 #ifndef NO_PASSWORD
 #include <pwd.h>
 #endif
@@ -75,13 +76,10 @@ krb5_gss_import_name(ctx, minor_status, input_name_buffer,
       tmp[input_name_buffer->length] = 0;
 
       service = tmp;
-      if ((host = strchr(tmp, '@')) == NULL) {
-	 xfree(tmp);
-	 *minor_status = (OM_uint32) G_BAD_SERVICE_NAME;
-	 return(GSS_S_BAD_NAME);
+      if (host = strchr(tmp, '@')) {
+	 *host = '\0';
+	 host++;
       }
-      *host = '\0';
-      host++;
 
       code = krb5_sname_to_principal(context, host, service, KRB5_NT_SRV_HST,
 				     &princ);

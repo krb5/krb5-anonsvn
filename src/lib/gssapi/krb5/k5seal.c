@@ -21,7 +21,6 @@
  */
 
 #include "gssapiP_krb5.h"
-#include "rsa-md5.h"
 
 static krb5_error_code
 make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
@@ -38,18 +37,22 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
      int bigend;
 {
    krb5_error_code code;
-   MD5_CTX md5;
+   char *data_ptr;
+   krb5_checksum md5cksum;
    krb5_checksum desmac;
-   int tmsglen, tlen;
+   int conflen, tmsglen, tlen;
    unsigned char *t, *ptr;
 
    /* create the token buffer */
 
-   if ((toktype == KG_TOK_SEAL_MSG) || (toktype == KG_TOK_WRAP_MSG)) {
-      if (bigend && !encrypt)
+   if (toktype == KG_TOK_SEAL_MSG) {
+      if (bigend && !encrypt) {
 	 tmsglen = text->length;
-      else
-	 tmsglen = (kg_confounder_size(enc_ed)+text->length+8)&(~7);
+      } else {
+	 conflen = kg_confounder_size(enc_ed);
+	 /* XXX knows that des block size is 8 */
+	 tmsglen = (conflen+text->length+8)&(~7);
+      }
    } else {
       tmsglen = 0;
    }
@@ -72,8 +75,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
    /* SEAL_ALG, or filler */
 
-   if (((toktype == KG_TOK_SEAL_MSG) ||
-	(toktype == KG_TOK_WRAP_MSG)) && encrypt) {
+   if ((toktype == KG_TOK_SEAL_MSG) && encrypt) {
       ptr[2] = 0;
       ptr[3] = 0;
    } else {
@@ -88,14 +90,15 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
    /* pad the plaintext, encrypt if needed, and stick it in the token */
 
-   if ((toktype == KG_TOK_SEAL_MSG) || (toktype == KG_TOK_WRAP_MSG)) {
+   if (toktype == KG_TOK_SEAL_MSG) {
       unsigned char *plain;
       unsigned char pad;
 
-      if ((plain = (unsigned char *) xmalloc(tmsglen)) == NULL) {
-	 xfree(t);
-	 return(ENOMEM);
-      }
+      if (!bigend || encrypt) {
+	 if ((plain = (unsigned char *) xmalloc(tmsglen)) == NULL) {
+	    xfree(t);
+	    return(ENOMEM);
+	 }
 
       if (code = kg_make_confounder(enc_ed, plain)) {
 	 xfree(plain);
@@ -103,16 +106,22 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 	 return(code);
       }
 
-      memcpy(plain+8, text->value, text->length);
+	 memcpy(plain+conflen, text->value, text->length);
 
-      pad = 8-(text->length%8);
+	 /* XXX 8 is DES cblock size */
+	 pad = 8-(text->length%8);
 
-      memset(plain+8+text->length, pad, pad);
+	 memset(plain+conflen+text->length, pad, pad);
+      } else {
+	 /* plain is never used in the bigend && !encrypt case */
+	 plain = NULL;
+      }
 
       if (encrypt) {
 	 if (code = kg_encrypt(enc_ed, NULL, (krb5_pointer) plain,
 			       (krb5_pointer) (ptr+22), tmsglen)) {
-	    xfree(plain);
+	    if (plain)
+	       xfree(plain);
 	    xfree(t);
 	    return(code);
 	 }
@@ -125,31 +134,62 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
       /* compute the checksum */
 
-      MD5Init(&md5);
-      MD5Update(&md5, (unsigned char *) ptr-2, 8);
+      /* 8 = head of token body as specified by mech spec */
+      if (! (data_ptr = xmalloc(8 + (bigend ? text->length : tmsglen)))) {
+	  if (plain)
+	      xfree(plain);
+	  xfree(t);
+	  return(ENOMEM);
+      }
+      (void) memcpy(data_ptr, ptr-2, 8);
       if (bigend)
-	 MD5Update(&md5, text->value, text->length);
+	  (void) memcpy(data_ptr+8, text->value, text->length);
       else
-	 MD5Update(&md5, plain, tmsglen);
-      MD5Final(&md5);
+	  (void) memcpy(data_ptr+8, plain, tmsglen);
+      code = krb5_calculate_checksum(context, CKSUMTYPE_RSA_MD5, data_ptr,
+				     8 + (bigend ? text->length : tmsglen),
+				     0, 0, &md5cksum);
+      xfree(data_ptr);
+      if (code) {
+	  if (plain)
+	      xfree(plain);
+	  xfree(t);
+	  return(code);
+      }
 
-      xfree(plain);
+      if (plain)
+	 xfree(plain);
    } else {
       /* compute the checksum */
 
-      MD5Init(&md5);
-      MD5Update(&md5, (unsigned char *) ptr-2, 8);
-      MD5Update(&md5, text->value, text->length);
-      MD5Final(&md5);
+      if (! (data_ptr = xmalloc(8 + text->length))) {
+	  xfree(t);
+	  return(ENOMEM);
+      }
+      (void) memcpy(data_ptr, ptr-2, 8);
+      (void) memcpy(data_ptr+8, text->value, text->length);
+      code = krb5_calculate_checksum(context, CKSUMTYPE_RSA_MD5, data_ptr,
+				     8 + text->length,
+				     0, 0, &md5cksum);
+      xfree(data_ptr);
+      if (code) {
+	  xfree(t);
+	  return(code);
+      }
    }
 
    /* XXX this depends on the key being a single-des key, but that's
       all that kerberos supports right now */
 
-   if (code = krb5_calculate_checksum(context, CKSUMTYPE_DESCBC, md5.digest, 16,
-				      seq_ed->key->contents, 
-				      seq_ed->key->length,
-				      &desmac)) {
+   code = krb5_calculate_checksum(context, CKSUMTYPE_DESCBC,
+				  md5cksum.contents, 16,
+				  seq_ed->key->contents, 
+				  seq_ed->key->length,
+				  &desmac);
+
+   krb5_xfree(md5cksum.contents);
+
+   if (code) {
       xfree(t);
       return(code);
    }
@@ -232,55 +272,9 @@ kg_seal(context, minor_status, context_handle, conf_req_flag, qop_req,
       return(GSS_S_FAILURE);
    }
 
-   if (((toktype == KG_TOK_SEAL_MSG) ||
-	(toktype == KG_TOK_WRAP_MSG)) && conf_state) {
+   if ((toktype == KG_TOK_SEAL_MSG) && conf_state)
       *conf_state = conf_req_flag;
-   }
 
    *minor_status = 0;
    return((ctx->endtime < now)?GSS_S_CONTEXT_EXPIRED:GSS_S_COMPLETE);
 }
-
-OM_uint32
-kg_seal_size(context, minor_status, context_handle, conf_req_flag, qop_req, 
-	     output_size, input_size)
-    krb5_context        context;
-    OM_uint32		*minor_status;
-    gss_ctx_id_t	context_handle;
-    int			conf_req_flag;
-    gss_qop_t		qop_req;
-    OM_uint32		output_size;
-    OM_uint32		*input_size;
-{
-    krb5_gss_ctx_id_rec	*ctx;
-    OM_uint32		cfsize;
-    OM_uint32		ohlen;
-
-    /* only default qop is allowed */
-    if (qop_req != GSS_C_QOP_DEFAULT) {
-	*minor_status = (OM_uint32) G_UNKNOWN_QOP;
-	return(GSS_S_FAILURE);
-    }
-    
-    /* validate the context handle */
-    if (! kg_validate_ctx_id(context_handle)) {
-	*minor_status = (OM_uint32) G_VALIDATE_FAILED;
-	return(GSS_S_NO_CONTEXT);
-    }
-    
-    ctx = (krb5_gss_ctx_id_rec *) context_handle;
-    if (! ctx->established) {
-	*minor_status = KG_CTX_INCOMPLETE;
-	return(GSS_S_NO_CONTEXT);
-    }
-
-    /* Calculate the token size and subtract that from the output size */
-    cfsize = (conf_req_flag) ? kg_confounder_size(&ctx->enc) : 0;
-    ohlen = g_token_size((gss_OID) gss_mech_krb5, (unsigned int) cfsize + 22);
-
-    /* Cannot have trailer length that will cause us to pad over our length */
-    *input_size = (output_size - ohlen) & (~7);
-    *minor_status = 0;
-    return(GSS_S_COMPLETE);
-}
-

@@ -20,6 +20,10 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+ * $Id$
+ */
+
 #include "gssapiP_krb5.h"
 #include <memory.h>
 
@@ -39,14 +43,12 @@ kg_checksum_channel_bindings(cb, cksum, bigend)
    /* generate a buffer full of zeros if no cb specified */
 
    if (cb == GSS_C_NO_CHANNEL_BINDINGS) {
-      /* allocate the cksum contents buffer */
-      if ((cksum->contents = (krb5_octet *)
-	   xmalloc(krb5_checksum_size(context, CKSUMTYPE_RSA_MD5))) == NULL)
-	 return(ENOMEM);
-
-      cksum->checksum_type = CKSUMTYPE_RSA_MD5;
-      memset(cksum->contents, '\0',
-	     (cksum->length = krb5_checksum_size(kg_context, CKSUMTYPE_RSA_MD5)));
+      /* we need to make a kerberos call, so that freeing the
+	 checksum works properly */
+      if (code = krb5_calculate_checksum(kg_context, CKSUMTYPE_RSA_MD5, "", 0,
+					 NULL, 0, cksum))
+	 return(code);
+      memset(cksum->contents, '\0', cksum->length);
       return(0);
    }
 
@@ -59,13 +61,6 @@ kg_checksum_channel_bindings(cb, cksum, bigend)
 
    if ((buf = (char *) xmalloc(len)) == NULL)
       return(ENOMEM);
-
-   /* allocate the cksum contents buffer */
-   if ((cksum->contents = (krb5_octet *)
-	xmalloc(krb5_checksum_size(context, CKSUMTYPE_RSA_MD5))) == NULL) {
-      free(buf);
-      return(ENOMEM);
-   }
 
    /* helper macros.  This code currently depends on a long being 32
       bits, and htonl dtrt. */

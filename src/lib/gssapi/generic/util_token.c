@@ -23,11 +23,9 @@
 #include "gssapiP_generic.h"
 #include <memory.h>
 
-#if (SIZEOF_INT == 2)
-#define VALID_INT_BITS    0x7fff
-#elif (SIZEOF_INT == 4)
-#define VALID_INT_BITS    0x7fffffff
-#endif	
+/*
+ * $Id$
+ */
 
 /* XXXX this code currently makes the assumption that a mech oid will
    never be longer than 127 bytes.  This assumption is not inherent in
@@ -166,45 +164,44 @@ int g_verify_token_header(mech, body_size, buf, tok_type, toksize)
 {
    int seqsize;
    gss_OID_desc toid;
+   int ret = 0;
 
    if ((toksize-=1) < 0)
-      return(0);
+      return(G_BAD_TOK_HEADER);
    if (*(*buf)++ != 0x60)
-      return(0);
+      return(G_BAD_TOK_HEADER);
 
    if ((seqsize = der_read_length(buf, &toksize)) < 0)
-      return(0);
+      return(G_BAD_TOK_HEADER);
 
    if (seqsize != toksize)
-      return(0);
+      return(G_BAD_TOK_HEADER);
 
    if ((toksize-=1) < 0)
-      return(0);
+      return(G_BAD_TOK_HEADER);
    if (*(*buf)++ != 0x06)
-      return(0);
+      return(G_BAD_TOK_HEADER);
  
    if ((toksize-=1) < 0)
-      return(0);
+      return(G_BAD_TOK_HEADER);
    toid.length = *(*buf)++;
 
-   if ((toid.length & VALID_INT_BITS) != toid.length) /* Overflow??? */
-      return(0);
-   if ((toksize-= (int) toid.length) < 0)
-      return(0);
+   if ((toksize-=toid.length) < 0)
+      return(G_BAD_TOK_HEADER);
    toid.elements = *buf;
    (*buf)+=toid.length;
 
-   if (! g_OID_equal(&toid, mech))
-      return(0);
+   if (! g_OID_equal(&toid, mech)) 
+      ret = G_WRONG_MECH;
  
    if ((toksize-=2) < 0)
-      return(0);
+      return(G_BAD_TOK_HEADER);
 
    if ((*(*buf)++ != ((tok_type>>8)&0xff)) ||
        (*(*buf)++ != (tok_type&0xff)))
-      return(0);
+      return(G_BAD_TOK_HEADER);
 
    *body_size = toksize;
 
-   return(1);
+   return(ret);
 }

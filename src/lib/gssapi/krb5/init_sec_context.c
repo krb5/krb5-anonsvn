@@ -22,18 +22,21 @@
 
 #include "gssapiP_krb5.h"
 #include <memory.h>
-#include "k5-int.h"
+
+/*
+ * $Id$
+ */
 
 static krb5_error_code
 make_ap_req(ctx, auth_context, cred, server, endtime, chan_bindings, 
-	    do_mutual, flags, token)
+	    req_flags, flags, token)
     void *ctx;
     krb5_auth_context * auth_context;
     krb5_gss_cred_id_t cred;
     krb5_principal server;
     krb5_timestamp *endtime;
     gss_channel_bindings_t chan_bindings;
-    OM_uint32 do_mutual;
+    OM_uint32 req_flags;
     krb5_flags *flags;
     gss_buffer_t token;
 {
@@ -46,13 +49,13 @@ make_ap_req(ctx, auth_context, cred, server, endtime, chan_bindings,
     krb5_data ap_req;
     unsigned char *ptr;
     krb5_data credmsg;
-    unsigned char ckbuf[24];		/* see the token formats doc */
     unsigned char *t;
     int tlen;
     krb5_int32 con_flags;
 
     ap_req.data = 0;
     checksum_data.data = 0;
+    credmsg.data = 0;
 
     /* build the checksum buffer */
  
@@ -92,25 +95,30 @@ make_ap_req(ctx, auth_context, cred, server, endtime, chan_bindings,
 	    return(KRB5KRB_ERR_FIELD_TOOLONG);
 	}
 
-	/* now allocate a buffer to hold the checksum data and KRB_CRED msg
-	   and write it */
+	checksum_data.length = 28+credmsg.length;
+    } else {
+	checksum_data.length = 24;
+    }
 
-	if ((ptr = (unsigned char *) xmalloc(credmsg.length+28)) == NULL) {
+    /* now allocate a buffer to hold the checksum data and
+       (maybe) KRB_CRED msg */
+
+    if ((checksum_data.data = (char *) xmalloc(checksum_data.length)) == NULL) {
+	if (credmsg.data)
 	    krb5_xfree(credmsg.data);
-	    return(ENOMEM);
-	}
+	return(ENOMEM);
+    }
 
-	checksum_data.data = (char *) ptr;
-	checksum_data.length = credmsg.length+28;
+    ptr = checksum_data.data;
 
-        TWRITE_INT(ptr, md5.length, 0);
-        TWRITE_STR(ptr, (unsigned char *) md5.contents, md5.length);
-        TWRITE_INT(ptr, do_mutual?GSS_C_MUTUAL_FLAG | GSS_C_DELEG_FLAG
-				 :GSS_C_DELEG_FLAG, 0);
+    TWRITE_INT(ptr, md5.length, 0);
+    TWRITE_STR(ptr, (unsigned char *) md5.contents, md5.length);
+    TWRITE_INT(ptr, GK_IMPLFLAGS(req_flags), 0);
 
-        /* done with this, free it */
-        xfree(md5.contents);
+    /* done with this, free it */
+    xfree(md5.contents);
 
+    if (credmsg.data) {
 	TWRITE_INT16(ptr, KRB5_GSS_FOR_CREDS_OPTION, 0);
 	TWRITE_INT16(ptr, credmsg.length, 0);
 	TWRITE_STR(ptr, (unsigned char *) credmsg.data, credmsg.length);
@@ -118,20 +126,6 @@ make_ap_req(ctx, auth_context, cred, server, endtime, chan_bindings,
 	/* free credmsg data */
 
 	krb5_xfree(credmsg.data);
-
-    } else {
-
-	ptr = ckbuf;
-
-	TWRITE_INT(ptr, md5.length, 0);
-	TWRITE_STR(ptr, (unsigned char *) md5.contents, md5.length);
-	TWRITE_INT(ptr, do_mutual?GSS_C_MUTUAL_FLAG:0, 0);
-
-	/* done with this, free it */
-	xfree(md5.contents);
-
-	checksum_data.data = (char *) ckbuf;
-	checksum_data.length = sizeof(ckbuf);
     }
 
     /* fill in the necessary fields in creds */
@@ -155,7 +149,7 @@ make_ap_req(ctx, auth_context, cred, server, endtime, chan_bindings,
 
     mk_req_flags = AP_OPTS_USE_SUBKEY;
 
-    if (do_mutual)
+    if (req_flags & GSS_C_MUTUAL_FLAG)
 	mk_req_flags |= AP_OPTS_MUTUAL_REQUIRED;
 
     if ((code = krb5_mk_req_extended(context, auth_context, mk_req_flags,
@@ -186,23 +180,24 @@ make_ap_req(ctx, auth_context, cred, server, endtime, chan_bindings,
    TWRITE_STR(ptr, (unsigned char *) ap_req.data, ap_req.length);
 
    /* pass it back */
+
    token->length = tlen;
    token->value = (void *) t;
 
    code = 0;
     
 cleanup:
-    if (checksum_data.data && checksum_data.data != (char *) ckbuf)
-	free(checksum_data.data);
-    krb5_free_cred_contents(context, &in_creds);
-    if (out_creds)
-	krb5_free_creds(context, out_creds);
-    if (ap_req.data)
-	xfree(ap_req.data);
-    if (code)
-	krb5_auth_con_free(context, *auth_context);
+   if (checksum_data.data)
+       free(checksum_data.data);
+   krb5_free_cred_contents(context, &in_creds);
+   if (out_creds)
+       krb5_free_creds(context, out_creds);
+   if (ap_req.data)
+       xfree(ap_req.data);
+   if (code)
+       krb5_auth_con_free(context, *auth_context);
 
-    return (code);
+   return (code);
 }
 
 OM_uint32
@@ -226,13 +221,13 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
     OM_uint32 *ret_flags;
     OM_uint32 *time_rec;
 {
-    krb5_context context = ct;
-    krb5_gss_cred_id_t 	  cred;
-    krb5_error_code 	  code; 
-    krb5_gss_ctx_id_rec *ctx;
-    krb5_timestamp now;
-    gss_buffer_desc token;
-    int i;
+   krb5_gss_cred_id_t cred;
+   krb5_error_code code; 
+   krb5_gss_ctx_id_rec *ctx;
+   krb5_timestamp now;
+   gss_buffer_desc token;
+   int i;
+   int err;
 
    /* set up return values so they can be "freed" successfully */
 
@@ -309,6 +304,7 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
       ctx->flags = req_flags & GSS_C_DELEG_FLAG;
       ctx->seed_init = 0;
       ctx->big_endian = 0;  /* all initiators do little-endian, as per spec */
+      ctx->seqstate = 0;
 
       if (time_req == 0 || time_req == GSS_C_INDEFINITE) {
 	 ctx->endtime = 0;
@@ -337,7 +333,7 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
 
       if ((code = make_ap_req(context, &(ctx->auth_context), cred, 
 			      ctx->there, &ctx->endtime, input_chan_bindings, 
-			      ctx->mutual, &ctx->flags, &token))) {
+			      req_flags, &ctx->flags, &token))) {
 	 krb5_free_principal(context, ctx->here);
 	 krb5_free_principal(context, ctx->there);
 	 xfree(ctx);
@@ -403,8 +399,7 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
       *output_token = token;
 
       if (ret_flags)
-	 *ret_flags = ((req_flags & (GSS_C_MUTUAL_FLAG | GSS_C_DELEG_FLAG)) | 
-		       GSS_C_CONF_FLAG | GSS_C_INTEG_FLAG);
+	 *ret_flags = KG_IMPLFLAGS(req_flags);
 
       /* return successfully */
 
@@ -414,8 +409,11 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
 	 return(GSS_S_CONTINUE_NEEDED);
       } else {
 	 ctx->seq_recv = ctx->seq_send;
+	 g_order_init(&(ctx->seqstate), ctx->seq_recv,
+		      req_flags & GSS_C_REPLAY_FLAG, 
+		      req_flags & GSS_C_SEQUENCE_FLAG);
 	 ctx->established = 1;
-	 return(GSS_S_COMPLETE);
+	 /* fall through to GSS_S_COMPLETE */
       }
    } else {
       unsigned char *ptr;
@@ -440,6 +438,7 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
 	  ((req_flags & GSS_C_MUTUAL_FLAG) == 0)) {
 	 (void)krb5_gss_delete_sec_context(context, minor_status, 
 					   context_handle, NULL);
+	 /* XXX this minor status is wrong if an arg was changed */
 	 *minor_status = KG_CONTEXT_ESTABLISHED;
 	 return(GSS_S_FAILURE);
       }
@@ -463,10 +462,10 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
 
       ptr = (unsigned char *) input_token->value;
 
-      if (! g_verify_token_header((gss_OID) gss_mech_krb5, &(ap_rep.length),
-				  &ptr, KG_TOK_CTX_AP_REP,
-				  input_token->length)) {
-	 *minor_status = 0;
+      if (err = g_verify_token_header((gss_OID) gss_mech_krb5, &(ap_rep.length),
+				      &ptr, KG_TOK_CTX_AP_REP,
+				      input_token->length)) {
+	 *minor_status = err;
 	 return(GSS_S_DEFECTIVE_TOKEN);
       }
 
@@ -481,8 +480,8 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
 	     * To be removed in 1999 -- proven 
 	     */
 	    krb5_auth_con_setuseruserkey(context,ctx->auth_context,ctx->subkey);
-	    if ((code = krb5_rd_rep(context, ctx->auth_context, &ap_rep,
-				    &ap_rep_data))) {
+	    if ((krb5_rd_rep(context, ctx->auth_context, &ap_rep,
+			     &ap_rep_data))) {
 	 	(void)krb5_gss_delete_sec_context(context, minor_status, 
 					          context_handle, NULL);
 		*minor_status = code;
@@ -492,6 +491,9 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
 
       /* store away the sequence number */
       ctx->seq_recv = ap_rep_data->seq_number;
+      g_order_init(&(ctx->seqstate), ctx->seq_recv,
+		   req_flags & GSS_C_REPLAY_FLAG,
+		   req_flags & GSS_C_SEQUENCE_FLAG);
 
       /* free the ap_rep_data */
       krb5_free_ap_rep_enc_part(context, ap_rep_data);
@@ -507,16 +509,18 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
 					      (gss_ctx_id_t) ctx, NULL);
 	    *minor_status = code;
 	    return(GSS_S_FAILURE);
-
 	 }
+	 *time_rec = ctx->endtime - now;
       }
 
       if (ret_flags)
-	 *ret_flags = GSS_C_CONF_FLAG | GSS_C_INTEG_FLAG | GSS_C_MUTUAL_FLAG;
+	 *ret_flags = KG_IMPLFLAGS(req_flags);
 
       /* success */
 
       *minor_status = 0;
-      return(GSS_S_COMPLETE);
+      /* fall through to GSS_S_COMPLETE */
    }
+
+   return(GSS_S_COMPLETE);
 }

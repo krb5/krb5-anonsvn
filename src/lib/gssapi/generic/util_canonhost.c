@@ -20,9 +20,12 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
+/*
+ * $Id$
+ */
+
 /* This file could be OS specific */
-#define NEED_SOCKETS
-#include "gssapiP_generic.h"
+#include "port-sockets.h"
 
 #ifndef _MACINTOSH
 #include <sys/types.h>

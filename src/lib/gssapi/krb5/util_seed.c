@@ -23,6 +23,10 @@
 #include "gssapiP_krb5.h"
 #include <memory.h>
 
+/*
+ * $Id$
+ */
+
 static unsigned char zeros[16] = {0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0};
 
 krb5_error_code

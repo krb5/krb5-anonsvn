@@ -24,6 +24,38 @@
 #include "rsa-md5.h"
 #include <memory.h>
 
+/*
+ * $Id$
+ */
+
+#if 0
+
+/* XXXX This widen/narrow stuff is bletcherous, but it seems to be
+   necessary.  Perhaps there is a "better" way, but I don't know what it
+   is */
+
+#include <krb5/widen.h>
+static krb5_error_code
+rd_req_keyproc(krb5_pointer keyprocarg, krb5_principal server,
+	       krb5_kvno kvno, krb5_keyblock **keyblock)
+#include <krb5/narrow.h>
+{
+   krb5_error_code code;
+   krb5_keytab_entry ktentry;
+
+   if (code = krb5_kt_get_entry((krb5_keytab) keyprocarg, server, kvno,
+				&ktentry))
+      return(code);
+
+   code = krb5_copy_keyblock(&ktentry.key, keyblock);
+
+   (void) krb5_kt_free_entry(&ktentry);
+
+   return(code);
+}
+
+#endif
+
 /* Decode, decrypt and store the forwarded creds in the local ccache. */
 static krb5_error_code
 rd_and_store_for_creds(context, auth_context, inbuf)
@@ -53,6 +85,80 @@ rd_and_store_for_creds(context, auth_context, inbuf)
 cleanup:
     krb5_free_tgt_creds(context, creds);
     return retval;
+}
+
+#if 0
+
+static krb5_error_code
+make_ap_rep(krb5_tkt_authent *authdat,
+	    krb5_keyblock *session_key,
+	    krb5_int32 *seq_send,
+	    gss_buffer_t token)
+{
+   krb5_error_code code;
+   krb5_ap_rep_enc_part ap_rep_data;
+   krb5_data ap_rep;
+   int tlen;
+   unsigned char *t, *ptr;
+
+   /* make the ap_rep */
+
+   ap_rep_data.ctime = authdat->authenticator->ctime;
+   ap_rep_data.cusec = authdat->authenticator->cusec;
+   ap_rep_data.subkey = authdat->authenticator->subkey;
+
+   if (code = krb5_generate_seq_number(authdat->ticket->enc_part2->session,
+				       &ap_rep_data.seq_number))
+      return(code);
+
+   if (code = krb5_mk_rep(&ap_rep_data, session_key, &ap_rep))
+      return(code);
+
+   /* build up the token */
+
+   /* allocate space for the token */
+   tlen = g_token_size(gss_mech_krb5, ap_rep.length);
+
+   if ((t = (unsigned char *) xmalloc(tlen)) == NULL) {
+      xfree(ap_rep.data);
+      return(ENOMEM);
+   }
+
+   /* fill in the buffer */
+
+   ptr = t;
+
+   g_make_token_header(gss_mech_krb5, ap_rep.length,
+		       &ptr, KG_TOK_CTX_AP_REP);
+
+   TWRITE_STR(ptr, ap_rep.data, ap_rep.length);
+
+   /* free the ap_rep */
+
+   xfree(ap_rep.data);
+
+   /* pass everything back */
+
+   *seq_send = ap_rep_data.seq_number;
+
+   token->length = tlen;
+   token->value = (void *) t;
+
+   return(0);
+}
+
+#endif
+
+static int krb5_gss_backward_mode = 0;
+
+OM_uint32
+krb5_gss_set_backward_mode(OM_uint32 *minor_status,
+			   int mode)
+{
+   krb5_gss_backward_mode = mode;
+   *minor_status = 0;
+
+   return(GSS_S_COMPLETE);
 }
 
 OM_uint32
@@ -91,11 +197,7 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
    krb5_gss_ctx_id_rec *ctx;
    krb5_timestamp now;
    gss_buffer_desc token;
-   krb5_auth_context auth_context = NULL;
-   krb5_ticket * ticket = NULL;
-   int option_id;
-   krb5_data option;
-   krb5_auth_context auth_context_cred = NULL;
+   int err;
 
 
    /* set up returns to be freeable */
@@ -145,9 +247,10 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
 
    ptr = (unsigned char *) input_token->value;
 
-   if (! g_verify_token_header((gss_OID) gss_mech_krb5, &(ap_req.length),
-			       &ptr, KG_TOK_CTX_AP_REQ, input_token->length)) {
-      *minor_status = 0;
+   if (err = g_verify_token_header(gss_mech_krb5, &(ap_req.length),
+				   &ptr, KG_TOK_CTX_AP_REQ,
+				   input_token->length)) {
+      *minor_status = err;
       return(GSS_S_DEFECTIVE_TOKEN);
    }
 
@@ -180,6 +283,17 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
 
    krb5_auth_con_getauthenticator(context, auth_context, &authdat);
 
+#if 0
+   /* make sure the necessary parts of the authdat are present */
+
+   if ((authdat->authenticator->subkey == NULL) ||
+       (authdat->ticket->enc_part2 == NULL)) {
+      krb5_free_tkt_authent(authdat);
+      *minor_status = KG_NO_SUBKEY;
+      return(GSS_S_FAILURE);
+   }
+#endif
+
    /* verify that the checksum is correct */
 
    /*
@@ -205,13 +319,13 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
        using little-endian or big-endian integer encoding.
    */
 
-   ptr = (unsigned char *) authdat->checksum->contents;
+   ptr = (unsigned char *) authdat->authenticator->checksum->contents;
    bigend = 0;
 
    TREAD_INT(ptr, tmp, bigend);
 
    if (tmp != RSA_MD5_CKSUM_LENGTH) {
-      ptr = (unsigned char *) authdat->checksum->contents;
+      ptr = (unsigned char *) authdat->authenticator->checksum->contents;
       bigend = 1;
 
       TREAD_INT(ptr, tmp, bigend);
@@ -289,16 +403,9 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
 
 		    break;
 
-		default :
+		    /* default: */
+		    /* unknown options aren't an error */
 
-		     /* any other options are unrecognized. return
-			generic GSS_C_FAILURE error with a minor status
-			of KRB5_PARSE_MALFORMED (XXX this is probably
-			not the right error, since it is used for
-			string parsing errors not token parsing errors.) */
-
-		    *minor_status = KRB5_PARSE_MALFORMED;
-		    return(GSS_S_FAILURE);
 	    } /* switch */
 	} /* while */
     } /* if */
@@ -348,7 +455,8 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
 
    krb5_use_enctype(context, &ctx->enc.eblock, ENCTYPE_DES_CBC_RAW);
    ctx->enc.processed = 0;
-   if ((code = krb5_copy_keyblock(context, ctx->subkey, &ctx->enc.key)))
+
+   if (code = krb5_copy_keyblock(ctx->subkey, &ctx->enc.key))
       return(code); 
    for (i=0; i<ctx->enc.key->length; i++)
       /*SUPPRESS 113*/
@@ -364,6 +472,10 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
    krb5_free_ticket(context, ticket); /* Done with ticket */
 
    krb5_auth_con_getremoteseqnumber(context, auth_context, &ctx->seq_recv);
+
+   g_order_init(&(ctx->seqstate), ctx->seq_recv,
+		gss_flags & GSS_C_REPLAY_FLAG,
+		gss_flags & GSS_C_SEQUENCE_FLAG);
 
    /* at this point, the entire context structure is filled in, 
       so it can be released.  */
@@ -385,12 +497,12 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
       if ((token.value = (unsigned char *) xmalloc(token.length)) == NULL) {
 	 (void)krb5_gss_delete_sec_context(context, minor_status, 
 					   (gss_ctx_id_t *) &ctx, NULL);
-	 *minor_status = code;
+	 *minor_status = ENOMEM;
 	 return(GSS_S_FAILURE);
       }
       ptr = token.value;
       g_make_token_header((gss_OID) gss_mech_krb5, ap_rep.length,
-                       &ptr, KG_TOK_CTX_AP_REP);
+			  &ptr, KG_TOK_CTX_AP_REP);
 
       TWRITE_STR(ptr, ap_rep.data, ap_rep.length);
       xfree(ap_rep.data);
@@ -433,7 +545,7 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
    }
 
    if (ret_flags)
-      *ret_flags = GSS_C_CONF_FLAG | GSS_C_INTEG_FLAG | ctx->mutual;
+      *ret_flags = KG_IMPLFLAGS(gss_flags);
 
    ctx->established = 1;
 

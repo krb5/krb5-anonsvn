@@ -22,6 +22,10 @@
 
 #include "gssapiP_krb5.h"
 
+/*
+ * $Id$
+ */
+
 OM_uint32
 krb5_gss_seal(ctx, minor_status, context_handle, conf_req_flag,
 	      qop_req, input_message_buffer, conf_state,
@@ -62,21 +66,3 @@ krb5_gss_wrap(ctx, minor_status, context_handle, conf_req_flag,
 		   output_message_buffer, KG_TOK_WRAP_MSG));
 }
 
-/* V2 interface */
-OM_uint32
-krb5_gss_wrap_size_limit(ctx, minor_status, context_handle, conf_req_flag,
-			 qop_req, req_output_size, max_input_size)
-    void *ctx;
-    OM_uint32		*minor_status;
-    gss_ctx_id_t	context_handle;
-    int			conf_req_flag;
-    gss_qop_t		qop_req;
-    OM_uint32		req_output_size;
-    OM_uint32		*max_input_size;
-{
-    krb5_context	context = ctx;
-    
-    /* XXX - should just put this in k5seal.c */
-    return(kg_seal_size(context, minor_status, context_handle, conf_req_flag,
-			qop_req, req_output_size, max_input_size));
-}

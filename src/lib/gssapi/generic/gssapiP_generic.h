@@ -23,7 +23,10 @@
 #ifndef _GSSAPIP_GENERIC_H_
 #define _GSSAPIP_GENERIC_H_
 
-#include "k5-int.h"
+/*
+ * $Id$
+ */
+
 #include "gssapi.h"
 
 #include "gssapi_err_generic.h"
@@ -86,6 +89,14 @@
 
 /** helper functions **/
 
+typedef struct _g_set *g_set;
+
+int g_set_init PROTOTYPE((g_set *s));
+int g_set_destroy PROTOTYPE((g_set *s));
+int g_set_entry_add PROTOTYPE((g_set *s, void *key, void *value));
+int g_set_entry_delete PROTOTYPE((g_set *s, void *key));
+int g_set_entry_get PROTOTYPE((g_set *s, void *key, void **value));
+
 int g_save_name PROTOTYPE((void **vdb, gss_name_t *name));
 int g_save_cred_id PROTOTYPE((void **vdb, gss_cred_id_t *cred));
 int g_save_ctx_id PROTOTYPE((void **vdb, gss_ctx_id_t *ctx));
@@ -119,8 +130,28 @@ OM_uint32 g_display_com_err_status PROTOTYPE((OM_uint32 *minor_status,
 				   OM_uint32 status_value,
 				   gss_buffer_t status_string));
 
-char * g_canonicalize_host PROTOTYPE((char *hostname));
+OM_uint32 g_order_init PROTOTYPE((void **queue, unsigned int seqnum,
+				  int do_replay, int do_sequence));
 
-char * g_strdup PROTOTYPE((char *str));
+OM_uint32 g_order_check PROTOTYPE((void **queue, unsigned int seqnum));
+
+void g_order_free PROTOTYPE((void **queue));
+
+char *g_canonicalize_host PROTOTYPE((char *hostname));
+char *g_local_host_name PROTOTYPE((void));
+
+char *g_strdup PROTOTYPE((char *str));
+
+/** declarations of internal name mechanism functions **/
+
+OM_uint32 generic_gss_release_buffer
+PROTOTYPE((OM_uint32*,       /* minor_status */
+            gss_buffer_t      /* buffer */
+           ));
+
+OM_uint32 generic_gss_release_oid_set
+PROTOTYPE((OM_uint32*,       /* minor_status */
+            gss_OID_set*      /* set */
+           ));
 
 #endif /* _GSSAPIP_GENERIC_H_ */

@@ -23,7 +23,11 @@
 #ifndef _GSSAPIP_KRB5_H_
 #define _GSSAPIP_KRB5_H_
 
-#include "k5-int.h"
+/*
+ * $Id$
+ */
+
+#include <krb5/krb5.h>
 #include <memory.h>
 
 /* work around sunos braindamage */
@@ -34,12 +38,15 @@
 #undef minor
 #endif
 
-/* this must be after "krb5.h", since krb5 #defines xfree(), too */
 #ifndef _MACINTOSH
 #include "../generic/gssapiP_generic.h"
 #else
 #include "gssapiP_generic.h"
 #endif
+
+/* The include of gssapi_krb5.h will dtrt with the above #defines in
+ * effect.
+ */
 #include "gssapi_krb5.h"
 #include "gssapi_err_krb5.h"
 
@@ -55,6 +62,10 @@
 #define	KG_TOK_MIC_MSG		0x0101
 #define	KG_TOK_WRAP_MSG		0x0201
 #define KG_TOK_DEL_CTX		0x0102
+
+#define KG_IMPLFLAGS(x) (GSS_C_INTEG_FLAG | GSS_C_CONF_FLAG | \
+			 ((x) & (GSS_C_MUTUAL_FLAG | GSS_C_REPLAY_FLAG | \
+				 GSS_C_SEQUENCE_FLAG | GSS_C_DELEG_FLAG)))
 
 #define KRB5_GSS_FOR_CREDS_OPTION 1
 
@@ -95,6 +106,7 @@ typedef struct _krb5_gss_ctx_id_rec {
    krb5_flags flags;
    krb5_int32 seq_send;
    krb5_int32 seq_recv;
+   void *seqstate;
    int established;
    int big_endian;
    krb5_auth_context auth_context;
@@ -134,6 +146,10 @@ krb5_error_code kg_checksum_channel_bindings
 krb5_error_code kg_make_seq_num PROTOTYPE((krb5_gss_enc_desc *ed,
             int direction, krb5_int32 seqnum, unsigned char *cksum,
 				unsigned char *buf));
+
+krb5_error_code kg_get_seq_num PROTOTYPE((krb5_gss_enc_desc *ed,
+            unsigned char *cksum, unsigned char *buf, int *direction,
+					  krb5_int32 *seqnum));
 
 krb5_error_code kg_make_seed PROTOTYPE((krb5_keyblock *key,
             unsigned char *seed));

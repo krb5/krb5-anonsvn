@@ -28,7 +28,7 @@
 #else
 #include <gssapi_generic.h>
 #endif
-#include "krb5.h"
+#include <krb5/krb5.h>
 
 extern const gss_OID_desc * const gss_mech_krb5;
 extern const gss_OID_set_desc * const gss_mech_set_krb5;
@@ -48,5 +48,12 @@ OM_uint32 gss_krb5_get_tkt_flags
 		   gss_ctx_id_t context_handle,
 		   krb5_flags *ticket_flags));
 
+
+/* this is for backward compatibility only.  It is declared here for
+   completeness, but should not be used */
+
+OM_uint32 krb5_gss_set_backward_mode
+        PROTOTYPE((OM_uint32 *minor_status,
+                   int mode));
 
 #endif /* _GSSAPI_KRB5_H_ */

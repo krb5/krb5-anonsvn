@@ -22,6 +22,10 @@
 
 #include "gssapiP_krb5.h"
 
+/*
+ * $Id$
+ */
+
 OM_uint32
 krb5_gss_delete_sec_context(ct, minor_status, context_handle, output_token)
      void *ct;
@@ -70,6 +74,9 @@ krb5_gss_delete_sec_context(ct, minor_status, context_handle, output_token)
    /* free all the context state */
 
    ctx = (gss_ctx_id_t) *context_handle;
+
+   if (ctx->seqstate)
+      g_order_free(&(ctx->seqstate));
 
    if (ctx->enc.processed)
       krb5_finish_key(context, &ctx->enc.eblock);

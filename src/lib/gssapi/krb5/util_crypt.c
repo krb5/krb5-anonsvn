@@ -23,6 +23,10 @@
 #include "gssapiP_krb5.h"
 #include <memory.h>
 
+/*
+ * $Id$
+ */
+
 static unsigned char zeros[8] = {0,0,0,0,0,0,0,0};
 
 int
@@ -39,7 +43,7 @@ kg_make_confounder(ed, buf)
      krb5_gss_enc_desc *ed;
      unsigned char *buf;
 {
-   return(krb5_random_confounder( ed->eblock.crypto_entry->block_length, buf));
+   return(krb5_random_confounder(ed->eblock.crypto_entry->block_length, buf));
 }
 
 int

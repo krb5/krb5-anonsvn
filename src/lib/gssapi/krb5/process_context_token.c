@@ -22,6 +22,10 @@
 
 #include "gssapiP_krb5.h"
 
+/*
+ * $Id$
+ */
+
 OM_uint32
 krb5_gss_process_context_token(ct, minor_status, context_handle, 
 			       token_buffer)

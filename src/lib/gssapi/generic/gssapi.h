@@ -95,14 +95,6 @@ typedef unsigned int uid_t;
 #endif
 #endif
 
-#ifndef NPROTOTYPE
-#if defined(__ultrix) && !defined (__GNUC__)
-#define NPROTOTYPE(x) ()
-#else
-#define NPROTOTYPE(x) PROTOTYPE(x)
-#endif
-#endif
-
 /*
  * First, include stddef.h to get size_t defined.
  */
@@ -125,8 +117,13 @@ typedef unsigned int uid_t;
 #endif	/* HAVE_XOM_H */
 
 /*
+ * $Id$
+ */
+
+/*
  * First, define the three platform-dependent pointer types.
  */
+
 typedef void FAR * gss_name_t;
 typedef void FAR * gss_cred_id_t;
 typedef void FAR * gss_ctx_id_t;
@@ -342,10 +339,14 @@ typedef	int		gss_cred_usage_t;
 /*
  * Supplementary info bits:
  */
-#define GSS_S_CONTINUE_NEEDED (1l << (GSS_C_SUPPLEMENTARY_OFFSET + 0))
-#define GSS_S_DUPLICATE_TOKEN (1l << (GSS_C_SUPPLEMENTARY_OFFSET + 1))
-#define GSS_S_OLD_TOKEN (1l << (GSS_C_SUPPLEMENTARY_OFFSET + 2))
-#define GSS_S_UNSEQ_TOKEN (1l << (GSS_C_SUPPLEMENTARY_OFFSET + 3))
+#define GSS_S_CONTINUE_NEEDED (1 << (GSS_C_SUPPLEMENTARY_OFFSET + 0))
+#define GSS_S_DUPLICATE_TOKEN (1 << (GSS_C_SUPPLEMENTARY_OFFSET + 1))
+#define GSS_S_OLD_TOKEN (1 << (GSS_C_SUPPLEMENTARY_OFFSET + 2))
+#define GSS_S_UNSEQ_TOKEN (1 << (GSS_C_SUPPLEMENTARY_OFFSET + 3))
+/*
+ * XXX not in the cbindings yet.  remove this comment when it is
+ */
+#define GSS_S_GAP_TOKEN (1 << (GSS_C_SUPPLEMENTARY_OFFSET + 4))
 
 
 /*

@@ -22,6 +22,10 @@
 
 #include "gssapiP_krb5.h"
 
+/*
+ * $Id$
+ */
+
 OM_uint32
 krb5_gss_context_time(ct, minor_status, context_handle, time_rec)
      void *ct;
