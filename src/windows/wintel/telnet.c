@@ -96,6 +96,17 @@ WinMain(HANDLE hInstance, HANDLE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
   while (GetMessage(&msg, NULL, 0, 0)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
+
+    /* Process all non-network messages */
+    while (PeekMessage(&msg, NULL, 0, WM_NETWORKEVENT-1, PM_REMOVE) ||
+	   PeekMessage(&msg, NULL, WM_NETWORKEVENT+1, (UINT)-1, PM_REMOVE))
+    {
+	if (msg.message == WM_QUIT)	// Special case: WM_QUIT -- return
+	    return msg.wParam;		//   the value from PostQuitMessage
+	
+	TranslateMessage(&msg);
+	DispatchMessage(&msg);
+    }
   }
 
   return (msg.wParam);		/* Returns the value from PostQuitMessage */
@@ -303,10 +314,13 @@ MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_MYSCREENCLOSE:
-    if (con == NULL)
-      break;
-    kstream_destroy(con->ks);
-    con->ks = NULL;
+#if 0
+    if (con)
+    {
+	kstream_destroy(con->ks);
+	con->ks = NULL;
+    }
+#endif
     DestroyWindow(hWnd);
     break;        
 
@@ -315,9 +329,12 @@ MainWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
 
   case WM_DESTROY:          /* message: window being destroyed */
-    kstream_destroy(con->ks);
-    free(con);
-    WSACleanup();
+    if (con)
+    {
+	kstream_destroy(con->ks);
+	free(con);
+	WSACleanup();
+    }
     PostQuitMessage(0);
     break;
 
