@@ -30,7 +30,7 @@ CL=
 #
 # CCOPTS for DLL functions
 #
-##WIN16##CCOPTS=/ALw /Zp /GD2s /Os /Zi /Od /W3 $(XTRA)
+##WIN16##CCOPTS=/ALw /Zp /GD2s /Os /Zi /Od /W3 /Ld $(XTRA) /DKRB5_DLL_FILE
 ##WIN32##CCOPTS=/Os /Zi /Od /W3 /MD $(XTRA) -DKRB5_DLL_FILE
 #
 # CCOPTS for non-DLL compiles
