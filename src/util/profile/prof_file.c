@@ -173,8 +173,9 @@ errcode_t profile_open_file(filespec, ret_prof)
 			data -> refcount++;
 			prf -> data = data;
 			*ret_prof = prf;
-			retval = profile_update_file_data (data); /* make sure the saved file hasn't changed */
 			prof_mutex_unlock (&g_shared_trees_mutex);
+            /* make sure the saved file hasn't changed -- mutex must be unlocked */
+			retval = profile_update_file_data (data); 
 			goto end;
 		}
 		/* We unlock the mutex here to avoid holding the mutex while we are reading in 
@@ -258,35 +259,36 @@ errcode_t profile_update_file_data(data)
 	}
 #endif /* SHARE_TREE_DATA */
 
-#ifdef HAVE_STAT
-	if (stat(data->filespec, &st)) {
-		retval = errno;
-		goto end;
-	}
-	if (st.st_mtime == data->timestamp) {
-		retval = 0;
-		goto end;
-	}
-	if (data->root) {
-		profile_free_node(data->root);
-		data->root = 0;
-	}
-	if (data->comment) {
-		free(data->comment);
-		data->comment = 0;
-	}
-#else
-	/*
-	 * If we don't have the stat() call, assume that our in-core
-	 * memory image is correct.  That is, we won't reread the
-	 * profile file if it changes.
-	 */
-	if (data->root) {
-		retval = 0;
-		goto end;
-	}
-
+#ifdef HAVE_STAT	
+    /* Get the mod date of the file and verify it exists 
+     * Don't worry about the cached data... profile_open_file
+     * won't let callers see it if they don't have access() 
+     */
+    if (stat(data->filespec, &st)) {
+        retval = errno;
+        goto end;
+    }
 #endif
+
+	if (data->root) {
+        /* If the profile structure is already filled in,
+         * check to make sure we need to read it
+         */
+#ifdef HAVE_STAT	
+        if (st.st_mtime == data->timestamp) {
+            retval = 0;
+            goto end;
+        }
+#else
+        /* If we don't have the stat() call, assume that our in-core
+         * memory image is correct.  That is, we won't reread the
+         * profile file if it changes.
+         */
+		retval = 0;
+		goto end;
+#endif
+    }
+
 	errno = 0;
 	f = fopen(data->filespec, "r");
 	if (f == NULL) {
@@ -299,6 +301,19 @@ errcode_t profile_update_file_data(data)
 	data->flags = 0;
 	if (read_write_access(data->filespec))
 		data->flags |= PROFILE_FILE_RW;
+
+    if (data->root) {
+        /* Free the old copy before profile_parse_file 
+         * overwrites the pointer */
+        profile_free_node(data->root);
+        data->root = 0;
+    }
+    if (data->comment) {
+        /* Free the old copy */
+        free(data->comment);
+        data->comment = 0;
+    }
+    
 	retval = profile_parse_file(f, &data->root);
 	fclose(f);
 	if (retval) {
@@ -457,8 +472,8 @@ void profile_free_file_data(data)
 {
 #ifdef SHARE_TREE_DATA
 	if ((data -> flags & PROFILE_FILE_SHARED) != 0) {
+        /* caller (profile_free_file) locked us */
 		/* Remove from the global list first */
-		prof_mutex_lock (&g_shared_trees_mutex);
 		if (g_shared_trees == data) {
 			g_shared_trees = data -> next;
 		} else {
@@ -475,7 +490,6 @@ void profile_free_file_data(data)
 				next = next -> next;
 			}
 		}
-		prof_mutex_unlock (&g_shared_trees_mutex);
 	}
 #endif /* SHARE_TREE_DATA */
 

@@ -1,3 +1,11 @@
+2002-06-04 Alexandra Ellwood <lxs@mit.edu>
+    * prof_file.c: Don't double lock the mutex (causes hang).  Also, only 
+    check timestamp if the file is already in the shared tree data.  Otherwise
+    just read it.  
+    * prof_set.c: Check to see whether the file is read only or has already 
+    been written to *before* mangling the shared tree data.
+    * prof_threads.h: Use default pthread attributes when initializing mutex.
+
 2002-05-16 Alexandra Ellwood <lxs@mit.edu>
 	* prof_file.c, prof_init.c, prof_int.h, prof_set.c, profile.hin:
 	Removed use of FSSpecs by the profile library other than FSSpec 

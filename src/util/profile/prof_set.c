@@ -34,6 +34,13 @@ static errcode_t rw_setup(profile)
 
 	file = profile->first_file;
 	
+	if (!(file->data->flags & PROFILE_FILE_RW))
+		return PROF_READ_ONLY;
+
+	/* Don't update the file if we've already made modifications */
+	if (file->data->flags & PROFILE_FILE_DIRTY)
+		return 0;
+			
 #ifdef SHARE_TREE_DATA
 	prof_mutex_lock (&g_shared_trees_mutex);
 	/* If the file is shared and we want to write to it, get a lock */
@@ -71,13 +78,6 @@ static errcode_t rw_setup(profile)
 	}
 #endif /* SHARE_TREE_DATA */
 	
-	if (!(file->data->flags & PROFILE_FILE_RW))
-		return PROF_READ_ONLY;
-
-	/* Don't update the file if we've already made modifications */
-	if (file->data->flags & PROFILE_FILE_DIRTY)
-		return 0;
-			
 	retval = profile_update_file_data(file->data);
 	
 	return retval;

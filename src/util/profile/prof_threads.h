@@ -14,7 +14,7 @@
 typedef pthread_mutex_t prof_mutex;
 
 #define prof_mutex_init(mutex)											\
-	pthread_mutex_init (mutex, PTHREAD_PROCESS_PRIVATE)
+	pthread_mutex_init (mutex, /* default attributes */ NULL)
 #define prof_mutex_lock(mutex)											\
 	pthread_mutex_lock (mutex)
 #define prof_mutex_unlock(mutex)										\
