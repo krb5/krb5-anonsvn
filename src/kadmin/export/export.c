@@ -13,7 +13,7 @@ static char *rcsid = "$Header$";
 #include    <malloc.h>
 #include    <unistd.h>
 
-#include    <ovsec_admin/adb.h>
+#include    <kadm5/adb.h>
 #include    "export_err.h"
 #include    "local.h"
 
@@ -53,7 +53,7 @@ void print_key_data(FILE *f, krb5_key_data *key_data)
  *	nuttin
  * 
  */
-krb5_error_code print_princ(krb5_pointer *data, krb5_db_entry *kdb)
+krb5_error_code print_princ(krb5_pointer data, krb5_db_entry *kdb)
 {
     char *princstr;
     int	x, y, foundcrc, ret;
