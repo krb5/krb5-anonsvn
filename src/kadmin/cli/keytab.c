@@ -31,7 +31,7 @@ static int quiet;
 
 void add_usage()
 {
-     fprintf(stderr, "Usage: ktadd [-k[eytab] keytab] [-q] princ-exp [...]\n");
+     fprintf(stderr, "Usage: ktadd [-k[eytab] keytab] [-q] [principal | -glob princ-exp] [...]\n");
 }
      
 void rem_usage()
@@ -117,13 +117,25 @@ void kadmin_keytab_add(int argc, char **argv)
 	  return;
      
      while (*argv) {
-	  if (code = kadm5_get_principals(handle, *argv, &princs, &num)) {
-	       com_err(whoami, code, "while retrieving principal names");
-	       break;
-	  }
-	  for (i = 0; i < num; i++) 
-	       (void) add_principal(handle, keytab_str, keytab, princs[i]);
-	  kadm5_free_name_list(handle, princs, num);
+	  if (strcmp(*argv, "-glob") == 0) {
+	       if (*++argv == NULL) {
+		    add_usage();
+		    break;
+	       }
+	       
+	       if (code = kadm5_get_principals(handle, *argv, &princs, &num)) {
+		    com_err(whoami, code, "while expanding expression \"%s\".",
+			    *argv);
+		    argv++;
+		    continue;
+	       }
+	       
+	       for (i = 0; i < num; i++) 
+		    (void) add_principal(handle, keytab_str, keytab,
+					 princs[i]); 
+	       kadm5_free_name_list(handle, princs, num);
+	  } else
+	       (void) add_principal(handle, keytab_str, keytab, *argv);
 	  argv++;
      }
 	  

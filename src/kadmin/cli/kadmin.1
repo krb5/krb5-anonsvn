@@ -428,15 +428,17 @@ get_policies [expression]
 	test-pol-nopw
 	kadmin:
 
-ktadd [-k keytab] [-q] princ-exp [...]
-	Adds all principals matching princ-exp to a keytab.  princ-exp
-	follows the same rules described for the get_principals
-	command.  An entry for each of the principal's unique
-	encryption types is added, ignoring multiple keys with the
-	same encryption type but different salt types.  If the -k
+ktadd [-k keytab] [-q] [principal | -glob princ-exp] [...]
+	Adds principal or all principals matching princ-exp to a
+	keytab.  princ-exp follows the same rules described for the
+	get_principals command.  An entry for each of the principal's
+	unique encryption types is added, ignoring multiple keys with
+	the same encryption type but different salt types.  If the -k
 	argument is not specified, the default keytab /etc/v5srvtab is
 	used.  If the -q option is specified, less verbose status
 	information is displayed.
+
+	The -glob option requires the "list" privilege.
 
 	EXAMPLES
 	kadmin% ktadd -k /krb5/kadmind.keytab kadmin/admin kadmin/changepw
