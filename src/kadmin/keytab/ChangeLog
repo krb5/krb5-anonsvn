@@ -1,0 +1,3 @@
+Wed Jul 10 01:27:44 1996  Marc Horowitz  <marc@mit.edu>
+
+	* Makefile.in, configure.in: added autoconf support
