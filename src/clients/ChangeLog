@@ -1,3 +1,13 @@
+Thu Aug 13 19:05:43 1998  Tom Yu  <tlyu@mit.edu>
+
+	* configure.in: Remove kvno for now.
+
+	* Makefile.in (LOCAL_SUBDIRS): Remove kvno for now.
+
+Sat Jul 25 15:00:26 1998  Sam Hartman  <hartmans@utwig.mesas.com>
+
+	* Makefile.in (LOCAL_SUBDIRS): add kvno
+
 Wed Feb 18 15:40:02 1998  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in: Remove trailing slash from thisconfigdir.

@@ -1,3 +1,7 @@
+Thu Aug 13 19:04:56 1998  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in: Remove des.c for now.
+
 Wed Apr 15 18:03:43 1998  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in (SHLIB_EXPDEPS): 

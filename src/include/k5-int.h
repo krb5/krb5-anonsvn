@@ -58,8 +58,11 @@
  * Machine-type definitions: PC Clone 386 running Microloss Windows
  */
 
-#if defined(_MSDOS) || defined(_WIN32) || defined(_MACINTOSH)
+#if defined(_MSDOS) || defined(_WIN32) || defined(macintosh)
 #include "win-mac.h"
+#if defined(macintosh) && defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+#pragma import on
+#endif
 #endif
 
 #if defined(_MSDOS) || defined(_WIN32)
@@ -72,9 +75,9 @@
 #endif
 
 
-#ifndef _MACINTOSH
+#ifndef macintosh
 #if defined(__MWERKS__) || defined(applec) || defined(THINK_C)
-#define _MACINTOSH
+#define macintosh
 #define SIZEOF_INT 4
 #define SIZEOF_SHORT 2
 #define HAVE_SRAND
@@ -148,6 +151,8 @@ typedef unsigned char	u_char;
 #ifndef HAVE_LABS
 #define labs(x) abs(x)
 #endif
+
+/* #define KRB5_OLD_CRYPTO is done in krb5.h */
 
 #endif /* KRB5_CONFIG__ */
 
@@ -497,10 +502,124 @@ void krb5_os_free_context
 krb5_error_code krb5_find_config_files
         KRB5_PROTOTYPE(());
 
+#endif /* KRB5_LIBOS_PROTO__ */
+
+/* new encryption provider api */
+
+struct krb5_enc_provider {
+    void (*block_size) KRB5_NPROTOTYPE
+    ((size_t *output));
+
+    /* keybytes is the input size to make_key; 
+       keylength is the output size */
+    void (*keysize) KRB5_NPROTOTYPE
+    ((size_t *keybytes, size_t *keylength));
+
+    /* ivec == 0 is an all-zeros ivec */
+    krb5_error_code (*encrypt) KRB5_NPROTOTYPE
+    ((krb5_const krb5_keyblock *key, krb5_const krb5_data *ivec,
+      krb5_const krb5_data *input, krb5_data *output));
+
+    krb5_error_code (*decrypt) KRB5_NPROTOTYPE
+    ((krb5_const krb5_keyblock *key, krb5_const krb5_data *ivec,
+      krb5_const krb5_data *input, krb5_data *output));
+
+    krb5_error_code (*make_key) KRB5_NPROTOTYPE
+    ((krb5_const krb5_data *randombits, krb5_keyblock *key));
+};
+
+struct krb5_hash_provider {
+    void (*hash_size) KRB5_NPROTOTYPE
+    ((size_t *output));
+
+    void (*block_size) KRB5_NPROTOTYPE
+    ((size_t *output));
+
+    /* this takes multiple inputs to avoid lots of copying. */
+    krb5_error_code (*hash) KRB5_NPROTOTYPE
+    ((unsigned int icount, krb5_const krb5_data *input, krb5_data *output));
+};
+
+struct krb5_keyhash_provider {
+    void (*hash_size) KRB5_NPROTOTYPE
+    ((size_t *output));
+
+    krb5_error_code (*hash) KRB5_NPROTOTYPE
+    ((krb5_const krb5_keyblock *key, krb5_const krb5_data *ivec,
+      krb5_const krb5_data *input, krb5_data *output));
+
+    krb5_error_code (*verify) KRB5_NPROTOTYPE
+    ((krb5_const krb5_keyblock *key, krb5_const krb5_data *ivec,
+      krb5_const krb5_data *input, krb5_const krb5_data *hash,
+      krb5_boolean *valid));
+};
+
+typedef void (*krb5_encrypt_length_func) KRB5_NPROTOTYPE
+((krb5_const struct krb5_enc_provider *enc,
+  krb5_const struct krb5_hash_provider *hash,
+  size_t inputlen, size_t *length));
+
+typedef krb5_error_code (*krb5_crypt_func) KRB5_NPROTOTYPE
+((krb5_const struct krb5_enc_provider *enc,
+  krb5_const struct krb5_hash_provider *hash,
+  krb5_const krb5_keyblock *key, krb5_keyusage usage,
+  krb5_const krb5_data *ivec, 
+  krb5_const krb5_data *input, krb5_data *output));
+
+typedef krb5_error_code (*krb5_str2key_func) KRB5_NPROTOTYPE
+((krb5_const struct krb5_enc_provider *enc, krb5_const krb5_data *string,
+  krb5_const krb5_data *salt, krb5_keyblock *key));
+
+struct krb5_keytypes {
+    krb5_enctype etype;
+    char *in_string;
+    char *out_string;
+    struct krb5_enc_provider *enc;
+    struct krb5_hash_provider *hash;
+    krb5_encrypt_length_func encrypt_len;
+    krb5_crypt_func encrypt;
+    krb5_crypt_func decrypt;
+    krb5_str2key_func str2key;
+};
+
+struct krb5_cksumtypes {
+    krb5_cksumtype ctype;
+    unsigned int flags;
+    char *in_string;
+    char *out_string;
+    /* if the hash is keyed, this is the etype it is keyed with.
+       Actually, it can be keyed by any etype which has the same
+       enc_provider as the specified etype.  DERIVE checksums can
+       be keyed with any valid etype. */
+    krb5_enctype keyed_etype;
+    /* I can't statically initialize a union, so I'm just going to use
+       two pointers here.  The keyhash is used if non-NULL.  If NULL,
+       then HMAC/hash with derived keys is used if the relevant flag
+       is set.  Otherwise, a non-keyed hash is computed.  This is all
+       kind of messy, but so is the krb5 api. */
+    struct krb5_keyhash_provider *keyhash;
+    struct krb5_hash_provider *hash;
+};
+
+#define KRB5_CKSUMFLAG_DERIVE		0x0001
+#define KRB5_CKSUMFLAG_NOT_COLL_PROOF	0x0002
 
 /*
- * in here to deal with stuff from lib/crypto/os
+ * in here to deal with stuff from lib/crypto
  */
+
+void krb5_nfold
+KRB5_PROTOTYPE((int inbits, krb5_const unsigned char *in,
+		int outbits, unsigned char *out));
+
+krb5_error_code krb5_hmac
+KRB5_PROTOTYPE((krb5_const struct krb5_hash_provider *hash,
+		krb5_const krb5_keyblock *key, unsigned int icount,
+		krb5_const krb5_data *input, krb5_data *output));
+
+
+#ifdef KRB5_OLD_CRYPTO
+/* old provider api */
 
 typedef struct _krb5_cryptosystem_entry {
     krb5_magic magic;
@@ -570,23 +689,6 @@ typedef struct _krb5_checksum_entry {
     unsigned int uses_key:1;
 } krb5_checksum_entry;
 
-
-/* This array is indexed by encryption type */
-extern krb5_cs_table_entry * NEAR krb5_csarray[];
-extern int krb5_max_cryptosystem;
-
-/* This array is indexed by key type */
-extern krb5_cs_table_entry * NEAR krb5_enctype_array[];
-extern krb5_enctype krb5_max_enctype;
-
-/* This array is indexed by checksum type */
-extern krb5_checksum_entry * NEAR krb5_cksumarray[];
-extern krb5_cksumtype krb5_max_cksum;
-
-KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_random_confounder
-	KRB5_PROTOTYPE((size_t,
-		krb5_pointer ));
-
 krb5_error_code krb5_crypto_os_localaddr
 	KRB5_PROTOTYPE((krb5_address ***));
 
@@ -596,7 +698,15 @@ krb5_error_code krb5_crypto_us_timeofday
 
 time_t gmt_mktime KRB5_PROTOTYPE((struct tm *));
 
-#endif /* KRB5_LIBOS_PROTO__ */
+#endif /* KRB5_OLD_CRYPTO */
+
+/* this helper fct is in libkrb5, but it makes sense declared here. */
+
+krb5_error_code krb5_encrypt_helper
+KRB5_PROTOTYPE((krb5_context context, krb5_const krb5_keyblock *key,
+		krb5_keyusage usage, krb5_const krb5_data *plain,
+		krb5_enc_data *cipher));
+
 /*
  * End "los-proto.h"
  */
@@ -1198,6 +1308,7 @@ krb5_error_code krb5_encode_kdc_rep
 	KRB5_PROTOTYPE((krb5_context,
 		krb5_const krb5_msgtype,
 		krb5_const krb5_enc_kdc_rep_part *,
+		int using_subkey,
 		krb5_const krb5_keyblock *,
 		krb5_kdc_rep *,
 		krb5_data ** ));
@@ -1305,6 +1416,10 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_ser_unpack_bytes
 		size_t,
 		krb5_octet FAR * FAR *,
 		size_t FAR *));
+
+#if defined(macintosh) && defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
+#pragma import reset
+#endif
 
 /*
  * Convenience function for structure magic number
