@@ -2,6 +2,5 @@ AC_INIT(configure.in)
 CONFIG_RULES
 dnl CONFIG_DIRS(kpasswd v5server v5client ktutil)
 CONFIG_DIRS(create export import keytab cli passwd server v4server)
-dnl kdbkeys dir needs some work, referred to bjaspan
 DO_SUBDIRS
 V5_AC_OUTPUT_MAKEFILE
