@@ -32,7 +32,7 @@ extern int fsync(int);
 #define FREE(x) ((void) free((char *) (x)))
 
 #include "rc_io.h"
-#include "rc_io_err.h"
+#include "krb5/krb5_err.h"
 
 #define UNIQUE getpid() /* hopefully unique number */
 
