@@ -366,12 +366,14 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
 	  ctx->cksum_size = 8;
 	  ctx->sealalg = 0;
 	  break;
+#if 0
       case ENCTYPE_DES3_CBC_MD5:
 	  enctype = ENCTYPE_DES3_CBC_RAW;
 	  ctx->signalg = 3;
 	  ctx->cksum_size = 16;
 	  ctx->sealalg = 1;
 	  break;
+#endif
       default:
 	  return GSS_S_FAILURE;
       }
