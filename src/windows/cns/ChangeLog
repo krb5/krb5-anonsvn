@@ -1,9 +1,5 @@
 Sun Feb  2 11:22:57 1997  Richard Basch  <basch@lehman.com>
 
-	* Makefile.in: Use CCOPTS2, not COPTS (win16)
-
-Sun Feb  2 11:22:57 1997  Richard Basch  <basch@lehman.com>
-
 	* cns.c (k5_name_from_ccache):
 		Declare variable as (char FAR *) to match
 		krb5_unparse_name prototype
