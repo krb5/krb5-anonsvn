@@ -175,9 +175,6 @@ struct auth_replay *rep;
      default: ; /* wtf? */
     }
 
-  if (alive(rep, t->lifespan) == CMP_EXPIRED)
-     return CMP_EXPIRED;
-
  if (!(ta = (struct authlist *) malloc(sizeof(struct authlist))))
    return CMP_MALLOC;
  ta->na = t->a; t->a = ta;
@@ -367,8 +364,6 @@ krb5_tkt_authent *auth;
        return KRB5_RC_MALLOC; break;
    case CMP_REPLAY: FREE(rep->client); FREE(rep->server); FREE(rep);
        return KRB5KRB_AP_ERR_REPEAT; break;
-   case CMP_EXPIRED:FREE(rep->client); FREE(rep->server); FREE(rep);
-       return KRB5KRB_AP_ERR_SKEW; break;
    case 0: break;
    default: /* wtf? */ ;
   }
