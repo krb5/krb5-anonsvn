@@ -1,3 +1,12 @@
+Tue Jun 18 02:29:43 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* Makefile.in, configure.in: lotsa frobbing to allow for
+		standalone compilation
+
+Mon Jun 17 23:56:27 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* configure.in: remove refs to CopySrcHeader, LinkFileDir
+
 Thu Jun 13 22:14:24 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* configure.in: remove ref to ET_RULES

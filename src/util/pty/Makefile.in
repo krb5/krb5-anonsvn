@@ -1,66 +1,67 @@
+srcdir=	@srcdir@
+VPATH=	@srcdir@
+prefix=	@prefix@
+LIBDIR=	@libdir@
+INCDIR=	@includedir@
+ARCHIVE=@ARCHIVE@
+AWK=	@AWK@
+ETDIR=	$(srcdir)/../et
+ET_INC=	$(ETDIR)
+ET_H=	$(AWK) -f $(ETDIR)/et_h.awk outfile=$@
+ET_C=	$(AWK) -f $(ETDIR)/et_c.awk outfile=$@
+RM=	rm -f
+
+DEFS=	@DEFS@
+
+WHAT=	unix
+all::	all-$(WHAT)
+clean::	clean-$(WHAT)
+check::
+
 CFLAGS = $(CCOPTS) $(DEFS) $(LOCALINCLUDE)
 SED = sed
-
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
 
+OBJS=	cleanup.o getpty.o init_slave.o open_ctty.o open_slave.o \
+	update_utmp.o update_wtmp.o vhangup.o void_assoc.o pty_err.o \
+	logwtmp.o init.o
 
-LIBOBJS= cleanup.o getpty.o init_slave.o open_ctty.o open_slave.o \
-   update_utmp.o update_wtmp.o vhangup.o void_assoc.o pty_err.o logwtmp.o init.o
-LIBUPDATE= $(BUILDTOP)/util/libupdate
-LIBDONE=DONE
-LIB_SUBDIRS=.
-INSTALLFILE = cp
+DONE::	$(OBJS) $(srcdir)/Makefile.in
+	@echo $(OBJS) > DONE
 
 # for pty-int.h
-LOCALINCLUDE=-I. -I$(srcdir)
+LOCALINCLUDE=-I. -I$(srcdir) -I$(ET_INC)
 
-FILES= Makefile cleanup.c getpty.c init_slave.c open_ctty.c open_slave.c update_utmp.c update_wtmp.c vhangup.c void_assoc.c pty_err.h pty_err.c\
-logwtmp.c init.c
+CFILES=	cleanup.c getpty.c init_slave.c open_ctty.c open_slave.c \
+	update_utmp.c update_wtmp.c vhangup.c void_assoc.c pty_err.c \
+	logwtmp.c init.c
 
-CFILES=cleanup.c getpty.c init_slave.c open_ctty.c open_slave.c\
-update_utmp.c update_wtmp.c vhangup.c void_assoc.c pty_err.c logwtmp.c init.c
+SRCS=	pty_err.h $(CFILES)
 
-
-SRCS=pty_err.h $(CFILES)
-
-DEPLIBS=
-
-#
-all-unix:: includes pty_err.h libpty.a $(TOPLIBD)/libpty.a
+all-unix:: pty_err.h libpty.a DONE
 
 clean-unix::
-	$(RM) libpty.a $(BUILDTOP)/include/libpty.h pty_err.c pty_err.h
+	$(RM) libpty.a $(OBJS) pty_err.c pty_err.h DONE
 
-
-depend:: 
+depend::
 
 install:: libpty.h
 	$(INSTALL_DATA) $(srcdir)/libpty.h  $(DESTDIR)$(KRB5_INCDIR)/libpty.h
 
-
-
 libpty.a: DONE
-	@if test -f $@ ; then \
-		(set -x; $(LIBUPDATE) $@ DONE .) \
-	else \
-		(set -x; $(LIBUPDATE) --force $@ DONE .) \
-	fi
+	$(RM) $@
+	$(ARCHIVE) $@ $(OBJS)
 	$(RANLIB) $@
-	touch libpty.stamp
-
-clean-unix::
-	$(RM) $(LIBOBJS) libpty.stamp
 
 clean-mac::
 	$(RM) libpty.a
-	$(RM) $(LIBOBJS)
+	$(RM) $(OBJS)
 
 install::
-	$(INSTALL_DATA) libpty.a $(DESTDIR)$(KRB5_LIBDIR)/libpty.a
-	$(RANLIB)    $(DESTDIR)$(KRB5_LIBDIR)/libpty.a
-## 
+	$(INSTALL_DATA) libpty.a $(DESTDIR)$(LIBDIR)/libpty.a
+	$(RANLIB) $(DESTDIR)$(LIBDIR)/libpty.a
 
 clean-unix:: clean-files
 
@@ -80,5 +81,8 @@ clean-files::
 pty_err.o: pty_err.c
 	$(CC) $(CFLAGS) -c $*.c
 
-pty_err.h:: pty_err.et
-pty_err.c:: pty_err.et
+pty_err.h:: $(srcdir)/pty_err.et
+	$(ET_H) $(srcdir)/pty_err.et
+
+pty_err.c:: $(srcdir)/pty_err.et
+	$(ET_C) $(srcdir)/pty_err.et
