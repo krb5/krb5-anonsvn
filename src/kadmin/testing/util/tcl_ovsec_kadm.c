@@ -2,7 +2,7 @@
 #include <string.h>
 #include <tcl.h>
 #define USE_KADM5_API_VERSION 1
-#include <ovsec_admin/admin.h>
+#include <kadm5/admin.h>
 #include <com_err.h>
 #include <malloc.h>
 #include <k5-int.h>
