@@ -1,3 +1,8 @@
+Sat Feb  8 18:49:39 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in:
+	* configure.in: Update to new program build procedure.
+
 Sun Dec 29 21:53:49 1996  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in:
