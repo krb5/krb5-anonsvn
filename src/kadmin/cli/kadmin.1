@@ -1,52 +1,83 @@
-KADMIN(8)	    USER_COMMANDS	  KADMIN(8)
+KADMIN(8)		USER_COMMANDS			KADMIN(8)
 
 NAME
-	kadmin - a command line interface to the
-	OpenV*Secure administration system
+	kadmin - a command line interface to the Kerberos KADM5
+	administration system
 
-SYNOPSYS
-	kadmin [-r _realm_] [[-p _principal_] [-k _keytab_]]
-	[-w _password_ ] [-q _query_]
+SYNOPSIS
+	kadmin [-r realm] [-p principal] [-q query] [clnt|local args]
+	    clnt args: [-p principal] [[-c ccache]|[-k [-t keytab]]]
+		       [-w] [-s admin_server[:port]]
+	    local args: [-d dbname] [-e \"enc:salt ...\"] [-m]
 
 DESCRIPTION
-	kadmin is a command-line interface to the Kerberos*Secure
-	administration system.  It provides most of the functionality
-	of the secure_admin(8) GUI.  It does not provide keytab
-	management; that functionality is provided by the command-line
-	program ovsec_edit_keytab(8).  kadmin should be used instead
-	of kdb5_edit(8) because kadmin does not bypass the
-	OpenV*Secure Administration server.
+	kadmin is a command-line interface to the Kerberos KADM5
+	administration system.  It provides for the maintainance of
+	Kerberos principals, KADM5 policies, and service key tables
+	(keytabs).  It exists as both a remote client, using Kerberos
+	authentication and an encrypted RPC to operate securely from
+	anywhere on the network, and as a local client intended to run
+	directly on the KDC without Kerberos authentication.  The
+	local version provides all of the functionality of the now
+	obsolete kdb5_edit(8) except for database dump and load, which
+	is now provided by the kdb5_util(8) utility.
 
-       	If given the -p option, kadmin will use the specified
-	principal to authenticate.  If the -p option is not given,
-	kadmin will default to $USER/admin (if the environment
-	variable USER is set).  If $USER is not set, then the first
-	component of the principal will be the username as obtained
-	from getuid(). If given -k, kadmin will not prompt for a
-	password, but rather use the specified keytab.  Also, if the
-	-k option is given, the default principal will be the
-	host/hostname.  If -r is present, then kadmin will use the
-	specified realm as the default database realm rather than the
-	default realm for the local machine.
+COMMAND LINE ARGUMENTS
+	If -r is specified, then kadmin will use the specified realm
+	as the default database realm rather than the default realm
+	for the local machine.
 
-	If given the -w option, kadmin will use the password provided
-	on the command line instead of prompting for one on the TTY.
+	The -q option allows the passing of a request directly to
+	kadmin, which will then exit.  This can be useful for writing
+	scripts.
+
+	The remote version authenticates to the KADM5 server using the
+	service kadmin/admin, and therefore needs a client Kerberos
+	principal name as which to authenticate.  The -p, -c, and -k
+	are designed to work together to specify which principal as
+	which to authenticate and where the service ticket or
+	password/key for that principal should be obtained.  If given
+	the -p option, kadmin will use the specified principal to
+	authenticate.  Otherwise, if given -c option then the primary
+	principal name of the ccache is used.  Otherwise, if given the
+	-k option, the principal name host/<hostname> is used.
+	Otherwise, kadmin will append "/admin" to the primary
+	principal name of the default ccache, the value of the USER
+	environment variable, or the username as obtained with
+	getpwuid, in order of preference.
+
+	Once kadmin knows the principal name as which to authenticate,
+	it needs to acquire a Kerberos service ticket for the KADM5
+	server.  If the -c ccache argument is specified, the ccache
+	should contain a service ticket for the kadmin/admin service;
+	it can be acquired with the kinit(1) program.  Otherwise,
+	kadmin requests a new service ticket from the KDC and stores
+	it in its own temporary ccache.  If the -k keytab argument is
+	specified, the keytab is used to decrypt the KDC response;
+	otherwise, a password is required.  By default, the user is
+	prompted for the password on the TTY.  However, if given the
+	-w option, kadmin will use the password provided on the
+	command line instead of prompting for one on the TTY.
 	WARNING!  Placing the password for a Kerberos principal with
 	administration access into a shell script is EXTREMELY
 	DANGEROUS and should only be done if you are highly sure that
 	the script will not fall into the wrong hands.
 
-	Upon starting up, kadmin will prompt for a password (unless
-	the -k or -w option has been given).  The program will then
-	obtain tickets for ovsec_admin/admin in the default realm
-	(unless -r has been specified, in which case it will use the
-	specified realm).  The ticket is stored in a separate ccache,
-	unless -c is specified.  The lifetime for these tickets is 5
-	minutes.
+	If given the -d argument, kadmin will use the specified
+	database name instead of the default defined in kdc.conf.
+	Note that specifying a different KDC database name also
+	specifies a different name for the KADM5 policy database and
+	lock file.
 
-	The -q option allows the passing of a request directly to
-	kadmin, which will then exit.  This can be useful for writing
-	scripts.
+	If given the -e argument, kadmin will use the specified list
+	of encryption and salt type tuples instead of the values
+	specified in kdc.conf.  This is useful, for example, if you
+	want to create a single principal with a particular key/salt
+	type without affecting any other principals.
+
+	If given the -m argument, kadmin will prompt for the Kerberos
+	master password on the command line instead of attempting to
+	use the stash file.
 
 DATE FORMAT 
         Various commands in kadmin can take a variety of
@@ -157,11 +188,11 @@ add_principal [options] _newprinc_
 	kadmin:
 
 	ERRORS
-	OVSEC_KADM_AUTH_ADD (requires "add" privilege)
-	OVSEC_KADM_BAD_MASK (shouldn't happen)
-	OVSEC_KADM_DUP (principal exists already)
-	OVSEC_KADM_UNK_POLICY (policy does not exist)
-	OVSEC_KADM_PASS_Q_* (password quality violations)
+	KADM5_AUTH_ADD (requires "add" privilege)
+	KADM5_BAD_MASK (shouldn't happen)
+	KADM5_DUP (principal exists already)
+	KADM5_UNK_POLICY (policy does not exist)
+	KADM5_PASS_Q_* (password quality violations)
 
 delete_principal [-force] _principal_
 	deletes the specified principal from the database.    This
@@ -179,8 +210,8 @@ delete_principal [-force] _principal_
 	kadmin:
 
 	ERRORS
-	OVSEC_KADM_AUTH_DELETE (reequires "delete" privilege)
-	OVSEC_KADM_UNK_PRINC (principal does not exist)
+	KADM5_AUTH_DELETE (reequires "delete" privilege)
+	KADM5_UNK_PRINC (principal does not exist)
 
 modify_principal [options] _principal_
 	modifies the specified principal, changing the fields as
@@ -191,10 +222,10 @@ modify_principal [options] _principal_
 	"modify" privilege.  Aliased to "modprinc".
 
 	ERRORS
-	OVSEC_KADM_AUTH_MODIFY (requires "modify" privilege)
-	OVSEC_KADM_UNK_PRINC (principal does not exist)
-	OVSEC_KADM_UNK_POLICY (policy does not exist)
-	OVSEC_KADM_BAD_MASK (shouldn't happen)
+	KADM5_AUTH_MODIFY (requires "modify" privilege)
+	KADM5_UNK_PRINC (principal does not exist)
+	KADM5_UNK_POLICY (policy does not exist)
+	KADM5_BAD_MASK (shouldn't happen)
 
 rename_principal [-force] _old_ _new_
 	rename the principal _old_ to _new_.  Prompts for
@@ -214,10 +245,10 @@ rename_principal [-force] _old_ _new_
 	kadmin:
 
 	ERRORS
-	OVSEC_KADM_AUTH_ADD (requires "add" privilege)
-	OVSEC_KADM_AUTH_DELETE (requires "delete" privilege)
-	OVSEC_KADM_UNK_PRINC (source principal does not exist)
-	OVSEC_KADM_DUP (target principal already exists)
+	KADM5_AUTH_ADD (requires "add" privilege)
+	KADM5_AUTH_DELETE (requires "delete" privilege)
+	KADM5_UNK_PRINC (source principal does not exist)
+	KADM5_DUP (target principal already exists)
 
 change_password [options] _principal_
 	changes the password of _principal_.  Prompts for a new
@@ -247,13 +278,11 @@ change_password [options] _principal_
 	kadmin:
 
 	ERRORS
-	OVSEC_KADM_AUTH_MODIFY (requires the modify privilege)
-	OVSEC_KADM_UNK_PRINC (principal does not exist)
-	OVSEC_KADM_PASS_Q_* (password policy violation errors)
-	OVSEC_KADM_PADD_REUSE (password is in principal's password
-	history)
-	OVSEC_KADM_PASS_TOOSOON (current password minimum life not
-	expired)
+	KADM5_AUTH_MODIFY (requires the modify privilege)
+	KADM5_UNK_PRINC (principal does not exist)
+	KADM5_PASS_Q_* (password policy violation errors)
+	KADM5_PADD_REUSE (password is in principal's password istory)
+	KADM5_PASS_TOOSOON (current password minimum life not xpired)
 
 get_principal [-terse] _principal_
 	gets the attributes of _principal_.  Requires the "get"
@@ -285,15 +314,17 @@ get_principal [-terse] _principal_
 	kadmin:
 
 	ERRORS
-	OVSEC_KADM_AUTH_GET (requires the get privilege)
-	OVSEC_KADM_UNK_PRINC (principal does not exist)
+	KADM5_AUTH_GET (requires the get privilege)
+	KADM5_UNK_PRINC (principal does not exist)
 
 get_principals [expression]
 	Retrieves all or some principal names.  _expression_ is a
 	shell-style glob expression that can contain the wild-card
 	characters ?, *, and []'s.  All principal names matching the
-	expression are printed.  If no expression is provided, all
-	principal names are printed.  Requires the "get" priviledge.
+	expression are printed.  If no expression is provided, the
+	expression "*" is assumed.  If the expression does not contain
+	an "@" character, an "@" character followed by the local realm
+	is appended to the expression.  Requires the "list" priviledge.
 	Alias "getprincs".
 
 	EXAMPLES
@@ -326,8 +357,8 @@ add_policy [options] _policy_
 		sets the number of past keys kept for a principal
 
 	ERRORS
-	OVSEC_KADM_AUTH_ADD (requires the add privilege)
-	OVSEC_KADM_DUP (policy already exists)
+	KADM5_AUTH_ADD (requires the add privilege)
+	KADM5_DUP (policy already exists)
 
 delete_policy _policy_
 	deletes the named policy.  Prompts for confirmation before
@@ -343,9 +374,9 @@ delete_policy _policy_
 	kadmin:
 
 	ERRORS
-	OVSEC_KADM_AUTH_DELETE (requires the delete privilege)
-	OVSEC_KADM_UNK_POLICY (policy does not exist)
-	OVSEC_KADM_POLICY_REF (reference count on policy is not zero)
+	KADM5_AUTH_DELETE (requires the delete privilege)
+	KADM5_UNK_POLICY (policy does not exist)
+	KADM5_POLICY_REF (reference count on policy is not zero)
 
 modify_policy [options] _policy_
 	modifies the named policy.  Options are as above for
@@ -353,8 +384,8 @@ modify_policy [options] _policy_
 	"modpol".
 
 	ERRORS
-	OVSEC_KADM_AUTH_MODIFY (requires the modify privilege)
-	OVSEC_KADM_UNK_POLICY (policy does not exist)
+	KADM5_AUTH_MODIFY (requires the modify privilege)
+	KADM5_UNK_POLICY (policy does not exist)
 
 get_policy [-terse] _policy_
 	displays the values of the named policy.  Requires the "get"
@@ -375,16 +406,16 @@ get_policy [-terse] _policy_
 	kadmin:
 
 	ERRORS
-	OVSEC_KADM_AUTH_GET (requires the get privilege)
-	OVSEC_KADM_UNK_POLICY (policy does not exist)
+	KADM5_AUTH_GET (requires the get privilege)
+	KADM5_UNK_POLICY (policy does not exist)
 
 get_policies [expression]
 	Retrieves all or some policy names.  _expression_ is a
 	shell-style glob expression that can contain the wild-card
 	characters ?, *, and []'s.  All policy names matching the
-	expression are printed.  If no expression is provided, all
-	policy names are printed.  Requires the "get" priviledge.
-	Alias "getprincs".
+	expression are printed.  If no expression is provided, the
+	expression "*" is assumed.  Requires the "list" priviledge.
+	Alias "getpols".
 
 	EXAMPLES
 	kadmin:  getpols
@@ -397,16 +428,44 @@ get_policies [expression]
 	test-pol-nopw
 	kadmin:
 
-get_privs
-	returns the administrative privileges of the current user.
-	Alias "getprivs".
+ktadd [-k keytab] [-q] princ-exp [...]
+	Adds all principals matching princ-exp to a keytab.  princ-exp
+	follows the same rules described for the get_principals
+	command.  An entry for each of the principal's unique
+	encryption types is added, ignoring multiple keys with the
+	same encryption type but different salt types.  If the -k
+	argument is not specified, the default keytab /etc/v5srvtab is
+	used.  If the -q option is specified, less verbose status
+	information is displayed.
 
-	EXAMPLE
-	kadmin: get_privs
-	Principal tlyu/admin@ATHENA.MIT.EDU
-	has privileges: GET, ADD, MODIFY, DELETE, CHSTAB
+	EXAMPLES
+	kadmin% ktadd -k /krb5/kadmind.keytab kadmin/admin kadmin/changepw
+	kadmin: Entry for principal kadmin/admin@ATHENA.MIT.EDU with
+		kvno 3, encryption type DES-CBC-CRC added to keytab
+		WRFILE:/krb5/kadmind.keytab.
+	kadmin: Entry for principal kadmin/changepw@ATHENA.MIT.EDU
+		with kvno 3, encryption type DES-CBC-CRC added to keytab
+		WRFILE:/krb5/kadmind.keytab.
+	kadmin:
+
+ktremove [-k keytab] [-q] principal [kvno|"all"|"old"]
+	Removes entries for the specified principal from a keytab.  If
+	the string "all" is specified, all entries for that principal
+	are removed; if the string "old" is specified, all entries for
+	that principal except those with the highest kvno are removed.
+	Otherwise, the value specified is parsed as an integer, and
+	all entries whose kvno match that integer are removed.  If the
+	-k argument is not specifeid, the default keytab /etc/v5srvtab
+	is used.  If the -q is specified, less verbose status
+	information is displayed.
+
+	EXAMPLES
+	kadmin: ktremove -k /krb5/kadmind.keytab kadmin/admin
+	kadmin: Entry for principal kadmin/admin with kvno 3 removed
+		from keytab WRFILE:/krb5/kadmind.keytab.
 	kadmin:
 
 SEE ALSO
-	kerberos(1)
+	kerberos(1), kdb5_util(8)
+
 
