@@ -29,7 +29,7 @@
 #ifndef UTMP_FILE
 #define	UTMP_FILE	"/etc/utmp"
 #endif
-
+#define WTMP_REQUIRES_USERNAME
 long pty_update_utmp (process_type, pid, username, line, host, flags)
     int process_type;
     int pid;
@@ -90,30 +90,28 @@ long pty_update_utmp (process_type, pid, username, line, host, flags)
 
     utmpname(UTMP_FILE);
     setutent();
+/* If we need to preserve the user name in the wtmp structure and
+ * Our flags tell us we can obtain it from the utmp and we succeed in
+ * obtaining it, we then save the utmp structure we obtain, write
+ * out the utmp structure and change the username pointer so  it is used by
+ * update_wtmp.*/
+#ifdef WTMP_REQUIRES_USERNAME
+strncpy(ut.ut_user, ent.ut_user, sizeof(ut.ut_user));
+    if (( !username) && (flags&PTY_UTMP_USERNAME_VALID)
+	&&line)  
+	{
+struct utmp *utptr;
+strncpy(ut.ut_line, line, sizeof(ut.ut_line));
+utptr = getutline(&ut);
+if (utptr)
+    ut = *utptr;
+	}
+#endif
+    
     pututline(&ent);
     endutent();
-
-#if 0
-    /* XXX -- NOT NEEDED ANYMORE */
-
-    if (ent.ut_type == DEAD_PROCESS) {
-	if ((fd = open(UTMP_FILE, O_RDWR)) >= 0) {
-	    int cnt = 0;
-	    while(read(fd, (char *)&ut, sizeof(ut)) == sizeof(ut)) {
-		if (!strncmp(ut.ut_id, ent.ut_id, sizeof(ut.ut_id))) {
-		    (void) memset(ut.ut_host, 0, sizeof(ut.ut_host));
-		    (void) memset(ut.ut_user, 0, sizeof(ut.ut_user));
-		    (void) time(&ut.ut_time);
-		    ut.ut_exit.e_exit = ut.ut_pid = 0;
-		    ut.ut_type = EMPTY;
-		    (void) lseek(fd, -sizeof(ut), SEEK_CUR);
-		    (void) write(fd, &ut, sizeof(ut));
-		}
-		cnt++;
-	    }
-	    close(fd);
-	}
-    }
+#ifdef WTMP_REQUIRES_USERNAME
+    username = (char *) &ut.ut_user;
 #endif
     
 #ifdef HAVE_SETUTXENT
@@ -141,6 +139,10 @@ if (host)
 		break;
 	    if (strncmp(ut.ut_line, ent.ut_line, sizeof(ut.ut_line)) == 0) {
 		tty = lc;
+#ifdef WTMP_REQUIRES_USERNAME
+		if (!username&&(flags&PTY_UTMP_USERNAME_VALID))
+		    username = (char *) &ut.ut_user;
+#endif
 		break;
 	    }
 	}

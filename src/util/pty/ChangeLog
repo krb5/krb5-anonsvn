@@ -1,3 +1,7 @@
+Tue Jan 16 13:52:22 1996  Sam Hartman  <hartmans@tertius.mit.edu>
+
+	* update_utmp.c (update_utmp): Implement PTY_UTMP_USERNAME_VALID flag
+
 Mon Jan 15 15:48:37 1996  Sam Hartman  (hartmans@justforfun)
 
 	* cleanup.c: Change to indiciate utmp user name is valid.
