@@ -50,96 +50,37 @@ dnl
 AC_SUBST(LOGINLIBS)
 dnl
 AC_TYPE_MODE_T
-AC_FUNC_CHECK(strsave,AC_DEFINE(HAS_STRSAVE))
-AC_FUNC_CHECK(getutent,AC_DEFINE(HAVE_GETUTENT))
-AC_FUNC_CHECK(setreuid,AC_DEFINE(HAVE_SETREUID))
-AC_FUNC_CHECK(gettosbyname,AC_DEFINE(HAVE_GETTOSBYNAME))
-AC_FUNC_CHECK(setsid,AC_DEFINE(HAVE_SETSID))
-AC_FUNC_CHECK(ttyname,AC_DEFINE(HAVE_TTYNAME))
-AC_FUNC_CHECK(line_push,AC_DEFINE(HAVE_LINE_PUSH))
-AC_FUNC_CHECK(ptsname,AC_DEFINE(HAVE_PTSNAME))
-AC_FUNC_CHECK(grantpt,AC_DEFINE(HAVE_GRANTPT))
-AC_FUNC_CHECK(openpty,AC_DEFINE(HAVE_OPENPTY))
-AC_FUNC_CHECK(logwtmp,AC_DEFINE(HAVE_LOGWTMP))
+AC_CHECK_FUNCS(getutent setreuid gettosbyname setsid ttyname line_push ptsname grantpt openpty logwtmp)
 AC_CHECK_HEADERS(unistd.h stdlib.h string.h utmpx.h utmp.h sys/filio.h sys/sockio.h sys/label.h sys/tty.h ttyent.h lastlog.h sys/select.h sys/ptyvar.h)
 AC_CHECK_HEADERS(sys/wait.h)
 AC_CHECK_FUNCS(waitpid)
-DECLARE_SYS_ERRLIST
+dnl not needed DECLARE_SYS_ERRLIST
 KRB5_SIGTYPE
 CHECK_SIGNALS
-CHECK_SETJMP
-CHECK_DIRENT
 CHECK_WAIT_TYPE
 AC_HEADER_CHECK(termios.h,AC_FUNC_CHECK(cfsetispeed,AC_DEFINE(POSIX_TERMIOS)))
 CHECK_UTMP
 dnl
 dnl
-AC_MSG_CHECKING([streams interface])
-AC_CACHE_VAL(krb5_cv_has_streams,
-[AC_TRY_COMPILE(
-[#include <sys/stream.h>
-#include <sys/stropts.h>], [],
+AC_CACHE_CHECK([for streams interface], krb5_cv_has_streams,
+[AC_TRY_COMPILE([#include <sys/stream.h>
+#include <sys/stropts.h>], ,
 krb5_cv_has_streams=yes, krb5_cv_has_streams=no)])
-AC_MSG_RESULT($krb5_cv_has_streams)
 if test $krb5_cv_has_streams = yes; then
-AC_DEFINE(HAVE_STREAMS)
+  AC_DEFINE(HAVE_STREAMS)
 fi
 dnl
 dnl
-AC_MSG_CHECKING([F_SETOWN])
-AC_CACHE_VAL(krb5_cv_f_setown,
-[AC_TRY_COMPILE(
-[#include <sys/types.h>
-#include <fcntl.h>], [1+F_SETOWN;],
-krb5_cv_f_setown=yes,krb5_cv_f_setown=no)])
-AC_MSG_RESULT($krb5_cv_f_setown)
-if test $krb5_cv_f_setown = yes; then
-AC_DEFINE(HAVE_SETOWN)
-fi
-dnl
-dnl
-dnl AC_MSG_CHECKING([setenv])
-dnl AC_CACHE_VAL(krb5_cv_setenv,
-dnl [AC_TRY_LINK(
-dnl [],[setenv("PATH","/bin",0);],
-dnl krb5_cv_setenv=yes,krb5_cv_setenv=no)])
-dnl AC_MSG_RESULT($krb5_cv_setenv)
-dnl if test $krb5_cv_setenv = no; then
-dnl SETENVSRC=setenv.c
-dnl SETENVOBJ=setenv.o
-dnl AC_SUBST([SETENVSRC])
-dnl AC_SUBST([SETENVOBJ])
-dnl fi
-dnl
-dnl
-AC_MSG_CHECKING([arguments to getpgrp])
-AC_CACHE_VAL(krb5_cv_getpgrp_args,
-[AC_TRY_COMPILE(
-[#ifndef __STDC__
+AC_CACHE_CHECK([arguments to getpgrp], krb5_cv_getpgrp_args,
+[AC_TRY_COMPILE([#ifndef __STDC__
 #define __STDC__ 1
 #endif
 #include <unistd.h>
 #include <sys/types.h>], [pid_t pid = getpgrp(getpid())],
 krb5_cv_getpgrp_args=pid, krb5_cv_getpgrp_args=void)])
-AC_MSG_RESULT($krb5_cv_getpgrp_args)
 if test $krb5_cv_getpgrp_args = pid; then
-AC_DEFINE(GETPGRP_ONEARG)
+  AC_DEFINE(GETPGRP_ONEARG)
 fi
-dnl
-dnl
-AC_MSG_CHECKING([number of arguments to setpgrp])
-AC_CACHE_VAL(krb5_cv_setpgrp_args,
-[AC_TRY_COMPILE(
-[#ifndef __STDC__
-#define __STDC__ 1
-#endif
-#include <unistd.h>],[setpgrp(0,0)],
-krb5_cv_setpgrp_args=two, krb5_cv_setpgrp_args=void)])
-AC_MSG_RESULT($krb5_cv_setpgrp_args)
-if test $krb5_cv_setpgrp_args = two; then
-AC_DEFINE(SETPGRP_TWOARG)
-fi
-dnl
 dnl
 dnl
 dnl ???? ADD_DEF(-DKERBEROS)
