@@ -1,3 +1,7 @@
+Tue Feb  4 15:57:18 1997  Richard Basch  <basch@lehman.com>
+
+	* krb5.hin: Do not bother to define INTERFACE or INTERFACE_C
+
 Sun Feb  2 20:58:40 1997  Richard Basch  <basch@lehman.com>
 
 	* k5-int.h:
