@@ -1,3 +1,8 @@
+2000-06-14  Miro Jurisic  <meeroh@mit.edu>
+
+	* prof_file.c (profile_flush_data):  
+	Return ENOENT when file is not found on MacOS (not ENFILE)
+
 2000-03-24  Miro Jurisic  <meeroh@mit.edu>
 	* Makefile.in, prof_file.c, prof_int.h, pros_set.c, 
 	prof_threads.c, prof_threads.h: Added first attempt at thread

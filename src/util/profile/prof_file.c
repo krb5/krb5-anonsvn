@@ -426,7 +426,7 @@ errcode_t profile_flush_file_data(data)
 	{
 		OSErr err = FSpExchangeFiles (&data->filespec, &new_file);
 		if (err != noErr) {
-			retval = ENFILE;
+			retval = ENOENT;
 			goto end;
 		}
 		FSpDelete (&new_file);
