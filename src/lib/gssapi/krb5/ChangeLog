@@ -1,5 +1,8 @@
 Thu Jun 20 23:15:57 1996  Marc Horowitz  <marc@mit.edu>
 
+	* k5unseal.c (kg_unseal), k5seal.c (make_seal_token): == cannot be
+ 	used to compare oid's.  The g_OID_equal macro must be used.
+
 	* init_sec_context.c (make_ap_req, krb5_gss_init_sec_context): -
  	gss_init_sec_context should use the mech set in the credential.
   	If the default mech is requested, but the old mech oid was

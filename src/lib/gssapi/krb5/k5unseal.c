@@ -286,8 +286,8 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
       xfree(cksum.contents);
 #else
       if (code = kg_encrypt(context, &ctx->seq,
-			    (ctx->mech_used == gss_mech_krb5 ?
-			     NULL : ctx->seq.key->contents),
+			    (g_OID_equal(ctx->mech_used, gss_mech_krb5_old) ?
+			     ctx->seq.key->contents : NULL),
 			    md5cksum.contents, md5cksum.contents, 16)) {
 	 xfree(md5cksum.contents);
 	 if (toktype == KG_TOK_SEAL_MSG)

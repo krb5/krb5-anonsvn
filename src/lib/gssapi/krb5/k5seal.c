@@ -235,7 +235,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
        xfree(cksum.contents);
 #else
        if (code = kg_encrypt(context, seq_ed,
-			     (oid == gss_mech_krb5_old ?
+			     (g_OID_equal(oid, gss_mech_krb5_old) ?
 			      seq_ed->key->contents : NULL),
 			     md5cksum.contents, md5cksum.contents, 16)) {
 	  xfree(md5cksum.contents);
