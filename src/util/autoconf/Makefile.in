@@ -26,50 +26,83 @@ INSTALL_DATA = @INSTALL_DATA@
 MAKEINFO = makeinfo
 TEXI2DVI = texi2dvi
 M4 = @M4@
+AWK = @AWK@
+PERL = @PERL@
 
-prefix = /usr/local
-exec_prefix = $(prefix)
+# Programs that are ALWAYS installed (and are created in the build dir).
+ASCRIPTS = autoconf autoheader autoreconf autoupdate ifnames 
+# All programs, including those only installed if you have perl.
+SCRIPTS = $(ASCRIPTS) @SCRIPTS@
+
+transform=@program_transform_name@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
 
 # Directory in which to install scripts.
-bindir = $(exec_prefix)/bin
+bindir = @bindir@
 
 # Directory in which to install library files.
-datadir = $(prefix)/lib
+datadir = @datadir@
 acdatadir = $(datadir)/autoconf
 
 # Directory in which to install documentation info files.
-infodir = $(prefix)/info
+infodir = @infodir@
 
 #### End of system configuration section. ####
 
 SHELL = /bin/sh
 
-DISTFILES = README Makefile.in INSTALL NEWS COPYING ChangeLog \
-autoconf.texi acconfig.h autoconf.sh acgeneral.m4 acspecific.m4 \
-configure configure.in autoheader.sh mkinstalldirs install.sh \
-autoconf.info standards.texi make-stds.texi standards.info texinfo.tex
+SUBDIRS = testsuite
 
-editsh = sed -e 's,@''datadir''@,$(acdatadir),g' -e 's,@''M4''@,$(M4),g'
+M4FILES = autoconf.m4 acgeneral.m4 acoldnames.m4 acspecific.m4 autoheader.m4
 
-all: autoconf autoheader
+# Files that can be generated, but should be up to date for a distribution.
+DISTDEP = info Makefile
+# Files to distribute.
+DISTFILES = COPYING ChangeLog ChangeLog.1 INSTALL \
+	Makefile.in NEWS README TODO $(M4FILES) \
+	acconfig.h acfunctions acheaders acidentifiers \
+	acmakevars acprograms autoconf.info* \
+	autoconf.sh autoconf.texi install.texi \
+	autoheader.sh autoscan.pl autoreconf.sh autoupdate.sh ifnames.sh \
+	config.guess config.sub configure configure.in \
+	install-sh mkinstalldirs texinfo.tex \
+	testsuite/Makefile.in testsuite/config/*.exp \
+	testsuite/lib/*.exp testsuite/autoconf.[gs]/*.exp \
+	standards.texi make-stds.texi standards.info*
 
-autoconf: autoconf.sh
+editsh = sed -e 's,@''datadir''@,$(acdatadir),g' -e \
+	's,@''M4''@,$(M4),g'  -e 's,@''AWK''@,$(AWK),g'
+editpl = sed -e 's,@''datadir''@,$(acdatadir),g' -e 's,@''PERL''@,$(PERL),g'
+
+all: ${SCRIPTS} info
+
+.SUFFIXES:
+.SUFFIXES: .sh .pl
+
+.sh:
 	rm -f $@ $@.tmp
-	$(editsh) $(srcdir)/autoconf.sh > $@.tmp && mv $@.tmp $@ && chmod +x $@
+	$(editsh) $< > $@.tmp && chmod +x $@.tmp && mv $@.tmp $@
 
-autoheader: autoheader.sh
+.pl:
 	rm -f $@ $@.tmp
-	$(editsh) $(srcdir)/autoheader.sh > $@.tmp && mv $@.tmp $@ && chmod +x $@
+	$(editpl) $< > $@.tmp && chmod +x $@.tmp && mv $@.tmp $@
 
-info: autoconf.info standards.info
+info: autoconf.info @standards_info@ INSTALL
 
-autoconf.info: autoconf.texi
+# Use --no-split to avoid creating filenames > 14 chars.
+autoconf.info: autoconf.texi install.texi
 	$(MAKEINFO) -I$(srcdir) $(srcdir)/autoconf.texi --no-split --output=$@
+
+INSTALL: install.texi
+	$(MAKEINFO) -I$(srcdir) $(srcdir)/install.texi --output=$@ \
+	--no-headers --no-validate
 
 standards.info: standards.texi make-stds.texi
 	$(MAKEINFO) -I$(srcdir) $(srcdir)/standards.texi --no-split --output=$@
 
-dvi: autoconf.dvi standards.dvi
+dvi: autoconf.dvi @standards_dvi@
 
 autoconf.dvi: autoconf.texi
 	$(TEXI2DVI) $(srcdir)/autoconf.texi
@@ -77,66 +110,106 @@ autoconf.dvi: autoconf.texi
 standards.dvi: standards.texi make-stds.texi
 	$(TEXI2DVI) $(srcdir)/standards.texi
 
-check:
-installcheck:
+check: all
+	rootme=`pwd`; srcrootme=`cd $(srcdir); pwd`; \
+	test -r install-sh || cp $(srcdir)/install-sh .; \
+	cd testsuite && ${MAKE} $@ AUTOCONF=$$rootme/autoconf \
+	AUTOCONFFLAGS="-m $$srcrootme"
+
+installcheck: all install
+	cd testsuite && ${MAKE} AUTOCONF=${bindir}/autoconf $@
 
 installdirs:
 	$(SHELL) ${srcdir}/mkinstalldirs $(bindir) $(infodir) $(acdatadir)
 
-# References to install-info have been removed until it's released.
-install: all acgeneral.m4 acspecific.m4 acconfig.h installdirs install-info
-	$(INSTALL_PROGRAM) autoconf $(bindir)/autoconf
-	$(INSTALL_PROGRAM) autoheader $(bindir)/autoheader
-	$(INSTALL_DATA) $(srcdir)/acgeneral.m4 $(acdatadir)/acgeneral.m4
-	$(INSTALL_DATA) $(srcdir)/acspecific.m4 $(acdatadir)/acspecific.m4
-	$(INSTALL_DATA) $(srcdir)/acconfig.h $(acdatadir)/acconfig.h
+install: all $(M4FILES) acconfig.h installdirs install-info
+	@case `$(M4) --help < /dev/null 2>&1` in \
+	*reload-state*) echo installing frozen m4 files; \
+	  $(M4) -F $(acdatadir)/autoconf.m4f -I${srcdir} ${srcdir}/autoconf.m4 ; \
+	  $(M4) -F $(acdatadir)/autoheader.m4f -I${srcdir} ${srcdir}/autoheader.m4 ;; \
+	*traditional*) ;; \
+	*) echo Error: Autoconf requires GNU m4 1.1 or later; exit 1 ;; \
+	esac
+	for p in $(ASCRIPTS); do \
+	  $(INSTALL_PROGRAM) $$p $(bindir)/`echo $$p|sed '$(transform)'`; \
+	done
+	for i in $(M4FILES) acconfig.h; do \
+	$(INSTALL_DATA) $(srcdir)/$$i $(acdatadir)/$$i; \
+	done
+	-if test -f autoscan; then \
+	$(INSTALL_PROGRAM) autoscan $(bindir)/`echo autoscan|sed '$(transform)'`; \
+	for i in acfunctions acheaders acidentifiers acprograms \
+	  acmakevars; do \
+	$(INSTALL_DATA) $(srcdir)/$$i $(acdatadir)/$$i; \
+	done; \
+	else :; fi
 
+# Don't cd, to avoid breaking install-sh references.
 install-info: info installdirs
-	-if test -f autoconf.info; then d=.; else d=$(srcdir); fi; \
-	$(INSTALL_DATA) $$d/autoconf.info $(infodir)/autoconf.info
-	-if test -f standards.info; then d=.; else d=$(srcdir); fi; \
-	$(INSTALL_DATA) $$d/standards.info $(infodir)/standards.info
+	if test -f autoconf.info; then \
+	  for i in *.info*; do \
+	    $(INSTALL_DATA) $$i $(infodir)/$$i; \
+	  done; \
+	else \
+	  for i in $(srcdir)/*.info*; do \
+	    $(INSTALL_DATA) $$i $(infodir)/`echo $$i | sed 's|^$(srcdir)/||'`; \
+	  done; \
+	fi
 
 uninstall:
-	rm -f $(bindir)/autoconf $(bindir)/autoheader
-	cd $(acdatadir); rm -f acgeneral.m4 acspecific.m4 aclocal.m4 acconfig.h
-	-rmdir $(acdatadir)
-	cd $(infodir); rm -f autoconf.info standards.info
+	for p in $(SCRIPTS); do \
+	  rm -f $(bindir)/`echo $$p|sed '$(transform)'`; \
+	done
+	rm -fr $(acdatadir)
+	cd $(infodir) && rm -f autoconf.info*
+	if test -f standards.info || test -f $(srcdir)/standards.info; \
+	then cd $(infodir) && rm -f standards.info*; fi
 
-configure: configure.in acgeneral.m4 acspecific.m4
-	cd $(srcdir); \
-	rm -f $@ $@.tmp; \
-	$(M4) acgeneral.m4 acspecific.m4 configure.in > $@.tmp && \
-	mv $@.tmp $@ && \
-	chmod +x $@
+${srcdir}/configure: configure.in $(M4FILES)
+	cd $(srcdir) && \
+	rm -f configure configure.tmp && \
+	$(M4) autoconf.m4 configure.in > configure.tmp && \
+	chmod +x configure.tmp && mv configure.tmp configure
 Makefile: Makefile.in config.status
 	./config.status
 config.status: configure
 	./config.status --recheck
 
-clean:
-	rm -f autoconf autoheader *.tmp
+maintainer-clean::
+	@echo "This command is intended for maintainers to use;"
+	@echo "rebuilding the deleted files requires makeinfo."
+	rm -f TAGS *.info* INSTALL
+
+clean mostlyclean distclean maintainer-clean::
+	for dir in $(SUBDIRS); do \
+	  echo making $@ in $$dir ; \
+	  (cd $$dir && $(MAKE) $@) ; \
+	done
+
+clean mostlyclean distclean maintainer-clean::
+	rm -f $(SCRIPTS) *.tmp 
 	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.kys *.log
-	rm -f *.pg *.pgs *.toc *.tp *.tps *.vr *.vrs *.ma *.mas
+	rm -f *.pg *.pgs *.toc *.tp *.tps *.vr *.vrs
+	rm -f *.ev *.evs *.ov *.ovs *.cv *.cvs *.ma *.mas
 
-mostlyclean: clean
-
-distclean: clean
-	rm -f Makefile config.status
-
-realclean: distclean
-	rm -f TAGS *.info*
+distclean maintainer-clean::
+	rm -f Makefile config.status config.cache config.log
 
 TAGS:
 	etags ${srcdir}/*.m4 ${srcdir}/*.sh ${srcdir}/[a-z]*.in ${srcdir}/*.texi
 
-dist: Makefile $(DISTFILES)
-	echo autoconf-`sed -e '/define(AC_ACVERSION,/!d' -e 's/[^0-9.]*\([0-9.]*\).*/\1/' -e q acgeneral.m4` > .fname
-	rm -rf `cat .fname`
-	mkdir `cat .fname`
+# Don't depend on DISTFILES because there's no rule for "standards.info*".
+dist: $(DISTDEP)
+	distname=`sed -e '/define(AC_ACVERSION,/!d' \
+	-e 's/[^0-9.]*\([0-9.]*\).*/autoconf-\1/' -e q acgeneral.m4`; \
+	rm -fr $$distname; \
+	mkdir $$distname $$distname/testsuite $$distname/testsuite/config \
+	$$distname/testsuite/lib $$distname/testsuite/autoconf.g \
+	$$distname/testsuite/autoconf.s; \
 	for file in $(DISTFILES); do \
-	  ln $$file `cat .fname` \
-	    || { echo copying $$file instead; cp -p $$file `cat .fname`; }; \
-	done
-	tar --gzip -chf `cat .fname`.tar.gz `cat .fname`
-	rm -rf `cat .fname` .fname
+	  ln $$file $$distname/$$file \
+	  || { echo copying $$file instead; cp -p $$file $$distname/$$file;}; \
+	done; \
+	chmod -R a+rX $$distname; \
+	tar -chz -f $$distname.tar.gz $$distname; \
+	rm -fr $$distname
