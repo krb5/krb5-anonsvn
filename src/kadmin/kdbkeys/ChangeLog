@@ -1,0 +1,5 @@
+Tue Jul  9 13:25:00 1996  Barry Jaspan  <bjaspan@mit.edu>
+
+	* do-test.pl: rewrite to use kdb5_util instead of kdbkeys
+	
+
