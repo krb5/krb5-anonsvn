@@ -92,14 +92,17 @@
  * Machine-type definitions: PC Clone 386 running Microloss Windows
  */
 
-#if defined(_MSDOS) || defined(_WIN32) || defined(macintosh)
-#include "win-mac.h"
-#if defined(macintosh) && defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
-#pragma import on
-#endif
+#if defined(macintosh) || (defined(__MACH__) && defined(__APPLE__))
+	#include <KerberosSupport/KerberosConditionalMacros.h>
+	
+	#if TARGET_API_MAC_OS8 || (TARGET_API_MAC_CARBON && !TARGET_API_MAC_OSX)
+		#include <Kerberos5/win-mac.h>
+	#endif
 #endif
 
 #if defined(_MSDOS) || defined(_WIN32)
+#include "win-mac.h"
+
 /* Kerberos Windows initialization file */
 #define KERBEROS_INI	"kerberos.ini"
 #define INI_FILES	"Files"
@@ -109,10 +112,12 @@
 #define ANSI_STDIO
 #endif
 
-
-#ifndef macintosh
-#if defined(__MWERKS__) || defined(applec) || defined(THINK_C)
+/* Note, this may shoot us in the foot if we switch to CW compilers for Mach-o builds */
+#if !defined(macintosh) && (defined(__MWERKS__) || defined(applec) || defined(THINK_C))
 #define macintosh
+#endif
+
+#ifdef macintosh
 #define SIZEOF_INT 4
 #define SIZEOF_SHORT 2
 #define HAVE_SRAND
@@ -120,15 +125,11 @@
 #define HAVE_LABS
 /*#define ENOMEM -1*/
 #define ANSI_STDIO
-#ifndef _SIZET
-typedef unsigned int size_t;
-#define _SIZET
-#endif
+#include <size_t.h>
 #include <unix.h>
 #include <ctype.h>
+#include <fcntl.h>
 #endif
-#endif
-
 
 #ifndef KRB5_AUTOCONF__
 #define KRB5_AUTOCONF__
@@ -511,7 +512,7 @@ krb5_error_code krb5_sendto_kdc
 		const krb5_data *,
 		const krb5_data *,
 		krb5_data *,
-		int *));
+		int));
 krb5_error_code krb5_get_krbhst
 	KRB5_PROTOTYPE((krb5_context,
 		const krb5_data *,
@@ -555,9 +556,8 @@ krb5_error_code krb5_locate_srv_conf
 			const krb5_data *,
 			const char *,
 			struct sockaddr **,
-			int *,
-			int *,
-			int *));
+			int*,
+            int));
 
 /* no context? */
 krb5_error_code krb5_locate_srv_dns
@@ -565,7 +565,7 @@ krb5_error_code krb5_locate_srv_dns
 			const char *,
 			const char *,
 			struct sockaddr **,
-			int *));
+			int*));
 
 #endif /* KRB5_LIBOS_PROTO__ */
 
@@ -788,11 +788,12 @@ KRB5_PROTOTYPE((krb5_context context, krb5_const krb5_keyblock *key,
 #define KRB5_LIBOS__
 
 typedef struct _krb5_os_context {
-	krb5_magic	magic;
-	krb5_int32	time_offset;
-	krb5_int32	usec_offset;
-	krb5_int32	os_flags;
-	char *		default_ccname;
+	krb5_magic		magic;
+	krb5_int32		time_offset;
+	krb5_int32		usec_offset;
+	krb5_int32		os_flags;
+	char *			default_ccname;
+	krb5_principal	default_ccprincipal;
 } *krb5_os_context;
 
 /*
@@ -943,7 +944,6 @@ void krb5_free_etype_info
  * End "preauth.h"
  */
 
-
 typedef krb5_error_code (*krb5_gic_get_as_key_fct)
     KRB5_NPROTOTYPE((krb5_context,
 		     krb5_principal,
@@ -966,7 +966,7 @@ KRB5_PROTOTYPE((krb5_context context,
 		krb5_get_init_creds_opt *options,
 		krb5_gic_get_as_key_fct gak,
 		void *gak_data,
-		int *master,
+		int master,
 		krb5_kdc_rep **as_reply));
 
 
@@ -999,7 +999,11 @@ KRB5_DLLIMP void KRB5_CALLCONV krb5_free_pa_enc_ts
 	KRB5_PROTOTYPE((krb5_context, krb5_pa_enc_ts FAR *));
 
 /* #include "krb5/wordsize.h" -- comes in through base-defs.h. */
+#if TARGET_OS_MAC
+#include <KerberosProfile/KerberosProfile.h>
+#else
 #include "profile.h"
+#endif
 
 struct _krb5_context {
 	krb5_magic	magic;
@@ -1022,6 +1026,7 @@ struct _krb5_context {
 	krb5_boolean	profile_secure;
 	int		fcc_default_format;
 	int		scc_default_format;
+	krb5_prompt_type *prompt_types;
 #ifdef KRB5_DNS_LOOKUP
         krb5_boolean    profile_in_memory;
 #endif /* KRB5_DNS_LOOKUP */
@@ -1506,10 +1511,15 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_ser_unpack_bytes
 		krb5_octet FAR * FAR *,
 		size_t FAR *));
 
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5int_cc_default
+	KRB5_PROTOTYPE((krb5_context, krb5_ccache FAR *));
 
 krb5_error_code KRB5_CALLCONV krb5_cc_retrieve_cred_default
 	KRB5_PROTOTYPE((krb5_context, krb5_ccache, krb5_flags,
 			krb5_creds *, krb5_creds *));
+
+void krb5int_set_prompt_types
+	KRB5_PROTOTYPE((krb5_context, krb5_prompt_type *));
 
 #if defined(macintosh) && defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
 #pragma import reset
