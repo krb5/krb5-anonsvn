@@ -7,6 +7,7 @@ Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 #ifndef KRB5_RC_H
 #define KRB5_RC_H
 #include "krb5/krb5.h"
+#include "krb5/krb5_err.h"
 
 typedef struct krb5_inRC
  {
