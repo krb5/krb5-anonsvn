@@ -813,8 +813,8 @@ dnl
 kadmsrv_deplib=''
 kadmsrv_lib=''
 define(USE_KADMSRV_LIBRARY,[
-kadmsrv_deplib="\[$](TOPLIBD)/libkadmsrv.a"
-kadmsrv_lib=-lkadmsrv])
+kadmsrv_deplib="\[$](TOPLIBD)/libkadm5srv.a"
+kadmsrv_lib=-lkadm5srv])
 dnl
 dnl This rule tells KRB5_LIBRARIES to use the gssrpc library.
 dnl
