@@ -83,7 +83,7 @@
 #define KG_TOK_DEL_CTX		0x0102
 
 #define KG_IMPLFLAGS(x) (GSS_C_INTEG_FLAG | GSS_C_CONF_FLAG | \
-			 GSS_C_TRANS_FLAG | GSS_C_PROT_READY_FLAG | \
+			 GSS_C_TRANS_FLAG | \
 			 ((x) & (GSS_C_MUTUAL_FLAG | GSS_C_REPLAY_FLAG | \
 				 GSS_C_SEQUENCE_FLAG | GSS_C_DELEG_FLAG)))
 
@@ -202,8 +202,6 @@ OM_uint32 kg_get_defcred
 	(OM_uint32 *minor_status, 
 		   gss_cred_id_t *cred);
 
-OM_uint32 kg_release_defcred (OM_uint32 *minor_status);
-
 krb5_error_code kg_checksum_channel_bindings
          (krb5_context context, gss_channel_bindings_t cb,
 					     krb5_checksum *cksum,
@@ -290,7 +288,15 @@ krb5_error_code kg_ctx_internalize (krb5_context kcontext,
 
 OM_uint32 kg_get_context (OM_uint32 *minor_status,
 				    krb5_context *context);
-	
+
+OM_uint32 kg_sync_ccache_name (OM_uint32 *minor_status);
+
+OM_uint32 kg_get_ccache_name (OM_uint32 *minor_status, 
+                              const char **out_name);
+
+OM_uint32 kg_set_ccache_name (OM_uint32 *minor_status, 
+                              const char *name);
+
 /** declarations of internal name mechanism functions **/
 
 OM_uint32 krb5_gss_acquire_cred
