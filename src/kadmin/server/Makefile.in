@@ -1,0 +1,25 @@
+CFLAGS = $(CCOPTS) $(DEFS) $(LOCALINCLUDE) 
+
+all::
+
+SRCS = $(srcdir)/kadm_rpc_svc.c \
+	$(srcdir)/server_stubs.c \
+	$(srcdir)/ovsec_kadmd.c \
+	$(srcdir)/misc.c
+
+OBJS = kadm_rpc_svc.o \
+	server_stubs.o \
+	ovsec_kadmd.o \
+	misc.o
+
+all::	ovsec_adm_server
+
+ovsec_adm_server: $(OBJS) $(DEPLIBS)
+	$(LD) $(LDFLAGS) $(LDARGS) -o ovsec_adm_server $(OBJS) $(LIBS)
+
+install::
+	$(INSTALL_PROGRAM) ./ovsec_adm_server ${DESTDIR}$(SERVER_BINDIR)/kadmind5
+	$(INSTALL_DATA) $(srcdir)/kadmind5.M ${DESTDIR}$(SERVER_MANDIR)/kadmind5.8
+
+clean::
+	$(RM) ovsec_adm_server
