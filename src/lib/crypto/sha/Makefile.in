@@ -1,7 +1,8 @@
 CFLAGS = $(CCOPTS) $(DEFS) -I$(srcdir)/../des
 
 ##DOSBUILDTOP = ..\..\..
-##DOSLIBNAME=..\crypto.lib
+##DOSMYDIR=sha
+##DOSOBJFILE=..\sha.lst
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
@@ -20,7 +21,11 @@ SRCS=	$(srcdir)/shs.c		\
 
 all-unix:: shared $(OBJS) 
 all-mac:: shared $(OBJS) 
-all-windows:: $(OBJS)
+all-windows:: $(OBJFILE)
+
+##DOS$(OBJFILE):: $(OBJS)
+##DOS	$(RM) $(OBJFILE)
+##DOS	$(LIBECHO) -p $(MYDIR)\ *.obj > $(OBJFILE)
 
 shared:
 	mkdir shared
@@ -45,3 +50,4 @@ clean-unix::
 clean-mac::
 	$(RM) shared/*
 clean-windows::
+	$(RM) $(OBJFILE)
