@@ -194,7 +194,7 @@ void AbsoluteToSecsNanosecs (
     * If this is the first call, compute the offset between
     * GetDateTime and UpTime.
     */
-   if (U64Compare (gNanosecondsAtStart, U64SetU (0))) {
+   if (U64Compare (gNanosecondsAtStart, U64SetU (0)) == 0) {
       UInt32				secondsAtStart;
       AbsoluteTime			absoluteTimeAtStart;
       UInt64				upTimeAtStart;
