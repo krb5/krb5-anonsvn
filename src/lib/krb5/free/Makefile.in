@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..
@@ -75,7 +78,10 @@ SRCS=	\
 	$(srcdir)/f_cred.c	\
 	$(srcdir)/f_cred_enc.c
 
-all-unix:: shared $(OBJS)
+all-unix:: shared $(OBJS) DONE
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: $(OBJS)
 all-windows:: $(OBJS)
 

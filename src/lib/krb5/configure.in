@@ -1,22 +1,40 @@
-AC_INIT(configure.in)
+AC_INIT(krb/mk_req.c)
 CONFIG_RULES
-CONFIG_DIRS(error_tables asn.1 ccache keytab krb rcache free os posix)
+dnl CONFIG_DIRS(error_tables asn.1 ccache keytab krb rcache free os posix)
 AC_PROG_ARCHIVE
 AC_PROG_ARCHIVE_ADD
 AC_PROG_RANLIB
 AC_PROG_INSTALL
-DO_SUBDIRS
-dnl
+AC_PROG_AWK
 USE_ANAME
 ANAME_DBDEP="$kaname_dbdep"
 ANAME_DBLIB="$kaname_libs"
 AC_SUBST(ANAME_DBDEP)
 AC_SUBST(ANAME_DBLIB)
 dnl
-V5_MAKE_SHARED_LIB(libkrb5,0.1,.., ./krb5)
+dnl punt shlib for now...
+SHARED_RULE=
+AC_SUBST(SHARED_RULE)
+SHARED_RULE_LOCAL=
+AC_SUBST(SHARED_RULE_LOCAL)
+dnl
+dnl V5_MAKE_SHARED_LIB(libkrb5,0.1,.., ./krb5)
 CRYPTO_SH_VERS=$krb5_cv_shlib_version_libcrypto
 AC_SUBST(CRYPTO_SH_VERS)
 COMERR_SH_VERS=$krb5_cv_shlib_version_libcom_err
 AC_SUBST(COMERR_SH_VERS)
-AppendRule([all::	all-$(WHAT)])
-V5_AC_OUTPUT_MAKEFILE
+AC_REPLACE_FUNCS(vfprintf vsprintf strdup strcasecmp strerror memmove daemon getuid sscanf syslog)
+AC_OUTPUT(Makefile:../../config/pre.in+Makefile.in+../../config/recurse.in+../../config/post.in
+  error_tables/Makefile:../../config/pre.in+error_tables/Makefile.in+../../config/post.in
+  asn.1/Makefile:../../config/pre.in+asn.1/Makefile.in+../../config/post.in
+  ccache/Makefile:../../config/pre.in+ccache/Makefile.in+../../config/recurse.in+../../config/post.in
+  ccache/file/Makefile:../../config/pre.in+ccache/file/Makefile.in+../../config/post.in
+  ccache/stdio/Makefile:../../config/pre.in+ccache/stdio/Makefile.in+../../config/post.in
+  ccache/memory/Makefile:../../config/pre.in+ccache/memory/Makefile.in+../../config/post.in
+  keytab/Makefile:../../config/pre.in+keytab/Makefile.in+../../config/recurse.in+../../config/post.in
+  keytab/file/Makefile:../../config/pre.in+keytab/file/Makefile.in+../../config/post.in
+  krb/Makefile:../../config/pre.in+krb/Makefile.in+../../config/post.in
+  rcache/Makefile:../../config/pre.in+rcache/Makefile.in+../../config/post.in
+  free/Makefile:../../config/pre.in+free/Makefile.in+../../config/post.in
+  os/Makefile:../../config/pre.in+os/Makefile.in+../../config/post.in
+  posix/Makefile:../../config/pre.in+posix/Makefile.in+../../config/post.in)

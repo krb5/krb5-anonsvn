@@ -1,3 +1,8 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
+SUBDIRS=file stdio memory
+
 CFLAGS = $(CCOPTS) $(DEFS) -I$(srcdir)$(S)file -I$(srcdir)$(S)stdio
 
 ##DOSBUILDTOP = ..\..\..
@@ -19,7 +24,10 @@ SRCS=	$(srcdir)/ccbase.c \
 	$(srcdir)/ccdefops.c \
 	$(srcdir)/ser_cc.c
 
-all-unix:: shared $(OBJS) 
+all-unix:: shared $(OBJS) DONE
+
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
 
 all-mac:: $(OBJS) 
 all-windows:: $(OBJS) 

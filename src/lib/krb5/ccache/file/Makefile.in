@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..\..
@@ -23,7 +26,10 @@ SRCS 	= $(srcdir)/fcc_close.c $(srcdir)/fcc_destry.c $(srcdir)/fcc_eseq.c \
 	$(srcdir)/fcc_write.c $(srcdir)/fcc_sflags.c $(srcdir)/fcc_defops.c \
 	$(srcdir)/fcc_errs.c $(srcdir)/fcc_maybe.c
 
-all-unix:: shared $(OBJS)
+all-unix:: shared $(OBJS) DONE
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: $(OBJS)
 all-windows:: $(OBJS)
 

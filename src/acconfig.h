@@ -9,8 +9,8 @@
 #undef ANSI_STDIO
 #undef HAS_SETVBUF
 #undef HAS_STDLIB_H
-#undef HAS_STRDUP
-#undef HAS_LABS
+#undef HAVE_LABS
+#undef HAVE_STRDUP
 #undef HAS_VOID_TYPE
 #undef KRB5_NO_PROTOTYPES
 #undef KRB5_PROVIDE_PROTOTYPES
@@ -32,6 +32,32 @@
 
 #undef HAVE_STDARG_H
 #undef HAVE_VARARGS_H
+
+#undef HAVE_UNISTD_H
+
+/* for lib/krb5/krb */
+
+#undef HAVE_STRFTIME
+#undef HAVE_STRPTIME
+#undef HAVE_GETEUID
+
+/* for lib/krb5/ccache/file */
+
+#undef HAVE_FLOCK
+
+/* for lib/krb5/os */
+
+#undef HAVE_REGCOMP
+#undef HAVE_REGEX_H
+#undef HAVE_REGEXP_H
+#undef HAVE_RECOMP
+
+/* for lib/krb5/posix */
+
+#undef HAVE_SETENV
+#undef HAVE_UNSETENV
+#undef HAVE_GETENV
+#undef HAVE_SETSID
 
 /* Define if MIT Project Athena default configuration should be used */
 #undef KRB5_ATHENA_COMPAT

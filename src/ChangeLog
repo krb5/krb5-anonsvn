@@ -1,3 +1,8 @@
+Sat Jun 22 16:44:42 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* acconfig.h: fixes to allow for most of defs in lib/krb5 to be
+		in include/krb5/autoconf.h
+
 Mon Jun 17 18:34:10 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* aclocal.m4 (CHECK_DB): explicitly set $LIBS before calling

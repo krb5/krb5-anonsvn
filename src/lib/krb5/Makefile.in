@@ -1,4 +1,8 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
 ##DOSBUILDTOP = ..\..
+
+SUBDIRS=error_tables asn.1 ccache keytab krb rcache free os posix
 
 ANAME_DBDEP=@ANAME_DBDEP@
 ANAME_DBLIB=@ANAME_DBLIB@
@@ -27,24 +31,24 @@ SHLIB_LDFLAGS= $(LDFLAGS) @SHLIB_RPATH_DIRS@
 #	$(LD_UNRESOLVED_PREFIX)_et_list $(LD_UNRESOLVED_PREFIX)error_message
 SHLIB_LIBDIRS= @SHLIB_LIBDIRS@
 
-all-unix::
+all-unix:: all-recurse
+
+all-unix:: libkrb5.a
 
 all-windows::
 
-libkrb5.$(STEXT): $(LIBDONE)
-	@if test -f $@ ; then \
-		(set -x; $(LIBUPDATE) $@ DONE $(LIB_SUBDIRS)) \
-	else \
-		(set -x; $(LIBUPDATE) --force $@ DONE $(LIB_SUBDIRS)) \
-	fi
-	$(RANLIB) libkrb5.$(STEXT)
+libkrb5.a: $(LIBDONE)
+	$(LIBUPDATE) --force $@ DONE $(LIB_SUBDIRS)
+	$(RANLIB) $@
 	touch libkrb5.stamp
 
 clean-unix::
-	$(RM) libkrb5.$(LIBEXT) libkrb5.stamp
+	$(RM) libkrb5.a libkrb5.stamp
 
 clean-windows::
 	$(RM) krb5.lib krb5.bak
+
+check-unix::
 
 all-windows::
 	cd ASN.1

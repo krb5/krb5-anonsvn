@@ -14,6 +14,45 @@ all-windows::
 	-$(MAKE) -$(MFLAGS)
 	cd ..
 
+#
+# util/et headers
+#
+
+com_err.h: $(SRCTOP)/util/et/com_err.h
+	$(RM) $@
+	$(CP) $@ .
+
+#
+# util/ss headers
+#
+
+ss/ss.h: $(SRCTOP)/util/ss/ss.h
+	@if test ! -d ss; then (set -x;mkdir ss) fi
+	$(RM) $@
+	$(CP) $@ ss
+
+ss/mit-sipb-copyright.h: $(SRCTOP)/util/ss/mit-sipb-copyright.h
+	@if test ! -d ss; then (set -x;mkdir ss) fi
+	$(RM) $@
+	$(CP) $@ ss
+
+ss/ss_err.h: $(BUILDTOP)/util/ss/ss_err.h
+	@if test ! -d ss; then (set -x;mkdir ss) fi
+	$(RM) $@
+	$(CP) $@ ss
+
+#
+# util/profile header
+#
+
+profile.h: $(BUILDTOP)/profile.h
+	$(RM) $@
+	$(CP) $@
+
+#
+# from util/pty
+#
+
 krb5/autoconf.h:
 	(cd krb5; $(MAKE) autoconf.h)
 
@@ -54,7 +93,8 @@ kv5m_err.h: $(SRCTOP)/lib/krb5/error_tables/kv5m_err.et
 
 clean-unix::
 	$(RM) krb5.h krb5_err.h kdb5_err.h kv5m_err.h \
-		asn1_err.h adm_err.h
+		asn1_err.h adm_err.h \
+		ss/ss.h ss/mit-sipb-copyright.h ss/ss_err.h
 
 clean-mac::
 

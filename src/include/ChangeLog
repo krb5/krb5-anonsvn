@@ -1,3 +1,8 @@
+Wed Jun 19 00:21:50 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* Makefile.in: add targets to copy in include files from util,
+		mostly
+
 Wed Jun 12 01:32:33 1996  Theodore Ts'o  <tytso@rsts-11.mit.edu>
 
 	* syslog.h: Add #ifdef _WIN32 in places where we had #ifdef _MSDOS

@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..
@@ -11,7 +14,10 @@ MACSRCS = getuid.c strcasecmp.c strdup.c
 
 OBJS = setenv.$(OBJEXT)	@LIBOBJS@
 
-all-unix:: shared $(OBJS)
+all-unix:: shared $(OBJS) DONE
+DONE: $(OBJS)
+	@if test -n "$(OBJS)"; then echo $(OBJS) > DONE; fi
+
 all-mac: $(OBJS)
 all-windows:: syslog.obj sscanf.obj
 

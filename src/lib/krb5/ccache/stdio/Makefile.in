@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 .c.o:
@@ -19,7 +22,10 @@ SRCS 	= $(srcdir)/scc_close.c $(srcdir)/scc_destry.c $(srcdir)/scc_eseq.c \
 	$(srcdir)/scc_errs.c $(srcdir)/scc_maybe.c
 
 
-all-unix:: shared $(OBJS)
+all-unix:: shared $(OBJS) DONE
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: $(OBJS)
 all-windows:: $(OBJS)
 

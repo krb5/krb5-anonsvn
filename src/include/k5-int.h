@@ -126,7 +126,7 @@
 #define USE_STRING_H 
 #define HAVE_SRAND
 #define HAVE_ERRNO
-#define HAS_STRDUP
+#define HAVE_STRDUP
 #define NO_USERID
 #define NOFCHMOD
 #define NOCHMOD
@@ -228,7 +228,7 @@ int sscanf(const char *str, char const *fmt0, ...);
 #define SIZEOF_SHORT 2
 #define HAVE_SRAND
 #define NO_PASSWORD
-#define HAS_LABS
+#define HAVE_LABS
 #define ENOMEM -1
 #define ANSI_STDIO
 #ifndef _SIZET
@@ -348,7 +348,7 @@ typedef unsigned char	u_char;
 #define O_BINARY 0
 #endif
 
-#ifndef HAS_LABS
+#ifndef HAVE_LABS
 #define labs(x) abs(x)
 #endif
 
@@ -694,11 +694,11 @@ extern char *getenv();
 #include <strings.h>
 #endif
 
-#ifndef HAS_STRDUP
+#ifndef HAVE_STRDUP
 extern char *strdup KRB5_PROTOTYPE((const char *));
 #endif
 
-#ifdef HAS_UNISTD_H
+#ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 

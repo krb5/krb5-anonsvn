@@ -1,3 +1,8 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
+SUBDIRS=file
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..
@@ -28,7 +33,10 @@ SRCS=	\
 shared:
 	mkdir shared
 
-all-unix:: shared $(OBJS)
+all-unix:: shared $(OBJS) DONE
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: $(OBJS)
 all-windows:: $(OBJS)
 	cd file

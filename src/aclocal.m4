@@ -86,34 +86,27 @@ AC_ARG_PROGRAM dnl
 dnl
 dnl check for sys_errlist -- DECLARE_SYS_ERRLIST
 dnl
-define(DECLARE_SYS_ERRLIST,[
-AC_MSG_CHECKING([for sys_errlist declaration])
-AC_CACHE_VAL(krb5_cv_decl_errlist,
-[AC_TRY_LINK(
-[#include <stdio.h>
-#include <errno.h>], [1+sys_nerr;],dnl
- krb5_cv_decl_errlist=yes, krb5_cv_decl_errlist=no)])
-AC_MSG_RESULT($krb5_cv_decl_errlist)
+AC_DEFUN(DECLARE_SYS_ERRLIST,
+[AC_MSG_CHECKING([for sys_errlist declaration])
+AC_CACHE_CHECK([for sys_errlist declaration], krb5_cv_decl_errlist,
+[AC_TRY_LINK([#include <stdio.h>
+#include <errno.h>], [1+sys_nerr;],
+krb5_cv_decl_errlist=yes, krb5_cv_decl_errlist=no)])
 if test $krb5_cv_decl_errlist = no; then
-	AC_DEFINE(NEED_SYS_ERRLIST)
-fi
-])dnl
+  AC_DEFINE(NEED_SYS_ERRLIST)
+fi])dnl
 dnl
 dnl check for sigmask/sigprocmask -- CHECK_SIGPROCMASK
 dnl
-define(CHECK_SIGPROCMASK,[
-AC_MSG_CHECKING([for use of sigprocmask])
-AC_CACHE_VAL(krb5_cv_func_sigprocmask_use,
-[AC_TRY_LINK(
-[#include <signal.h>], [sigmask(1);], 
+AC_DEFUN(CHECK_SIGPROCMASK,
+[AC_CACHE_CHECK([for use of sigprocmask], krb5_cv_func_sigprocmask_use,
+[AC_TRY_LINK([#include <signal.h>], [sigmask(1);], 
  krb5_cv_func_sigprocmask_use=no,
 AC_TRY_LINK([#include <signal.h>], [sigprocmask(SIG_SETMASK,0,0);],
  krb5_cv_func_sigprocmask_use=yes, krb5_cv_func_sigprocmask_use=no))])
-AC_MSG_RESULT($krb5_cv_func_sigprocmask_use)
 if test $krb5_cv_func_sigprocmask_use = yes; then
- AC_DEFINE(USE_SIGPROCMASK)
-fi
-])dnl
+  AC_DEFINE(USE_SIGPROCMASK)
+fi])dnl
 dnl
 define(AC_PROG_ARCHIVE, [AC_PROGRAM_CHECK(ARCHIVE, ar, ar cqv, false)])dnl
 define(AC_PROG_ARCHIVE_ADD, [AC_PROGRAM_CHECK(ARADD, ar, ar cruv, false)])dnl
@@ -452,7 +445,8 @@ AC_CACHE_VAL(krb5_cv_type_yylineno,
 	AC_DEFINE([NO_YYLINENO])
   fi
 ])dnl
-dnl
+
+ifelse([dnl
 dnl fix AC_PROG_LEX
 dnl
 undefine([AC_PROG_LEX])dnl
@@ -465,7 +459,8 @@ then
    flex*) AC_CHECK_LIB(fl,main, LEXLIB="-lfl") ;;
    *) AC_CHECK_LIB(l,main, LEXLIB="-ll") ;;
    esac
-fi
+fi])
+
 AC_MSG_RESULT(setting LEXLIB to $LEXLIB)
 AC_SUBST(LEX)AC_SUBST(LEXLIB)])dnl
 dnl

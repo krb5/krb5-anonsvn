@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..\..
@@ -21,7 +24,10 @@ SRCS    = $(srcdir)/mcc_close.c $(srcdir)/mcc_destry.c $(srcdir)/mcc_eseq.c \
 	$(srcdir)/mcc_store.c $(srcdir)/mcc_ops.c \
 	$(srcdir)/mcc_sflags.c
 
-all-unix:: shared $(OBJS)
+all-unix:: shared $(OBJS) DONE
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: $(OBJS)
 all-windows:: $(OBJS)
 
