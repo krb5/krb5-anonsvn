@@ -1,5 +1,7 @@
 Fri Dec 27 16:54:41 1996  Tom Yu  <tlyu@mit.edu>
 
+	* aclocal.m4: Fix up solaris shared lib generation flags.
+
 	* aclocal.m4: Many changes.  Add KRB5_LIB_PARAMS,
 	KRB5_BUILD_LIBRARY, KRB5_BUILD_LIBOBJS, which do the obvious
 	things.  Change V5_AC_OUTPUT_MAKEFILE to use $krb5_prepend_frags

@@ -1219,6 +1219,7 @@ AC_CACHE_VAL(krb5_cv_host,
 [AC_CANONICAL_HOST
 krb5_cv_host=$host])
 AC_MSG_RESULT($krb5_cv_host)
+AC_REQUIRE([AC_PROG_CC])
 #
 # Set up some defaults.
 #
@@ -1250,10 +1251,15 @@ alpha-dec-osf*)
 	PROFFLAGS=-pg
 	;;
 *-*-solaris*)
-	PICFLAGS=-fpic
+	if test "$GCC" = yes; then
+		PICFLAGS=-fpic
+		LDCOMBINE='$(CC) -shared'
+	else
+		PICFLAGS=-Kpic
+		LDCOMBINE='$(CC) -dy -G -z text'
+	fi
 	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
 	SHLIBEXT=.so
-	LDCOMBINE='$(CC) -G'
 	SONAMEFLAG='-h lib$(LIBNAME).$(LIBMAJOR).$(LIBMINOR)'
 	PROFFLAGS=-pg
 	;;
