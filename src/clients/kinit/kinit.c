@@ -61,7 +61,7 @@ main(argc, argv)
     char *cache_name = NULL;		/* -f option */
     char *keytab_name = NULL;		/* -t option */
     char *service_name = NULL;		/* -s option */
-    krb5_deltat lifetime = KRB5_DEFAULT_LIFE;	/* -l option */
+    krb5_deltat lifetime = 0;	/* -l option */
     krb5_timestamp starttime = 0;
     krb5_deltat rlife = 0;
     int options = KRB5_DEFAULT_OPTIONS;
@@ -274,6 +274,31 @@ main(argc, argv)
     }
 	
     my_creds.server = server;
+
+    {
+      int forward;
+		krb5_appdefault_boolean(kcontext, "kinit", krb5_princ_realm(kcontext,me),
+					"forwardable", 0, &forward);
+	if (forward)
+		options |= KDC_OPT_FORWARDABLE;
+
+	if (!lifetime) {
+		char *lifetimestring;
+		krb5_appdefault_string(kcontext, "kinit", krb5_princ_realm(kcontext,me),
+					   "default_lifetime", "",
+					   &lifetimestring);
+		if (lifetimestring[0]) {
+		  code = krb5_string_to_deltat(lifetimestring, &lifetime);
+		  if (code != 0 || lifetime == 0) {
+		    fprintf(stderr, "Bad lifetime value: %s\n",
+			    lifetimestring);
+		    exit(1);
+		  }
+		}
+		else lifetime = KRB5_DEFAULT_LIFE;
+		free(lifetimestring);
+	}
+    }
 
     if (options & KDC_OPT_POSTDATED) {
       my_creds.times.starttime = starttime;
