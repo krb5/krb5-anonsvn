@@ -1,3 +1,7 @@
+2002-03-07	Alexandra Ellwood <lxs@mit.edu>
+    * profile.hin: Added check for CFM compiles.  Removed dependency on 
+    PRAGMA_* macros.
+
 2002-03-06	Alexandra Ellwood <lxs@mit.edu>
     prof_file.c, prof_init.c: Updated header paths for Mac OS X
 
