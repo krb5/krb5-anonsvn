@@ -1282,5 +1282,66 @@ static int decrypt_key_data(krb5_context context,
      return 0;
 }
 
-						     
-	  
+/*
+ * Function: kadm5_decrypt_key
+ *
+ * Purpose: Retrieves and decrypts a principal key.
+ *
+ * Arguments:
+ *
+ *	server_handle	(r) kadm5 handle
+ *	entry		(r) principal retrieved with kadm5_get_principal
+ *	ktype		(r) enctype to search for, or -1 to ignore
+ *	stype		(r) salt type to search for, or -1 to ignore
+ *	kvno		(r) kvno to search for, -1 for max, 0 for max
+ *			only if it also matches ktype and stype
+ *	keyblock	(w) keyblock to fill in
+ *	keysalt		(w) keysalt to fill in, or NULL
+ *	kvnop		(w) kvno to fill in, or NULL
+ *
+ * Effects: Searches the key_data array of entry, which must have been
+ * retrived with kadm5_get_principal with the KADM5_KEY_DATA mask, to
+ * find a key with a specified enctype, salt type, and kvno in a
+ * principal entry.  If not found, return ENOENT.  Otherwise, decrypt
+ * it with the master key, and return the key in keyblock, the salt
+ * in salttype, and the key version number in kvno.
+ *
+ * If ktype or stype is -1, it is ignored for the search.  If kvno is
+ * -1, ktype and stype are ignored and the key with the max kvno is
+ * returned.  If kvno is 0, only the key with the max kvno is returned
+ * and only if it matches the ktype and stype; otherwise, ENOENT is
+ * returned.
+ */
+kadm5_ret_t kadm5_decrypt_key(void *server_handle,
+			      kadm5_principal_ent_t entry, krb5_int32
+			      ktype, krb5_int32 stype, krb5_int32
+			      kvno, krb5_keyblock *keyblock,
+			      krb5_keysalt *keysalt, int *kvnop)
+{
+    kadm5_server_handle_t handle = server_handle;
+    krb5_db_entry dbent;
+    krb5_key_data *key_data;
+    int ret;
+
+    CHECK_HANDLE(server_handle);
+
+    if (entry->n_key_data == 0 || entry->key_data == NULL)
+	 return EINVAL;
+
+    /* find_enctype only uses these two fields */
+    dbent.n_key_data = entry->n_key_data;
+    dbent.key_data = entry->key_data;
+    if (ret = krb5_dbe_find_enctype(handle->context, &dbent, ktype,
+				    stype, kvno, &key_data))
+	 return ret;
+
+    if (ret = krb5_dbekd_decrypt_key_data(handle->context,
+					  &master_encblock, key_data,
+					  keyblock, keysalt))
+	 return ret;
+
+    if (kvnop)
+	 *kvnop = key_data->key_data_kvno;
+
+    return KADM5_OK;
+}

@@ -95,6 +95,8 @@ bool_t		xdr_osa_policy_ent_rec(XDR *xdrs, osa_policy_ent_t objp);
  * Functions
  */
 
+osa_adb_ret_t	osa_adb_create_db(char *filename, char *lockfile, int magic);
+osa_adb_ret_t	osa_adb_destroy_db(char *filename, char *lockfile, int magic);
 osa_adb_ret_t	osa_adb_init_db(osa_adb_db_t *dbp, char *filename,
 				char *lockfile, int magic);
 osa_adb_ret_t	osa_adb_fini_db(osa_adb_db_t db, int magic);
@@ -103,6 +105,8 @@ osa_adb_ret_t	osa_adb_release_lock(osa_adb_db_t db);
 osa_adb_ret_t	osa_adb_open_and_lock(osa_adb_princ_t db, int locktype);
 osa_adb_ret_t	osa_adb_close_and_unlock(osa_adb_princ_t db);
 
+osa_adb_ret_t	osa_adb_create_policy_db(kadm5_config_params *params);
+osa_adb_ret_t	osa_adb_destroy_policy_db(kadm5_config_params *params);
 osa_adb_ret_t	osa_adb_open_princ(osa_adb_princ_t *db, char *filename);
 osa_adb_ret_t	osa_adb_open_policy(osa_adb_policy_t *db,
 				    kadm5_config_params *rparams);

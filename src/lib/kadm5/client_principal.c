@@ -287,3 +287,13 @@ kadm5_randkey_principal(void *server_handle,
 	 
     return r->code;
 }
+
+/* not supported on client side */
+kadm5_ret_t kadm5_decrypt_key(void *server_handle,
+			      kadm5_principal_ent_t entry, krb5_int32
+			      ktype, krb5_int32 stype, krb5_int32
+			      kvno, krb5_keyblock *keyblock,
+			      krb5_keysalt *keysalt, int *kvnop)
+{
+     return EINVAL;
+}

@@ -35,6 +35,20 @@ extern	int errno;
 	  return ret; \
 }
 
+osa_adb_ret_t osa_adb_create_policy_db(kadm5_config_params *params)
+{
+     return osa_adb_create_db(params->admin_dbname,
+			      params->admin_lockfile,
+			      OSA_ADB_POLICY_DB_MAGIC);
+}
+
+osa_adb_ret_t osa_adb_destroy_policy_db(kadm5_config_params *params)
+{
+     return osa_adb_destroy_db(params->admin_dbname,
+			       params->admin_lockfile,
+			       OSA_ADB_POLICY_DB_MAGIC);
+}
+
 osa_adb_ret_t osa_adb_open_policy(osa_adb_princ_t *dbp,
 				  kadm5_config_params *rparams)
 {

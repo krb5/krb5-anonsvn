@@ -41,13 +41,15 @@ struct iter_data {
  * Arguments:
  *
  *	glob	(r) the shell-style glob (?*[]) to convert
+ *	realm	(r) the default realm to append, or NULL
  *	regexp	(w) the ed-style regexp created from glob
  *
  * Effects:
  *
  * regexp is filled in with allocated memory contained a regular
  * expression to be used with re_comp/compile that matches what the
- * shell-style glob would match.  
+ * shell-style glob would match.  If glob does not contain an "@"
+ * character and realm is not NULL, "@<realm>" is appended to the regexp.
  *
  * Conversion algorithm:
  *
@@ -60,17 +62,21 @@ struct iter_data {
  *	other characters are copied
  *	regexp is anchored with ^ and $
  */
-kadm5_ret_t glob_to_regexp(char *glob, char **regexp)
+kadm5_ret_t glob_to_regexp(char *glob, char *realm, char **regexp)
 {
+     int append_realm;
      char *p;
 
      /* validate the glob */
      if (glob[strlen(glob)-1] == '\\')
 	  return EINVAL;
 
-     /* a character of glob can turn into two in regexp, plus ^ and $ */
-     /* and trailing null */
-     p = (char *) malloc(strlen(glob)*2+3);
+     /* A character of glob can turn into two in regexp, plus ^ and $ */
+     /* and trailing null.  If glob has no @, also allocate space for */
+     /* the realm. */
+     append_realm = (realm != NULL) && (strchr(glob, '@') != NULL);
+     p = (char *) malloc(strlen(glob)*2+ 3 +
+			 (append_realm ? 0 : (strlen(realm)+1)));
      if (p == NULL)
 	  return ENOMEM;
      *regexp = p;
@@ -100,6 +106,12 @@ kadm5_ret_t glob_to_regexp(char *glob, char **regexp)
 	       break;
 	  }
 	  glob++;
+     }
+
+     if (! append_realm) {
+	  *p++ = '@';
+	  strcpy(p, realm);
+	  p += strlen(realm);
      }
 
      *p++ = '$';
@@ -162,7 +174,8 @@ kadm5_ret_t kadm5_get_either(int princ,
 
      CHECK_HANDLE(server_handle);
 
-     if ((ret = glob_to_regexp(exp, &regexp)) != KADM5_OK)
+     if ((ret = glob_to_regexp(exp, princ ? handle->params.realm : NULL,
+			       &regexp)) != KADM5_OK)
 	  return ret;
 
      if (

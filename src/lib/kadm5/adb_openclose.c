@@ -1,57 +1,7 @@
 /*
  * Copyright 1993 OpenVision Technologies, Inc., All Rights Reserved
  *
- * $Header$
- * 
- * $Log$
- * Revision 1.14.2.1  1996/06/20 02:16:26  marc
- * File added to the repository on a branch
- *
- * Revision 1.14  1996/05/30  22:23:52  bjaspan
- * zero db *correctly* before using
- *
- * Revision 1.13  1996/05/30 21:13:41  bjaspan
- * zero db before using
- *
- * Revision 1.12  1996/05/08 19:12:29  bjaspan
- * use file names specifies in realm params instead of hard-coded constants
- *
- * Revision 1.11  1995/11/07  23:23:12  grier
- * Add stdlib.h
- *
- * Revision 1.10  1995/08/27  12:22:54  jik
- * Include <unistd.h> for F_OK.  See PR 3463.
- *
- * Revision 1.9  1995/08/24 20:23:26  bjaspan
- * initialize perm = 0
- *
- * Revision 1.8  1995/08/24  19:05:10  bjaspan
- * remove extraneous return
- *
- * Revision 1.7  1995/08/22  20:24:25  marc
- * correct race condition where db was unlocked, then closed
- *
- * Revision 1.6  1995/08/22  20:14:57  marc
- * clean up mode grossity
- *
- * Revision 1.5  1995/08/22  19:58:41  marc
- * [secure-admin/3394]
- * fix off-by-one error which was causing the db never to be closed.
- * clarification changes
- *
- * Revision 1.4  1995/08/22  18:48:06  bjaspan
- * [secure-admin/3394: fix design flaw with multiple open database
- * locking
- *
- * Revision 1.3  1995/08/10  22:42:09  bjaspan
- * [secure-admin/3394] first cut at unit tests for locking
- *
- * Revision 1.2  1995/08/09  19:00:17  bjaspan
- * [secure-admin/3394] add permanent lock mode, fix import/export
- *
- * Revision 1.1  1995/08/08  18:30:25  bjaspan
- * Initial revision
- *
+ * $Header$ 
  */
 
 #if !defined(lint) && !defined(__CODECENTER__)
@@ -66,13 +16,55 @@ static char *rcsid = "$Header$";
 
 #define MAX_LOCK_TRIES 5
 
+struct _locklist {
+     osa_adb_lock_ent lockinfo;
+     struct _locklist *next;
+};
+
+osa_adb_ret_t osa_adb_create_db(char *filename, char *lockfilename,
+				int magic)
+{
+     FILE *lf;
+     DB *db;
+     HASHINFO info;
+     
+     lf = fopen(lockfilename, "w+");
+     if (lf == NULL)
+	  return errno;
+     (void) fclose(lf);
+
+     memset(&info, 0, sizeof(info));
+     info.hash = NULL;
+     info.bsize = 256;
+     info.ffactor = 8;
+     info.nelem = 25000;
+     info.lorder = 0;
+     db = dbopen(filename, O_RDWR | O_CREAT | O_EXCL, 0600, DB_HASH, &info);
+     if (db == NULL)
+	  return errno;
+     if (db->close(db) < 0)
+	  return errno;
+     return OSA_ADB_OK;
+}
+
+osa_adb_ret_t osa_adb_destroy_db(char *filename, char *lockfilename,
+				 int magic)
+{
+     /* the admin databases do not contain security-critical data */
+     if (unlink(filename) < 0 ||
+	 unlink(lockfilename) < 0)
+	  return errno;
+     return OSA_ADB_OK;
+}
+
 osa_adb_ret_t osa_adb_init_db(osa_adb_db_t *dbp, char *filename,
 			      char *lockfilename, int magic)
 {
      osa_adb_db_t db;
-     static osa_adb_lock_ent lockinfo = { NULL, NULL, 0, 0, 0, NULL };
+     static struct _locklist *locklist = NULL;
+     struct _locklist *lockp;
      krb5_error_code code;
-
+     
      if (dbp == NULL || filename == NULL)
 	  return EINVAL;
 
@@ -87,34 +79,84 @@ osa_adb_ret_t osa_adb_init_db(osa_adb_db_t *dbp, char *filename,
      db->info.nelem = 25000;
      db->info.lorder = 0;
 
-     if (lockinfo.lockfile == NULL) {
-	  if (code = krb5_init_context(&lockinfo.context)) {
-	     free(db);
-	     return((osa_adb_ret_t) code);
+     /*
+      * A process is allowed to open the same database multiple times
+      * and access it via different handles.  If the handles use
+      * distinct lockinfo structures, things get confused: lock(A),
+      * lock(B), release(B) will result in the kernel unlocking the
+      * lock file but handle A will still think the file is locked.
+      * Therefore, all handles using the same lock file must share a
+      * single lockinfo structure.
+      *
+      * It is not sufficient to have a single lockinfo structure,
+      * however, because a single process may also wish to open
+      * multiple different databases simultaneously, with different
+      * lock files.  This code used to use a single static lockinfo
+      * structure, which means that the second database opened used
+      * the first database's lock file.  This was Bad.
+      *
+      * We now maintain a linked list of lockinfo structures, keyed by
+      * lockfilename.  An entry is added when this function is called
+      * with a new lockfilename, and all subsequent calls with that
+      * lockfilename use the existing entry, updating the refcnt.
+      * When the database is closed with fini_db(), the refcnt is
+      * decremented, and when it is zero the lockinfo structure is
+      * freed and reset.  The entry in the linked list, however, is
+      * never removed; it will just be reinitialized the next time
+      * init_db is called with the right lockfilename.
+      */
+
+     /* find or create the lockinfo structure for lockfilename */
+     lockp = locklist;
+     while (lockp) {
+	  if (strcmp(lockp->lockinfo.filename, lockfilename) == 0)
+	       break;
+	  else
+	       lockp = lockp->next;
+     }
+     if (lockp == NULL) {
+	  /* doesn't exist, create it, add to list */
+	  lockp = (struct _locklist *) malloc(sizeof(*lockp));
+	  if (lockp == NULL) {
+	       free(db);
+	       return ENOMEM;
+	  }
+	  memset(lockp, 0, sizeof(lockp));
+	  lockp->next = locklist;
+	  locklist = lockp;
+     }
+
+     /* now initialize lockp->lockinfo if necessary */
+     if (lockp->lockinfo.lockfile == NULL) {
+	  if (code = krb5_init_context(&lockp->lockinfo.context)) {
+	       free(db);
+	       return((osa_adb_ret_t) code);
 	  }
 
 	  /*
 	   * needs be open read/write so that write locking can work with
 	   * POSIX systems
 	   */
-	  lockinfo.filename = lockfilename;
-	  if ((lockinfo.lockfile = fopen(lockinfo.filename, "r+")) == NULL) {
+	  lockp->lockinfo.filename = strdup(lockfilename);
+	  if ((lockp->lockinfo.lockfile = fopen(lockfilename, "r+")) == NULL) {
 	       /*
 		* maybe someone took away write permission so we could only
 		* get shared locks?
 		*/
-	       if ((lockinfo.lockfile = fopen(lockinfo.filename, "r")) == NULL) {
+	       if ((lockp->lockinfo.lockfile = fopen(lockfilename, "r"))
+		   == NULL) {
 		    free(db);
 		    return OSA_ADB_NOLOCKFILE;
 	       }
 	  }
-	  lockinfo.lockmode = lockinfo.lockcnt = 0;
+	  lockp->lockinfo.lockmode = lockp->lockinfo.lockcnt = 0;
      }
 
-     db->lock = &lockinfo;
+     /* lockp is set, lockinfo is initialized, update the reference count */
+     db->lock = &lockp->lockinfo;
      db->lock->refcnt++;
 
-     db->filename = filename;
+     db->filename = strdup(filename);
      db->magic = magic;
 
      *dbp = db;
@@ -134,13 +176,16 @@ osa_adb_ret_t osa_adb_fini_db(osa_adb_db_t db, int magic)
      }
 
      if (db->lock->refcnt == 0) {
+	  /* don't free db->lock->filename, it is used as a key to
+	   * find the lockinfo entry in the linked list */
 	  if (fclose(db->lock->lockfile) != 0)
 	       return OSA_ADB_NOLOCKFILE;
 	  db->lock->lockfile = NULL;
 	  krb5_free_context(db->lock->context);
      }
-     
+
      db->magic = 0;
+     free(db->filename);
      free(db);
      return OSA_ADB_OK;
 }     
@@ -239,23 +284,15 @@ osa_adb_ret_t osa_adb_release_lock(osa_adb_db_t db)
      if (!db->lock->lockcnt)		/* lock already unlocked */
 	  return OSA_ADB_NOTLOCKED;
 
-     if (db->lock->lockmode == OSA_ADB_PERMANENT) {
-	  /* now we need to create the file since it does not exist */
-	  if ((db->lock->lockfile = fopen(db->lock->filename, "w+")) == NULL) {
-	       return OSA_ADB_NOLOCKFILE;
-	  }
-
-	  /* the file was closed and reopen, so we have no more locks */
-	  db->lock->lockmode = 0;
-	  db->lock->lockcnt = 0;
-	  return OSA_ADB_OK;
-     }
-     
      if (--db->lock->lockcnt == 0) {
-	  ret = krb5_lock_file(db->lock->context,
-			       fileno(db->lock->lockfile),
-			       KRB5_LOCKMODE_UNLOCK);
-	  if (ret)
+	  if (db->lock->lockmode == OSA_ADB_PERMANENT) {
+	       /* now we need to create the file since it does not exist */
+	       if ((db->lock->lockfile = fopen(db->lock->filename,
+					       "w+")) == NULL)
+		    return OSA_ADB_NOLOCKFILE;
+	  } else if (ret = krb5_lock_file(db->lock->context,
+					  fileno(db->lock->lockfile),
+					  KRB5_LOCKMODE_UNLOCK))
 	       return ret;
 	  
 	  db->lock->lockmode = 0;
@@ -271,8 +308,7 @@ osa_adb_ret_t osa_adb_open_and_lock(osa_adb_princ_t db, int locktype)
      if (ret != OSA_ADB_OK)
 	  return ret;
      
-     db->db = dbopen(db->filename, O_RDWR | O_CREAT, 0600, DB_HASH,
-		     &db->info);
+     db->db = dbopen(db->filename, O_RDWR, 0600, DB_HASH, &db->info);
      if (db->db == NULL) {
 	  (void) osa_adb_release_lock(db);
 	  if(errno == EINVAL)

@@ -1,4 +1,4 @@
-TOP = ../../kadmin.ov
+TOP = ../../kadmin
 include $(TOP)/config.mk/template
 
 # All but D_REGEXP_TYPE are needed only for logger.c
