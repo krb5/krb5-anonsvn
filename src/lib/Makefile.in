@@ -38,7 +38,8 @@ KLIBS = krb5\krb5.lib crypto\crypto.lib \
 
 ##WIN16##WLIB  = .\winsock.lib
 ##WIN16##WINLIBS = $(WLIB) ldllcew libw oldnames
-##WIN32##WINLIBS = msvcrt.lib kernel32.lib wsock32.lib user32.lib shell32.lib oldnames.lib
+##WIN32##WINLIBS = msvcrt.lib kernel32.lib wsock32.lib \
+##WIN32##	user32.lib shell32.lib oldnames.lib
 ##WIN32##WINDLLFLAGS = /nodefaultlib /incremental:no /pdb:none /release \
 ##WIN32##		/nologo /align:0x1000 /base:0x1c000000 /dll /debug
 

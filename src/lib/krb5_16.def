@@ -158,12 +158,19 @@ EXPORTS
 	krb5_read_adm_reply
 	krb5_send_adm_cmd
 ;Com_err routines
-	error_message
 	_com_err
+	error_message
+	et_init
+	et_shutdown
+	et_add_error_table
+	et_error_message
+	_et_com_err
+	_et_com_err_va
+	et_set_hook
 	__et_list
-	init_error_table
 ;
 ;Temporary exports (DO NOT USE)
+	_sscanf
 	_decode_krb5_ticket
 	des_ecb_encrypt
 	des_new_random_key
