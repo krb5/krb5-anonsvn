@@ -324,6 +324,8 @@ add_key_pwd(context, master_eblock, ks_tuple, ks_tuple_count, passwd,
     krb5_boolean	  found;
     int			  i, j;
 
+    retval = 0;
+
     for (i = 0; i < ks_tuple_count; i++) {
 	krb5_enctype new_enctype, old_enctype;
 
