@@ -14,32 +14,18 @@ Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 #include <malloc.h>
 #include <errno.h>
 extern int errno; /* this should be in errno.h, but isn't on some systems */
-#ifdef notdef
-/* these are all in our include files */
-extern char *getenv(char *); /* ain't there an include file for this? */
-extern int open(char *,int,int);
-extern char *sprintf(char *,char *,...);
-extern int getpid(void);
-extern int rename(char *,char *);
-extern int free(char *);
-extern int close(int);
-extern int unlink(char *);
-extern int lseek(int,int,int);
-extern int read(int,char *,int);
-extern int write(int,char *,int);
-extern int fsync(int);
-#endif
 #define FREE(x) ((void) free((char *) (x)))
 
 #include "rc_io.h"
 #include "krb5/krb5_err.h"
 
-#define UNIQUE getpid() /* hopefully unique number */
+#define UNIQUE1 getpid() /* hopefully unique number */
+#define UNIQUE2 time(0) /* hopefully unique number */
 
 int dirlen = 0;
 char *dir;
 
-#define GETDIR do { if (!dirlen) getdir(); } while(0); /* stupid C syntax */
+#define GETDIR { if (!dirlen) getdir(); }
 
 static void getdir()
 {
@@ -47,8 +33,8 @@ static void getdir()
   {
    if (!(dir = getenv("KRB5RCACHEDIR")))
      if (!(dir = getenv("TMPDIR")))
-#ifdef P_tmpdir
-       dir = P_tmpdir;
+#ifdef RCTMPDIR
+       dir = RCTMPDIR;
 #else
        dir = "/tmp";
 #endif
@@ -74,12 +60,14 @@ char **fn;
   }
  else
   {
-   if (!(d->fn = malloc(30 + dirlen)))
+      /* each %d's is max 11 digits (-, 10 digits of 32-bit number)
+	 11 * 2 = 22, + /krb5_RC + aaa = 33, +2 for slop */
+   if (!(d->fn = malloc(35 + dirlen)))
      return KRB5_RC_IO_MALLOC;
    if (fn)
-     if (!(*fn = malloc(30)))
+     if (!(*fn = malloc(35)))
       { FREE(d->fn); return KRB5_RC_IO_MALLOC; }
-   (void) sprintf(d->fn,"%s/krb5_RC%d",dir,UNIQUE);
+   (void) sprintf(d->fn,"%s/krb5_RC%d%d",dir,UNIQUE1,UNIQUE2);
    c = d->fn + strlen(d->fn);
    (void) strcpy(c,"aaa");
    while ((d->fd = open(d->fn,O_WRONLY | O_CREAT | O_TRUNC,0600)) == -1)
@@ -183,13 +171,16 @@ krb5_rc_iostuff *d;
 krb5_pointer buf;
 int num;
 {
- if (read(d->fd,(char *) buf,num) == -1)
+ int count;
+ if ((count = read(d->fd,(char *) buf,num)) == -1)
    switch(errno)
     {
      case EBADF: return KRB5_RC_IO_UNKNOWN; break;
      case EIO: return KRB5_RC_IO_IO; break;
      default: return KRB5_RC_IO_UNKNOWN; break;
     }
+ if (count == 0)
+     return KRB5_RC_IO_EOF;
  return 0;
 }
 
