@@ -1,5 +1,3 @@
-# Microsoft Windows configuration file for Cygnus Kerberos
-# ***copy from K4***
 
 WHAT=windows
 
@@ -33,7 +31,7 @@ CL=
 # CCOPTS for DLL functions
 #
 ##WIN16##CCOPTS=/ALw /Zp /GD2s /Os /Zi /Od /W3 $(XTRA)
-##WIN32##CCOPTS=/Os /Zi /Od /W3 $(XTRA) -DKRB5_DLL_FILE
+##WIN32##CCOPTS=/Os /Zi /Od /W3 /MD $(XTRA) -DKRB5_DLL_FILE
 #
 # CCOPTS for non-DLL compiles
 #
