@@ -100,6 +100,9 @@ typedef struct _krb5_gss_ctx_id_rec {
    krb5_principal here;
    krb5_principal there;
    krb5_keyblock *subkey;
+   int signalg;
+   int cksum_size;
+   int sealalg;
    krb5_gss_enc_desc enc;
    krb5_gss_enc_desc seq;
    krb5_timestamp endtime;
@@ -110,7 +113,7 @@ typedef struct _krb5_gss_ctx_id_rec {
    int established;
    int big_endian;
    krb5_auth_context auth_context;
-} krb5_gss_ctx_id_rec, krb5_gss_ctx_id_t;
+} krb5_gss_ctx_id_rec, *krb5_gss_ctx_id_t;
 
 extern void *kg_vdb;
 

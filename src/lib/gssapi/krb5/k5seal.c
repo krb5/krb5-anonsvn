@@ -24,7 +24,7 @@
 
 static krb5_error_code
 make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
-		encrypt, toktype, bigend)
+		signalg, cksum_size, sealalg, encrypt, toktype, bigend)
      krb5_context context;
      krb5_gss_enc_desc *enc_ed;
      krb5_gss_enc_desc *seq_ed;
@@ -32,6 +32,9 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
      int direction;
      gss_buffer_t text;
      gss_buffer_t token;
+     int signalg;
+     int cksum_size;
+     int sealalg;
      int encrypt;
      int toktype;
      int bigend;
@@ -39,7 +42,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
    krb5_error_code code;
    char *data_ptr;
    krb5_checksum md5cksum;
-   krb5_checksum desmac;
+   krb5_checksum cksum;
    int conflen, tmsglen, tlen;
    unsigned char *t, *ptr;
 
@@ -57,7 +60,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
       tmsglen = 0;
    }
 
-   tlen = g_token_size((gss_OID) gss_mech_krb5, 22+tmsglen);
+   tlen = g_token_size((gss_OID) gss_mech_krb5, 14+cksum_size+tmsglen);
 
    if ((t = (unsigned char *) xmalloc(tlen)) == NULL)
       return(ENOMEM);
@@ -66,24 +69,26 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
    ptr = t;
 
-   g_make_token_header((gss_OID) gss_mech_krb5, 22+tmsglen, &ptr, toktype);
+   g_make_token_header((gss_OID) gss_mech_krb5,
+		       14+cksum_size+tmsglen, &ptr, toktype);
 
-   /* for now, only generate DES integrity */
+   /* 0..1 SIGN_ALG */
 
-   ptr[0] = 0;
+   ptr[0] = signalg;
    ptr[1] = 0;
-
-   /* SEAL_ALG, or filler */
+   
+   /* 2..3 SEAL_ALG or Filler */
 
    if ((toktype == KG_TOK_SEAL_MSG) && encrypt) {
-      ptr[2] = 0;
+      ptr[2] = sealalg;
       ptr[3] = 0;
    } else {
+      /* No seal */
       ptr[2] = 0xff;
       ptr[3] = 0xff;
    }
 
-   /* filler */
+   /* 4..5 Filler */
 
    ptr[4] = 0xff;
    ptr[5] = 0xff;
@@ -103,15 +108,17 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
       if (!bigend || encrypt) {
 	 if ((plain = (unsigned char *) xmalloc(tmsglen)) == NULL) {
+	    xfree(md5cksum.contents);
 	    xfree(t);
 	    return(ENOMEM);
 	 }
 
-      if (code = kg_make_confounder(enc_ed, plain)) {
-	 xfree(plain);
-	 xfree(t);
-	 return(code);
-      }
+	 if (code = kg_make_confounder(enc_ed, plain)) {
+	    xfree(plain);
+	    xfree(md5cksum.contents);
+	    xfree(t);
+	    return(code);
+	 }
 
 	 memcpy(plain+conflen, text->value, text->length);
 
@@ -126,17 +133,18 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
       if (encrypt) {
 	 if (code = kg_encrypt(context, enc_ed, NULL, (krb5_pointer) plain,
-			       (krb5_pointer) (ptr+22), tmsglen)) {
+			       (krb5_pointer) (ptr+cksum_size+14), tmsglen)) {
 	    if (plain)
 	       xfree(plain);
+	    xfree(md5cksum.contents);
 	    xfree(t);
 	    return(code);
 	 }
       } else {
 	 if (bigend)
-	    memcpy(ptr+22, text->value, text->length);
+	    memcpy(ptr+14+cksum_size, text->value, text->length);
 	 else
-	    memcpy(ptr+22, plain, tmsglen);
+ 	    memcpy(ptr+14+cksum_size, plain, tmsglen);
       }
 
       /* compute the checksum */
@@ -146,6 +154,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 	     (char *) xmalloc(8 + (bigend ? text->length : tmsglen)))) {
 	  if (plain)
 	      xfree(plain);
+	  xfree(md5cksum.contents);
 	  xfree(t);
 	  return(ENOMEM);
       }
@@ -158,11 +167,14 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 				     8 + (bigend ? text->length : tmsglen),
 				     0, 0, &md5cksum);
       xfree(data_ptr);
+
       if (code) {
 	  if (plain)
 	      xfree(plain);
+	  xfree(md5cksum.contents);
 	  xfree(t);
 	  return(code);
+	  memcpy(ptr+14+cksum_size, plain, tmsglen);
       }
 
       if (plain)
@@ -171,6 +183,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
       /* compute the checksum */
 
       if (! (data_ptr = (char *) xmalloc(8 + text->length))) {
+	  xfree(md5cksum.contents);
 	  xfree(t);
 	  return(ENOMEM);
       }
@@ -181,37 +194,62 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 				     0, 0, &md5cksum);
       xfree(data_ptr);
       if (code) {
+	  xfree(md5cksum.contents);
 	  xfree(t);
 	  return(code);
       }
    }
 
-   /* XXX this depends on the key being a single-des key, but that's
-      all that kerberos supports right now */
+   switch(signalg) {
+   case 0:
+   case 3:
 
-   /* initialize the the cksum and allocate the contents buffer */
-   desmac.checksum_type = CKSUMTYPE_DESCBC;
-   desmac.length = krb5_checksum_size(context, CKSUMTYPE_DESCBC);
-   if ((desmac.contents = (krb5_octet *) xmalloc(desmac.length)) == NULL) {
-      return(ENOMEM);
+#if 0
+       /* XXX this depends on the key being a single-des key */
+
+       /* DES CBC doesn't use a zero IV like it should in some
+	  krb5 implementations (beta5+).  So we just do the
+	  DES encryption the long way, and keep the last block
+	  as the MAC */
+
+       /* initialize the the cksum and allocate the contents buffer */
+       cksum.checksum_type = CKSUMTYPE_DESCBC;
+       cksum.length = krb5_checksum_size(context, CKSUMTYPE_DESCBC);
+       if ((cksum.contents = (krb5_octet *) xmalloc(cksum.length)) == NULL)
+	   return(ENOMEM);
+
+       if (code = krb5_calculate_checksum(context, cksum.checksum_type,
+					  md5cksum.contents, 16,
+					  seq_ed->key->contents, 
+					  seq_ed->key->length,
+					  &cksum)) {
+	  xfree(cksum.contents);
+	  xfree(md5cksum.contents);
+	  xfree(t);
+	  return(code);
+       }
+
+       memcpy(ptr+14, cksum.contents, 8);
+
+       xfree(cksum.contents);
+#else
+       if (code = kg_encrypt(context, seq_ed, NULL,
+			     md5cksum.contents, md5cksum.contents, 16)) {
+	  xfree(md5cksum.contents);
+	  xfree(t);
+	  return code;
+       }
+       
+       cksum.length = cksum_size;
+       cksum.contents = md5cksum.contents + 16 - cksum.length;
+
+       memcpy(ptr+14, cksum.contents, cksum.length);
+#endif
+
+       break;
    }
- 
-   code = krb5_calculate_checksum(context, desmac.checksum_type,
-				  md5cksum.contents, 16,
-				  seq_ed->key->contents, 
-				  seq_ed->key->length,
-				  &desmac);
 
-   krb5_xfree(md5cksum.contents);
-
-   if (code) {
-      xfree(t);
-      return(code);
-   }
-
-   memcpy(ptr+14, desmac.contents, 8);
-
-   krb5_xfree(desmac.contents);
+   xfree(md5cksum.contents);
 
    /* create the seq_num */
 
@@ -281,6 +319,7 @@ kg_seal(context, minor_status, context_handle, conf_req_flag, qop_req,
    if (code = make_seal_token(context, &ctx->enc, &ctx->seq,
 			      &ctx->seq_send, ctx->initiate,
 			      input_message_buffer, output_message_buffer,
+			      ctx->signalg, ctx->cksum_size, ctx->sealalg,
 			      conf_req_flag, toktype, ctx->big_endian)) {
       *minor_status = code;
       return(GSS_S_FAILURE);

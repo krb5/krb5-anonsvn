@@ -37,7 +37,7 @@ krb5_gss_export_sec_context(minor_status, context_handle, interprocess_token)
     krb5_error_code	kret;
     OM_uint32		retval;
     size_t		bufsize, blen;
-    krb5_gss_ctx_id_t	*ctx;
+    krb5_gss_ctx_id_t	ctx;
     krb5_octet		*obuffer, *obp;
 
     if (GSS_ERROR(kg_get_context(minor_status, &context)))
@@ -54,7 +54,7 @@ krb5_gss_export_sec_context(minor_status, context_handle, interprocess_token)
 	    goto error_out;
     }
 
-    ctx = (krb5_gss_ctx_id_t *) *context_handle;
+    ctx = (krb5_gss_ctx_id_t) *context_handle;
 
     /* Determine size needed for externalization of context */
     bufsize = 0;

@@ -102,7 +102,8 @@ make_ap_req(context, auth_context, cred, server, endtime, chan_bindings,
     /* now allocate a buffer to hold the checksum data and
        (maybe) KRB_CRED msg */
 
-    if ((checksum_data.data = (char *) xmalloc(checksum_data.length)) == NULL) {
+    if ((checksum_data.data =
+	 (char *) xmalloc(checksum_data.length)) == NULL) {
 	if (credmsg.data)
 	    krb5_xfree(credmsg.data);
 	return(ENOMEM);
@@ -135,7 +136,7 @@ make_ap_req(context, auth_context, cred, server, endtime, chan_bindings,
 	goto cleanup;
     
     in_creds.times.endtime = *endtime;
-    in_creds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
+    
     /*
      * Get the credential..., I don't know in 0 is a good value for the
      * kdcoptions
@@ -224,6 +225,7 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
    krb5_error_code code; 
    krb5_gss_ctx_id_rec *ctx;
    krb5_timestamp now;
+   krb5_enctype enctype;
    gss_buffer_desc token;
    int i;
    int err;
@@ -350,9 +352,27 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
 
       /* fill in the encryption descriptors */
 
+      switch(ctx->subkey->enctype) {
+      case ENCTYPE_DES_CBC_MD5:
+      case ENCTYPE_DES_CBC_CRC:
+	  enctype = ENCTYPE_DES_CBC_RAW;
+	  ctx->signalg = 0;
+	  ctx->cksum_size = 8;
+	  ctx->sealalg = 0;
+	  break;
+      case ENCTYPE_DES3_CBC_MD5:
+	  enctype = ENCTYPE_DES3_CBC_RAW;
+	  ctx->signalg = 3;
+	  ctx->cksum_size = 16;
+	  ctx->sealalg = 1;
+	  break;
+      default:
+	  return GSS_S_FAILURE;
+      }
+
       /* the encryption key is the session key XOR 0xf0f0f0f0f0f0f0f0 */
 
-      krb5_use_enctype(context, &ctx->enc.eblock, ENCTYPE_DES_CBC_RAW);
+      krb5_use_enctype(context, &ctx->enc.eblock, enctype);
       ctx->enc.processed = 0;
       if ((code = krb5_copy_keyblock(context, ctx->subkey, &ctx->enc.key)))
 	 return(code); 
@@ -360,7 +380,7 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
 	 /*SUPPRESS 113*/
 	 ctx->enc.key->contents[i] ^= 0xf0;
 
-      krb5_use_enctype(context, &ctx->seq.eblock, ENCTYPE_DES_CBC_RAW);
+      krb5_use_enctype(context, &ctx->seq.eblock, enctype);
       ctx->seq.processed = 0;
       if ((code = krb5_copy_keyblock(context, ctx->subkey, &ctx->seq.key)))
 	  return(code);

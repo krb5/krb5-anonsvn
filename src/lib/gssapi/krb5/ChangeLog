@@ -1,3 +1,10 @@
+Sat Apr 20 00:02:51 1996  Marc Horowitz  <marc@mit.edu>
+
+	* accept_sec_context.c, export_sec_context.c, gssapiP_krb5.h,
+ 	import_sec_context.c, init_sec_context.c, k5seal.c, k5unseal.c,
+ 	ser_sctx.c, wrap_size_limit.c: Implemented triple-des changes
+ 	based on Richard's patches.
+
 Wed Apr 17 21:08:59 1996  Marc Horowitz  <marc@mit.edu>
 
 	* accept_sec_context.c (krb5_gss_set_backward_mode): removed
