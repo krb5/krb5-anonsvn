@@ -11,38 +11,19 @@ KVERSION = 5
 !endif
 KRB 	 = KRB$(KVERSION)
 
-!if $(KVERSION) == 4
-BUILDTOP = ..
-LIBDIR 	 = $(BUILDTOP)\lib\krb
-KLIB 	 = $(LIBDIR)\kerberos.lib 
-##WIN16##WLIB 	 = $(LIBDIR)\winsock.lib
-INCLUDES = /I$(BUILDTOP)\include
-##WIN16##XOBJS    = 
-##WIN32##XOBJS    = cnsres4.obj
-!endif
-
-!if $(KVERSION) == 5
 BUILDTOP =..\..
-LIBDIR	 = $(BUILDTOP)\lib
-KLIB	 = $(LIBDIR)\krb5.lib
-##WIN16##WLIB	 = $(LIBDIR)\winsock.lib
+
+##WIN16##WLIB	 = $(BUILDTOP)\lib\winsock.lib
 INCLUDES = /I$(BUILDTOP)\include /I$(BUILDTOP)\include\krb5
 ##WIN16##XOBJS    = kpasswd.obj
 ##WIN32##XOBJS    = cnsres5.obj kpasswd.obj
-!endif
 
-##### CVTRES -- .res -> .obj converter
-CVTRES = cvtres
-
-##### C Compiler
 !if defined(DEBUG)
 CFLAGS	= $(COPTS) $(INCLUDES) /D$(KRB)=1 /Zi /Yd /DDEBUG
 !else
 CFLAGS	= $(COPTS) $(INCLUDES) /D$(KRB)=1
 !endif
 
-##### RC Compiler
-RC 	 = rc
 ##WIN16##RFLAGS 	 = /nologo /D$(KRB)=1 $(INCLUDES)
 ##WIN32##RFLAGS 	 = /D$(KRB)=1 $(INCLUDES)
 
@@ -65,7 +46,7 @@ all:: makefile $(NAME).exe
 $(NAME).exe: $*.def $(OBJS) $(XOBJS) $(LIBS)
 ##WIN16##	$(LINK) $(LFLAGS) $(OBJS) $(XOBJS), $@, $*.map, \
 ##WIN16##	  $(LIBS) $(SYSLIBS), $*.def
-##WIN16##	$(RC) $(RFLAGS) /k $*.res $@
+##WIN16##	$(RC) $(RFLAGS) /k cnsres5.rc $@
 ##WIN32##	$(LINK) $(LFLAGS) /map:$*.map /out:$@ $(OBJS) $(XOBJS) \
 ##WIN32##	  $(LIBS) $(SYSLIBS)
 

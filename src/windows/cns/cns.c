@@ -34,6 +34,12 @@ enum {				       /* Actions after login */
   LOGIN_AND_RUN,
 };
 
+#ifndef _WIN32
+typedef MINMAXINFO *LPMINMAXINFO;
+#define GET_WM_COMMAND_MPS(id, hwnd, cmd)    \
+        (WPARAM)MAKELONG(id, cmd), (LONG)(hwnd)
+#endif
+
 /*
  * Globals
  */
