@@ -1,3 +1,13 @@
+Tue Jul  9 17:18:56 1996  Marc Horowitz  <marc@mit.edu>
+
+	* kadm_stream.c: rename HAS_STDLIB_H to HAVE_STDLIB_H to conform
+ 	to the autoconf convention
+	* configure.in: the old configure.in seemed to be written for some
+ 	other directory.  Now it's right.
+	* admin_server.c, kadm_ser_wrap.c, kadm_server.c: renamed
+ 	<ovsec_admin/foo.h> to <kadm5/foo.h>
+	* Makefile.in: complete rewrite.
+
 Thu Mar 21 20:33:43 1996  Richard Basch  <basch@lehman.com>
 
 	* kadm_funcs.c: new principals were being created with two keys,

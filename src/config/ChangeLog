@@ -1,3 +1,8 @@
+Tue Jul  9 15:02:00 1996  Marc Horowitz  <marc@mit.edu>
+
+	* pre.in (SRVLIBS, SRVDEPLIBS, CLNTLIBS, CLNTDEPLIBS): added for
+ 	support of new aclocal.m4 KRB5_LIBRARIES macro
+
 Tue Mar 12 19:40:59 1996  Ken Raeburn  <raeburn@cygnus.com>
 
 	* pre.in (SRCTOP, BUILDTOP): Don't define.

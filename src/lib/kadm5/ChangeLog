@@ -1,3 +1,14 @@
+Tue Jul  9 17:38:43 1996  Marc Horowitz  <marc@mit.edu>
+
+	* svr_iters.c (*_REGEXPS): rework the conditionals to operate
+ 	as functions of function symbols tested by configure.
+	* client_init.c (setenv, unsetenv declarations): make them the
+ 	same as the stdlib declarations, if they're going to be here at
+ 	all.
+	* Makefile.in: reworked to support building both libraries.  this
+ 	required a bunch of changes, including some coordinating ones in
+ 	aclocal.m4
+	
 Tue Jul  9 16:26:26 1996  Barry Jaspan  <bjaspan@mit.edu>
 
 	* svr_principal.c (kadm5_decrypt_key): add kadm5_decrypt_key

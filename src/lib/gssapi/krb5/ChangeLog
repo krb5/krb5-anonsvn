@@ -1,3 +1,8 @@
+Fri Jul  5 15:27:29 1996  Marc Horowitz  <marc@mit.edu>
+
+	* gssapi_krb5.h: Add declarations for _old mech set, and _both
+ 	mech set
+
 Thu Jun 20 23:15:57 1996  Marc Horowitz  <marc@mit.edu>
 
 	* ser_sctx.c (kg_oid_size, kg_ctx_size): pull the oid-related code

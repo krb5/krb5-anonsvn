@@ -1,3 +1,7 @@
+Tue Jul  9 17:31:57 1996  Marc Horowitz  <marc@mit.edu>
+
+	* configure.in (CONFIG_DIRS): add rpc subdir
+
 Fri Mar 15 15:21:32 1996  Ezra Peisach  <epeisach@kangaroo.mit.edu>
 
 	* Makefile.in (CLEANLIBS): Add libkrb5util.a and libgssapi.a
