@@ -1,5 +1,0 @@
-Thu Sep 29 22:45:52 1994  Theodore Y. Ts'o  (tytso@dcl)
-
-	* Makefile.in: Relink executable if library changes
-
-
