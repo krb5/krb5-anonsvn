@@ -1,0 +1,8 @@
+Tue Jul  9 15:03:13 1996  Marc Horowitz  <marc@mit.edu>
+
+	* kpasswd.c, tty_kpasswd.c, xm_kpasswd.c: renamed
+ 	<ovsec_admin/foo.h> to <kadm5/foo.h>
+
+	* configure.in (CONFIG_DIRS): build the subdirs for the new admin
+ 	system, not the old one.
+

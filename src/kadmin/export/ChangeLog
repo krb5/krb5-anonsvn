@@ -1,0 +1,4 @@
+Tue Jul  9 16:45:52 1996  Marc Horowitz  <marc@mit.edu>
+
+	* export.c: renamed <ovsec_admin/foo.h> to <kadm5/foo.h>
+
