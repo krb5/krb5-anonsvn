@@ -12,9 +12,13 @@
     #endif
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+#if defined(__cplusplus) && !defined(PROFILEINT_BEGIN_DECLS)
+#define PROFILEINT_BEGIN_DECLS	extern "C" {
+#define PROFILEINT_END_DECLS	}
+#else
+#define PROFILEINT_BEGIN_DECLS
+#define PROFILEINT_END_DECLS
+#endif
 
 #if TARGET_OS_MAC
     #if defined(__MWERKS__)
@@ -23,6 +27,8 @@ extern "C" {
     #endif
     #pragma options align=mac68k
 #endif
+
+PROFILEINT_BEGIN_DECLS
 
 /* We use file paths as unique file identifiers */
 #define PROFILE_USES_PATHS 1
@@ -147,8 +153,6 @@ KRB5_DLLIMP long KRB5_CALLCONV profile_add_relation
 	#pragma options align=reset
 #endif
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+PROFILEINT_END_DECLS
 
 #endif /* _KRB5_PROFILE_H */
