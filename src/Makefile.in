@@ -125,7 +125,7 @@ config-windows:: makefile-windows
 ##DOS		lib\crypto\os\makefile lib\des425\makefile \
 ##DOS		lib\gssapi\makefile lib\gssapi\generic\makefile \
 ##DOS		lib\gssapi\krb5\makefile lib\gssapi\mechglue\makefile \
-##DOS		lib\krb5\makefile \
+##DOS		lib\kadm\makefile lib\krb5\makefile \
 ##DOS		lib\krb5\asn.1\makefile lib\krb5\ccache\makefile \
 ##DOS		lib\krb5\ccache\file\makefile \
 ##DOS		lib\krb5\ccache\stdio\makefile \
