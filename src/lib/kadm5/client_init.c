@@ -34,8 +34,8 @@ static char *rcsid = "$Header$";
 #define	ADM_CCACHE  "/tmp/ovsec_adm.XXXXXX"
 
 #ifndef _POSIX_SOURCE /* Perhaps this should actually say __STDC__ */
-void	setenv(char *var, char *val, int flag);
-void	unsetenv(char *var);
+int	setenv(const char *var, const char *val, int flag);
+void	unsetenv(const char *var);
 #endif
 
 enum init_type { INIT_PASS, INIT_SKEY, INIT_CREDS };
