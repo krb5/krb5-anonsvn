@@ -1,3 +1,9 @@
+Fri Jan 31 23:10:09 1997  Richard Basch  <basch@lehman.com>
+
+	* krb5.hin:
+		Fixed improper declaration of krb5_eblock_enctype;
+		it returns a krb5_enctype, not a krb5_error_code.
+
 Thu Jan 30 21:22:28 1997  Richard Basch  <basch@lehman.com>
 
 	* krb5.hin

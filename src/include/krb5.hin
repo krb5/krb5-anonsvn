@@ -386,7 +386,7 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_random_key
 		krb5_const krb5_encrypt_block FAR * eblock,
 		krb5_pointer ptr,
 		krb5_keyblock FAR * FAR * keyblock));
-KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_eblock_enctype
+KRB5_DLLIMP krb5_enctype KRB5_CALLCONV krb5_eblock_enctype
 	KRB5_PROTOTYPE((krb5_context context,
 		krb5_const krb5_encrypt_block FAR * eblock));
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_use_enctype
