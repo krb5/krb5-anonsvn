@@ -199,6 +199,9 @@ int g_verify_token_header(mech, body_size, buf_in, tok_type, toksize)
    if (! g_OID_equal(&toid, mech)) 
       ret = G_WRONG_MECH;
  
+   /* G_WRONG_MECH is not returned immediately because it's more important
+      to return G_BAD_TOK_HEADER if the token header is in fact bad */
+
    if ((toksize-=2) < 0)
       return(G_BAD_TOK_HEADER);
 
@@ -206,7 +209,6 @@ int g_verify_token_header(mech, body_size, buf_in, tok_type, toksize)
        (*buf++ != (tok_type&0xff)))
       return(G_BAD_TOK_HEADER);
 
-   /* Why is G_WRONG_MECH the only case that does not return immediately? */
    if (!ret) {
 	*buf_in = buf;
 	*body_size = toksize;
