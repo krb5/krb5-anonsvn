@@ -44,7 +44,7 @@ g_canonicalize_host(hostname)
    if ((hent = gethostbyname(hostname)) == NULL)
       return(NULL);
 
-   if (! (haddr = xmalloc(hent->h_length))) {
+   if (! (haddr = (char *) xmalloc(hent->h_length))) {
 	return(NULL);
    }
 
@@ -56,7 +56,7 @@ g_canonicalize_host(hostname)
 
    xfree(haddr);
 
-   if ((canon = xmalloc(strlen(hent->h_name)+1)) == NULL)
+   if ((canon = (char *) xmalloc(strlen(hent->h_name)+1)) == NULL)
       return(NULL);
 
    strcpy(canon, hent->h_name);

@@ -212,9 +212,9 @@ int g_delete_cred_id(vdb, cred)
 {
    return(g_delete(vdb, V_CRED_ID, (void *) cred));
 }
+int g_delete_ctx_id(vdb, ctx)
      void **vdb;
      gss_ctx_id_t *ctx;
-int g_delete_ctx_id(vdb, ctx)
 {
    return(g_delete(vdb, V_CTX_ID, (void *) ctx));
 }

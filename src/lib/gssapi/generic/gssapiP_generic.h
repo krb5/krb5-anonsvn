@@ -154,4 +154,40 @@ PROTOTYPE((OM_uint32*,       /* minor_status */
             gss_OID_set*      /* set */
            ));
 
+OM_uint32 generic_gss_copy_oid
+PROTOTYPE( (OM_uint32 *,	/* minor_status */
+	    gss_OID,		/* oid */
+	    gss_OID *		/* new_oid */
+	    ));
+
+OM_uint32 generic_gss_create_empty_oid_set
+PROTOTYPE( (OM_uint32 *,	/* minor_status */
+	    gss_OID_set *	/* oid_set */
+	   ));
+
+OM_uint32 generic_gss_add_oid_set_member
+PROTOTYPE( (OM_uint32 *,	/* minor_status */
+	    gss_OID,		/* member_oid */
+	    gss_OID_set *	/* oid_set */
+	   ));
+
+OM_uint32 generic_gss_test_oid_set_member
+PROTOTYPE( (OM_uint32 *,	/* minor_status */
+	    gss_OID,		/* member */
+	    gss_OID_set,	/* set */
+	    int *		/* present */
+	   ));
+
+OM_uint32 generic_gss_oid_to_str
+PROTOTYPE( (OM_uint32 *,	/* minor_status */
+	    gss_OID,		/* oid */
+	    gss_buffer_t	/* oid_str */
+	   ));
+
+OM_uint32 generic_gss_str_to_oid
+PROTOTYPE( (OM_uint32 *,	/* minor_status */
+	    gss_buffer_t,	/* oid_str */
+	    gss_OID *		/* oid */
+	   ));
+
 #endif /* _GSSAPIP_GENERIC_H_ */
