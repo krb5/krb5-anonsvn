@@ -88,7 +88,7 @@ $(__SUBDIR_TARGET)::
 	for d in $(SUBDIRS); do \
 		echo "--- Making $(__SUBDIR_TARGET) in $(CUR_DIR)/$$$$d"; \
 		cd $$$$d && \
-		$(MAKE) $(__SUBDIR_TARGET) CUR_DIR=$(CUR_DIR)/$$$$d; \
+		$(MAKE) $(SITEMAKEFLAGS) $(__SUBDIR_TARGET) CUR_DIR=$(CUR_DIR)/$$$$d; \
 		cd $$$$cwd; \
  	done
 endef

@@ -133,6 +133,8 @@ endif
 .SUFFIXES: .ct
 .ct.c:
 	$(MK_CMDS) $<
+.ct.h:
+	$(MK_CMDS) $<
 
 CMD="echo 'You must specify CMD to use the 'execute' rule.'; exit 1"
 

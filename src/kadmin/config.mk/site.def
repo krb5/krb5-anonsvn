@@ -16,6 +16,8 @@ CFLAGS := $(CFLAGS) -I$(TOP)/../../src/include \
 	-I$(TOP)/../include/krb5 \
 	$(PCC_STRUCT_RETURN) -g
 
+SITEMAKEFLAGS	:= -f Makefile.ov
+
 #
 # Packages whose locations we need to know
 #
