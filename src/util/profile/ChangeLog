@@ -1,3 +1,38 @@
+2000-10-16  Miro Jurisic <meeroh@mit.edu>
+
+        * profile.exp, prof_init.c, profile.hin:
+        Fixed #ifdefs and exports to that Mac OS 9 builds work again
+
+2000-10-16  Miro Jurisic <meeroh@mit.edu>
+
+        * profile.pbexp, prof_file.c, prof_init.c, profile.hin:
+        Support Mac FSSpecs and POSIX paths under Mac OS X
+
+2000-10-02  Alexandra Ellwood <lxs@mit.edu>
+
+        * profile.pbexp: added a Mac OS X export file.  This
+        will eventually be replaced by a script that generates it.
+
+2000-07-06  Miro Jurisic  <meeroh@mit.edu>
+
+	* prof_set.c (rw_setup): Initialize retval before using it
+
+2000-06-14  Miro Jurisic  <meeroh@mit.edu>
+
+	* prof_file.c (profile_flush_data):  
+	Return ENOENT when file is not found on MacOS (not ENFILE)
+
+2000-03-24  Miro Jurisic  <meeroh@mit.edu>
+	* Makefile.in, prof_file.c, prof_int.h, pros_set.c, 
+	prof_threads.c, prof_threads.h: Added first attempt at thread
+	synchronization for global state.
+
+2000-03-15  Miro Jurisic  <meeroh@mit.edu>
+	* prof_err.et, prof_file.c, prof_init.c, prof_int.h, prof_set.c,
+	prof_tree.c: Added preliminary version of code which allows multiple
+	profiles to share the same in-memory structures (with copy-on-write).
+	Initial checkin on meeroh-profile-sharing-optimization branch.
+
 1999-10-26  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in: Clean up usage of CFLAGS, CPPFLAGS, DEFS, DEFINES,
