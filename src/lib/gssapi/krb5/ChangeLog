@@ -1,5 +1,12 @@
 Sun May 12 00:54:35 1996  Marc Horowitz  <marc@mit.edu>
 
+	* util_crypt.c (kg_encrypt): It used to be that krb5_encrypt could
+ 	be used to encrypt in place.  That's broken now.  This would need
+ 	to be fixed in several places in the crypto layer, and it's not
+ 	clear what the right thing is, so it's worked around here in the
+ 	interests of portability and reliablility, at the expense of a
+ 	malloc/memcpy/free.
+
 	* Makefile.in, configure.in: gssapi_krb5.h should be installed
  	inside the tree.  This is really only half the work, as it should
  	be installed outside of the tree, too.

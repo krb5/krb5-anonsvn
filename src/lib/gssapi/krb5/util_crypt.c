@@ -64,6 +64,7 @@ kg_encrypt(context, ed, iv, in, out, length)
      int length;
 {
    krb5_error_code code;
+   krb5_pointer tmp;
 
    if (! ed->processed) {
       if (code = krb5_process_key(context, &ed->eblock, ed->key))
@@ -71,8 +72,21 @@ kg_encrypt(context, ed, iv, in, out, length)
       ed->processed = 1;
    }
 
-   if (code = krb5_encrypt(context, in, out, length, &ed->eblock, 
-			   iv?iv:(krb5_pointer)zeros))
+   /* this is lame.  the krb5 encryption interfaces no longer allow
+      you to encrypt in place.  perhaps this should be fixed, but
+      dealing here is easier for now --marc */
+
+   if ((tmp = (krb5_pointer) xmalloc(length)) == NULL)
+      return(ENOMEM);
+
+   memcpy(tmp, in, length);
+
+   code = krb5_encrypt(context, tmp, out, length, &ed->eblock, 
+		       iv?iv:(krb5_pointer)zeros);
+
+   xfree(tmp);
+
+   if (code)
       return(code);
 
    return(0);
