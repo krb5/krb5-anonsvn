@@ -1,3 +1,4 @@
+RELDIR=../util/et
 CFLAGS = $(CCOPTS) $(DEFS) $(LOCALINCLUDE)
 SED = sed
 

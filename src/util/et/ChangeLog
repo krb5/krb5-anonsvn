@@ -1,3 +1,7 @@
+Tue Dec 31 12:54:54 1996  Ezra Peisach  <epeisach@mit.edu>
+
+	* Makefile.in (RELDIR): Add for new procedure.
+
 Mon Dec 30 17:30:43 1996  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in:
