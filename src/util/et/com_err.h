@@ -30,46 +30,17 @@
  * come up with a better way of handling this problem.
  */
 #if defined(_MSDOS) || defined (_WIN32)
-#ifdef _MSDOS
-        /* Windows 16 specific */
-#ifndef KRB5_CALLCONV
-#define KRB5_CALLCONV __far __export __pascal 
-#define KRB5_CALLCONV_C __far __export __cdecl
-#define KRB5_DLLIMP
-#define INTERFACE   KRB5_CALLCONV
-#define INTERFACE_C KRB5_CALLCONV_C
-#endif /* !KRB5_CALLCONV */
-#ifndef FAR
-#define FAR __far
-#define NEAR __near
+#include <win-mac.h>
 #endif
-#else
-        /* Windows 32 specific */
-#ifndef KRB5_CALLCONV
-#ifdef KRB5_DLL_FILE
-#define KRB5_DECLSPEC dllexport
-#else
-#define KRB5_DECLSPEC dllimport
-#endif
-#define KRB5_DLLIMP __declspec(KRB5_DECLSPEC)
-#define KRB5_CALLCONV __stdcall
-#define KRB5_CALLCONV_C __cdecl
-#define INTERFACE   KRB5_DLLIMP KRB5_CALLCONV
-#define INTERFACE_C KRB5_DLLIMP KRB5_CALLCONV_C
-#endif /* !KRB5_CALLCONV */
 
-#include <windows.h>
-	
-#endif  /* Win 16 vs Win 32 */
-#else /* Windows stuff */
 #ifndef KRB5_CALLCONV
 #define KRB5_CALLCONV
 #define KRB5_CALLCONV_C
 #define KRB5_DLLIMP
+#define KRB5_EXPORTVAR
 #define INTERFACE
 #define INTERFACE_C
 #endif
-#endif /* Windows stuff */
 
 #ifndef FAR
 #define FAR

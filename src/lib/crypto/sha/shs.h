@@ -7,7 +7,12 @@
 /* Some useful types */
 
 typedef krb5_octet	BYTE;
+
+/* Old DOS/Windows compilers are case-insensitive */
+#if !defined(_MSDOS) || defined(_WIN32)
 typedef krb5_ui_4	LONG;
+#endif
+
 
 /* Exit status of functions. */
 

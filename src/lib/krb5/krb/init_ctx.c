@@ -30,9 +30,9 @@
 extern void krb5_win_do_init();
 #endif
 
-krb5_error_code INTERFACE
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV
 krb5_init_context(context)
-	krb5_context *context;
+	krb5_context FAR *context;
 {
 	krb5_context ctx;
 	krb5_error_code retval;
@@ -136,7 +136,7 @@ cleanup:
 	return retval;
 }
 
-void
+KRB5_DLLIMP void KRB5_CALLCONV
 krb5_free_context(ctx)
 	krb5_context	ctx;
 {

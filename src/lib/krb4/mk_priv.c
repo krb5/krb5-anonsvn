@@ -79,7 +79,7 @@ extern int krb_debug;
 #endif
  */
 
-long INTERFACE
+KRB5_DLLIMP long KRB5_CALLCONV
 krb_mk_priv(in,out,length,schedule,key,sender,receiver)
     u_char *in;                 /* application data */
     u_char *out;                /* put msg here, leave room for

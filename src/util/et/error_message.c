@@ -26,9 +26,9 @@ static const char copyright[] =
 
 static char buffer[25];
 
-struct et_list * _et_list = (struct et_list *) NULL;
+KRB5_DLLIMP struct et_list KRB5_EXPORTVAR * _et_list = (struct et_list *) NULL;
 
-KRB5_DLLIMP const char * KRB5_CALLCONV error_message (code)
+KRB5_DLLIMP const char FAR * KRB5_CALLCONV error_message (code)
 long code;
 {
     int offset;
@@ -39,7 +39,9 @@ long code;
     char *cp;
 
 #if defined(_MSDOS) || defined(_WIN32)
+#ifndef HAVE_STRERROR
 #define HAVE_STRERROR 1
+#endif /* HAVE_STRERROR */
 /*
 ** Winsock defines errors in the range 10000-10100. These are equivalent
 ** to 10000 plus the Berkeley error numbers.

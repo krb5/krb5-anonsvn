@@ -34,20 +34,20 @@
 
 static char *sendauth_version = "KRB5_SENDAUTH_V1.0";
 
-krb5_error_code
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV
 krb5_recvauth(context, auth_context,
 	      /* IN */
 	      fd, appl_version, server, flags, keytab,
 	      /* OUT */
 	      ticket)
     krb5_context 	  context;
-    krb5_auth_context   * auth_context;
+    krb5_auth_context   FAR * auth_context;
     krb5_pointer	  fd;
-    char		* appl_version;
+    char		FAR * appl_version;
     krb5_principal	  server;
     krb5_int32		  flags;
     krb5_keytab		  keytab;
-    krb5_ticket	       ** ticket;
+    krb5_ticket	       FAR * FAR * ticket;
 {
     krb5_auth_context	  new_auth_context;
     krb5_flags		  ap_option;
@@ -57,6 +57,7 @@ krb5_recvauth(context, auth_context,
     krb5_rcache 	  rcache = 0;
     krb5_octet		  response;
     krb5_data		  null_server;
+    int                   need_error_free = 0;
 	
 	/*
 	 * Zero out problem variable.  If problem is set at the end of
@@ -173,7 +174,14 @@ krb5_recvauth(context, auth_context,
 
 	memset((char *)&error, 0, sizeof(error));
 	krb5_us_timeofday(context, &error.stime, &error.susec);
-	error.server = server;
+	if(server) 
+		error.server = server;
+	else {
+		/* If this fails - ie. ENOMEM we are hosed
+		   we cannot even send the error if we wanted to... */
+		(void) krb5_parse_name(context, "????", &error.server);
+		need_error_free = 1;
+	}
 
 	error.error = problem - ERROR_TABLE_BASE_krb5;
 	if (error.error > 127)
@@ -190,6 +198,9 @@ krb5_recvauth(context, auth_context,
 	    goto cleanup;
 	}
 	free(error.text.data);
+	if(need_error_free) 
+		krb5_free_principal(context, error.server);
+
     } else {
 	outbuf.length = 0;
 	outbuf.data = 0;

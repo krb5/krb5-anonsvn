@@ -87,7 +87,7 @@ passwd_to_key(user,instance,realm,passwd,key)
  * The result of the call to krb_get_in_tkt() is returned.
  */
 
-int INTERFACE
+KRB5_DLLIMP int KRB5_CALLCONV
 krb_get_pw_in_tkt(user,instance,realm,service,sinstance,life,password)
     char *user, *instance, *realm, *service, *sinstance;
     int life;
@@ -101,7 +101,7 @@ krb_get_pw_in_tkt(user,instance,realm,service,sinstance,life,password)
        is an API change. */
 
     if (password == 0)
-    	return INTK_PW_NULL;
+    	return INTK_BADPW;
 #endif
 
     return(krb_get_in_tkt(user,instance,realm,service,sinstance,life,
@@ -126,7 +126,7 @@ static int stub_key(user,instance,realm,passwd,key)
    return 0;
 }
 
-int INTERFACE
+KRB5_DLLIMP int KRB5_CALLCONV
 krb_get_pw_in_tkt_preauth(user,instance,realm,service,sinstance,life,password)
     char *user, *instance, *realm, *service, *sinstance;
     int life;
@@ -140,7 +140,7 @@ krb_get_pw_in_tkt_preauth(user,instance,realm,service,sinstance,life,password)
    /* On non-Unix systems, we can't handle a null password, because
       passwd_to_key can't handle prompting for the password.  */
    if (password == 0)
-     return INTK_PW_NULL;
+     return INTK_BADPW;
 #endif
 
    krb_mk_preauth(&preauth_p,&preauth_len, passwd_to_key,

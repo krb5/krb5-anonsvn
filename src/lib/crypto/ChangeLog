@@ -1,3 +1,10 @@
+Thu Nov 21 00:58:04 EST 1996    Richard Basch   <basch@lehman.com>
+
+        * Makefile.in: Win32 build
+
+	* des3_sha.c: Changed the confounder from 24 bytes to 8 bytes.
+		(A lot more has to be done to truly support 3des)
+
 Thu Jun  6 00:04:38 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* Makefile.in (all-windows): Don't pass $(LIBCMD) on the command
@@ -8,6 +15,10 @@ Thu Jun  6 00:03:05 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 	* Makefile.in (MAC_SUBDIRS): Include sha in the list of
 		subdirectories for the Macintosh
 
+Wed May 22 23:26:10 1996  Richard Basch  <basch@lehman.com>
+
+	* des3_sha.c: Reverted the confounder length back to 8 bytes.
+
 Mon May 20 10:59:23 1996  Tom Yu  <tlyu@dragons-lair.MIT.EDU>
 
 	* Makefile.in (libcrypto.$(STEXT): deal with new improved
@@ -15,8 +26,8 @@ Mon May 20 10:59:23 1996  Tom Yu  <tlyu@dragons-lair.MIT.EDU>
 
 Sat May 18 13:34:01 1996  Ezra Peisach  (epeisach@paris)
 
-	* des3_sha.c: Add static keywords in function declarartions to
-		match earlier declarations. 
+	* des3_sha.c: Add static keywords in function declarations to
+		match earlier declarations.
 
 Tue May 14 15:14:20 1996  Richard Basch  <basch@lehman.com>
 
@@ -33,7 +44,7 @@ Tue May 14 15:14:20 1996  Richard Basch  <basch@lehman.com>
 Fri May 10 01:34:46 1996  Richard Basch  <basch@lehman.com>
 
 	* configure.in cryptoconf.c des3_sha.c:
-	Support enctype-des3-sha, cksum-sha, cksum-sha-des3
+		Support enctype-des3-sha, cksum-sha, cksum-sha-des3
 
 	* Removed des3_md5.c (and all des3-md5 support).
 

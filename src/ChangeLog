@@ -1,3 +1,8 @@
+Thu Dec 19 03:44:38 1996  Theodore Y. Ts'o  <tytso@mit.edu>
+
+	* Makefile.in (WINFILES): The NT build must include the
+		util/windows directory in the kerbsrc.zip file.
+
 Thu Nov  7 23:55:02 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* aclocal.m4 (LinkFileDir, LinkFile): AC_REQUIRE the AC_LN_S macro

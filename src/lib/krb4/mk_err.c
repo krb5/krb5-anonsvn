@@ -33,7 +33,7 @@
  * string		e_string		given error text
  */
 
-long INTERFACE
+KRB5_DLLIMP long KRB5_CALLCONV
 krb_mk_err(p,e,e_string)
     u_char *p;			/* Where to build error packet */
     KRB4_32 e;		/* Error code */

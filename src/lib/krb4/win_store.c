@@ -15,6 +15,18 @@
 
 #include "krb.h"
 
+#define KERBEROS_INI	"kerberos.ini"
+
+#define INI_FILES	"Files"
+#define INI_KRB_CONF	"krb.conf"
+#define INI_KRB_REALMS	"krb.realms"
+#define DEF_KRB_CONF	"krb.con"
+#define DEF_KRB_REALMS	"krb.rea"
+
+#define INI_DEFAULTS	"Defaults"
+#define INI_USER	"User"
+
+
 /*
  * Returns an open file handle to the configuration file.  This
  * file was called "krb.conf" on Unix.  Here we search for the entry
@@ -65,9 +77,7 @@ krb__get_realmsfile()
 
 	rc = GetWindowsDirectory(defname, sizeof(defname));
 	assert(rc > 0);
-
 	strcat(defname, "\\");
-
 	strcat(defname, DEF_KRB_REALMS);
 
 	GetPrivateProfileString(INI_FILES, INI_KRB_REALMS, defname,

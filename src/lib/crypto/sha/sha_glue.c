@@ -7,7 +7,7 @@ krb5_sha_sum_func
 		   size_t		in_length,
 		   krb5_pointer		seed,
 		   size_t		seed_length,
-		   krb5_checksum	*outcksum));
+		   krb5_checksum	FAR *outcksum));
 
 krb5_error_code
 krb5_sha_verify_func

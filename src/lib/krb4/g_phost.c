@@ -32,7 +32,7 @@
  * to the original "alias" argument is returned.
  */
 
-char * INTERFACE
+KRB5_DLLIMP char * KRB5_CALLCONV
 krb_get_phost(alias)
     char *alias;
 {
