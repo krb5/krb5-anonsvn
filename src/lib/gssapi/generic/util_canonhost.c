@@ -25,6 +25,9 @@
  */
 
 /* This file could be OS specific */
+
+#include "gssapiP_generic.h"
+
 #include "port-sockets.h"
 
 #ifndef _MACINTOSH
