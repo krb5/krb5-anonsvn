@@ -31,21 +31,41 @@
 #define NO_SYS_STAT_H
 #endif
 
+/* If you want the library to share read-only profile data to save memory, define SHARE_TREE_DATA */
+#ifdef macintosh
+#define SHARE_TREE_DATA 1
+#endif /* macintosh */
+
 typedef long prf_magic_t;
+
+/*
+ * This is the structure which holds profile data for a particular
+ * configuration file. When using SHARE_TREE_DATA, one copy of this structure
+ * can be shared among multiple profiles.
+ */
+
+struct _prf_data_t {
+	prf_magic_t 			magic;			/* magic */
+	profile_filespec_t		filespec;		/* file from which the configuration was read */
+	char*					comment;		/* top of the file comment (I think) */
+	struct profile_node*	root;			/* profile tree for this file */
+	time_t					timestamp;		/* time tree last updated */
+	int						upd_serial;		/* incremented every time the data changes */
+	int						flags;			/* read/write, dirty/clean */
+	int						refcount;		/* number of profiles sharing this data */
+	struct _prf_data_t*		next;			/* next data in the list */
+};
+
+typedef struct _prf_data_t* prf_data_t;
 
 /*
  * This is the structure which stores the profile information for a
  * particular configuration file.
  */
 struct _prf_file_t {
-	prf_magic_t	magic;
-	char		*comment;
-	profile_filespec_t filespec;
-	struct profile_node *root;
-	time_t		timestamp;
-	int		flags;
-	int		upd_serial;
-	struct _prf_file_t *next;
+	prf_magic_t				magic;			/* magic */
+	prf_data_t				data;			/* data for this file */
+	struct _prf_file_t*		next;			/* next data in the profile */
 };
 
 typedef struct _prf_file_t *prf_file_t;
@@ -55,6 +75,7 @@ typedef struct _prf_file_t *prf_file_t;
  */
 #define PROFILE_FILE_RW		0x0001
 #define PROFILE_FILE_DIRTY	0x0002
+#define PROFILE_FILE_SHARED	0x0004
 
 /*
  * This structure defines the high-level, user visible profile_t
@@ -175,14 +196,17 @@ errcode_t profile_rename_node
 errcode_t profile_open_file
 	PROTOTYPE ((const_profile_filespec_t file, prf_file_t *ret_prof));
 
-errcode_t profile_update_file
-	PROTOTYPE ((prf_file_t profile));
+errcode_t profile_update_file_data
+	PROTOTYPE ((prf_data_t profile));
 
 errcode_t profile_flush_file
 	PROTOTYPE ((prf_file_t profile));
 
 void profile_free_file
 	PROTOTYPE ((prf_file_t profile));
+
+void profile_free_file_data
+	PROTOTYPE ((prf_data_t data));
 
 errcode_t profile_close_file
 	PROTOTYPE ((prf_file_t profile));

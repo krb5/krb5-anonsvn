@@ -1,3 +1,9 @@
+2000-03-15  Miro Jurisic  <meeroh@mit.edu>
+	* prof_err.et, prof_file.c, prof_init.c, prof_int.h, prof_set.c,
+	prof_tree.c: Added preliminary version of code which allows multiple
+	profiles to share the same in-memory structures (with copy-on-write).
+	Initial checkin on meeroh-profile-sharing-optimization branch.
+
 1999-10-26  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in: Clean up usage of CFLAGS, CPPFLAGS, DEFS, DEFINES,
