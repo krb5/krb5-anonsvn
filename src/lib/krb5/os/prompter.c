@@ -1,5 +1,5 @@
 #include "k5-int.h"
-#if !defined(_MSDOS) && (!defined(_WIN32) || (defined(_WIN32) && defined(__CYGWIN32__))) && !defined(macintosh)
+#if !defined(_MSDOS) && (!defined(_WIN32) || (defined(_WIN32) && defined(__CYGWIN32__))) && !defined(macintosh) && !defined(__MACH__)
 #include <stdio.h>
 #include <errno.h>
 #include <signal.h>
@@ -235,7 +235,7 @@ krb5int_set_prompt_types(context, types)
     krb5_context context;
     krb5_prompt_type *types;
 {
-    context->prompt_types = 0;
+    context->prompt_types = types;
 }
 
 KRB5_DLLIMP
