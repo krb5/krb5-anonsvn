@@ -58,6 +58,14 @@ struct _prf_data_t {
 
 typedef struct _prf_data_t* prf_data_t;
 
+#ifdef SHARE_TREE_DATA
+#include "prof_threads.h"
+/* This is the head of the global list of shared trees */
+extern prf_data_t g_shared_trees;
+/* This is the mutex used to lock it */
+extern prof_mutex g_shared_trees_mutex;
+#endif /* SHARE_TREE_DATA */
+
 /*
  * This is the structure which stores the profile information for a
  * particular configuration file.

@@ -29,8 +29,12 @@
 #endif
 
 #ifdef SHARE_TREE_DATA
+#include "prof_threads.h"
+
 /* This is the head of the global list of shared trees */
-static prf_data_t g_shared_trees;
+prf_data_t g_shared_trees;
+/* This is the mutex used to lock it */
+prof_mutex g_shared_trees_mutex;
 #endif /* SHARE_TREE_DATA */
 
 #ifndef PROFILE_USES_PATHS
@@ -129,7 +133,7 @@ errcode_t profile_open_file(filespec, ret_prof)
 	new handles acquired as a normal user must not share the data acquired as root. This is
 	handled by checking whether we have read access on the file before sharing the data */
 	{
-		/* xxx: lock global list here */
+		prof_mutex_lock (&g_shared_trees_mutex);
 		data = g_shared_trees;
 		
 		while (data != NULL) {
@@ -158,9 +162,12 @@ errcode_t profile_open_file(filespec, ret_prof)
 			prf -> data = data;
 			*ret_prof = prf;
 			retval = 0;
-			/* xxx: unlock global list here */
+			prof_mutex_unlock (&g_shared_trees_mutex);
 			goto end;
 		}
+		/* We unlock the mutex here to avoid holding the mutex while we are reading in 
+		the new file */
+		prof_mutex_unlock (&g_shared_trees_mutex);
 	}
 #endif /* SHARE_TREE_DATA */
 
@@ -214,11 +221,11 @@ errcode_t profile_open_file(filespec, ret_prof)
 #ifdef SHARE_TREE_DATA
 	/* If we are here, that means that we created a new tree and
 	   we need to insert it into the global list */
-	/* xxx: lock global list */
+	prof_mutex_lock (&g_shared_trees_mutex);
 	data -> next = g_shared_trees;
 	data -> flags |= PROFILE_FILE_SHARED;
 	g_shared_trees = data;
-	/* xxx: unlock global list */
+	prof_mutex_unlock (&g_shared_trees_mutex);
 #endif /* SHARE_TREE_DATA */
 
 	*ret_prof = prf;
@@ -246,12 +253,14 @@ errcode_t profile_update_file_data(data)
 	struct stat st;
 #endif
 	FILE *f;
-	
 #ifdef SHARE_TREE_DATA
-	/* This can be read without locking because it is never changed while a file is
-	in the list (i.e. it's set before it's inserted and cleared after it's removed */
-	if ((data -> flags & PROFILE_FILE_SHARED) != 0) {
-		/* xxx: acquire lock on the list */
+	int havelock = 1;
+	
+	prof_mutex_lock (&g_shared_trees_mutex);
+	if ((data -> flags & PROFILE_FILE_SHARED) == 0) {
+		/* Not shared, don't need the lock */
+		havelock = 0;
+		prof_mutex_unlock (&g_shared_trees_mutex);
 	}
 #endif /* SHARE_TREE_DATA */
 
@@ -312,7 +321,8 @@ errcode_t profile_update_file_data(data)
 
 end:
 #ifdef SHARE_TREE_DATA
-	/* xxx: release the lock here */
+	if (havelock) 
+		prof_mutex_unlock (&g_shared_trees_mutex);
 #endif /* SHARE_TREE_DATA */
 	return retval;
 }
@@ -344,8 +354,13 @@ errcode_t profile_flush_file_data(data)
 	errcode_t	retval = 0;
 	
 #ifdef SHARE_TREE_DATA
-	if ((data -> flags & PROFILE_FILE_SHARED) != 0) {
-		/* xxx: acquire lock here */
+	int havelock = 1;
+	
+	prof_mutex_lock (&g_shared_trees_mutex);
+	if ((data -> flags & PROFILE_FILE_SHARED) == 0) {
+		/* Not shared, don't need the lock */
+		havelock = 0;
+		prof_mutex_unlock (&g_shared_trees_mutex);
 	}
 #endif /* SHARE_TREE_DATA */
 	
@@ -435,7 +450,8 @@ end:
 #endif
 
 #ifdef SHARE_TREE_DATA
-	/* xxx: release lock here */
+	if (havelock)
+		prof_mutex_unlock (&g_shared_trees_mutex);
 #endif /* SHARE_TREE_DATA */
 
 	return retval;
@@ -446,12 +462,12 @@ void profile_free_file(prf)
 	prf_file_t prf;
 {
 	if (prf->data) {
-		/* xxx: lock the global list here */
+		prof_mutex_lock (&g_shared_trees_mutex);
 		prf->data->refcount--;
 		if (prf->data->refcount == 0) {
 			profile_free_file_data(prf->data);
 		}
-		/* xxx: unlock the global list here */
+		prof_mutex_unlock (&g_shared_trees_mutex);
 	}
 		
 	free(prf);
@@ -465,7 +481,7 @@ void profile_free_file_data(data)
 #ifdef SHARE_TREE_DATA
 	if ((data -> flags & PROFILE_FILE_SHARED) != 0) {
 		/* Remove from the global list first */
-		/* xxx: lock the global list here */
+		prof_mutex_lock (&g_shared_trees_mutex);
 		if (g_shared_trees == data) {
 			g_shared_trees = data -> next;
 		} else {
@@ -482,7 +498,7 @@ void profile_free_file_data(data)
 				next = next -> next;
 			}
 		}
-		/* xxx: unlock the global list here */
+		prof_mutex_unlock (&g_shared_trees_mutex);
 	}
 #endif /* SHARE_TREE_DATA */
 

@@ -25,7 +25,7 @@ static errcode_t rw_setup(profile)
 {
    	prf_file_t	file;
 	errcode_t	retval;
-
+	
 	if (!profile)
 		return PROF_NO_PROFILE;
 
@@ -35,10 +35,9 @@ static errcode_t rw_setup(profile)
 	file = profile->first_file;
 	
 #ifdef SHARE_TREE_DATA
+	prof_mutex_lock (&g_shared_trees_mutex);
 	/* If the file is shared and we want to write to it, get a lock */
 	if ((file -> data -> flags & PROFILE_FILE_SHARED) != 0) {
-		/* xxx: acquire lock here */
-
 		prf_data_t new_data = NULL;
 		new_data = malloc (sizeof (struct _prf_data_t));
 		if (new_data == NULL) {
@@ -64,11 +63,13 @@ static errcode_t rw_setup(profile)
 			file -> data = new_data;
 		}
 		
-		/* xxx: release lock here */
+		prof_mutex_unlock (&g_shared_trees_mutex);
 		
 		if (retval != 0) {
 			return retval;
 		}
+	} else {
+		prof_mutex_unlock (&g_shared_trees_mutex);
 	}
 #endif /* SHARE_TREE_DATA */
 	
