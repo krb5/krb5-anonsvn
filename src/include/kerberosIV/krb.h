@@ -38,6 +38,7 @@
 /* Windows declarations */
 #ifndef KRB5_CALLCONV
 #define KRB5_CALLCONV
+#define KRB5_CALLCONV_C
 #define KRB5_DLLIMP
 #endif
 #ifndef FAR
