@@ -22,6 +22,7 @@
 #ifndef KRB5_CALLCONV
 #define KRB5_CALLCONV __far __export __pascal
 #define KRB5_CALLCONV_C __far __export __cdecl
+#define KRB5_EXPORTVAR __far __export
 #define KRB5_DLLIMP
 #endif /* !KRB5_CALLCONV */
 
@@ -52,6 +53,8 @@
 
 #include <windows.h>   /* always include this here, to get correct FAR and NEAR */
 
+#define HAS_LABS
+
 #ifndef KRB5_CALLCONV
 #ifdef KRB5_DLL_FILE
 #define KRB5_DECLSPEC dllexport
@@ -61,13 +64,11 @@
 #define KRB5_DLLIMP __declspec(KRB5_DECLSPEC)
 #define KRB5_CALLCONV __stdcall
 #define KRB5_CALLCONV_C __cdecl
+#define KRB5_EXPORTVAR __far
 #endif /* !KRB5_CALLCONV */
 
 #endif /* _MSDOS */
 
-#define KRB5_PROVIDE_PROTOTYPES
-#define HAS_VOID_TYPE
-#define HAVE_STDARG_H
 #ifndef _SIZE_T_DEFINED
 typedef unsigned int size_t;
 #define _SIZE_T_DEFINED
@@ -90,12 +91,7 @@ typedef unsigned char	u_char;
 #define HAVE_SRAND
 #define HAVE_ERRNO
 #define HAS_STRDUP
-#ifdef _WIN32
-#define HAS_LABS
-#endif
 #define NO_USERID
-#define NOFCHMOD
-#define NOCHMOD
 #define NO_PASSWORD
 #define WM_KERBEROS5_CHANGED "Kerberos5 Changed"
 
@@ -114,11 +110,6 @@ typedef unsigned char	u_char;
 #define PROVIDE_CRC32
 #define PROVIDE_RSA_MD4
 #define PROVIDE_RSA_MD5
-
-#ifndef _SIZE_T_DEFINED
-typedef unsigned int size_t;
-#define _SIZE_T_DEFINED
-#endif 
 
 /* Ugly. Microsoft, in stdc mode, doesn't support the low-level i/o
  * routines directly. Rather, they only export the _<function> version.
@@ -166,10 +157,6 @@ typedef unsigned int size_t;
  */
 #define strcasecmp   stricmp
 #define strncasecmp  strnicmp
-#if 0
-#define strdup       _strdup
-#define off_t        _off_t
-#endif
 
 #endif /* _MSDOS || _WIN32 */
 

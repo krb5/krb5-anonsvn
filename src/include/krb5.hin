@@ -397,31 +397,6 @@ typedef struct _krb5_checksum_entry {
 #endif /* roundup */
 
 /* macro function definitions to help clean up code */
-#define	krb5_encrypt_size(length, crypto) \
-     krb5_roundup((length)+(crypto)->pad_minimum, (crypto)->block_length)
-
-/* This array is indexed by encryption type */
-extern krb5_cs_table_entry * NEAR krb5_csarray[];
-extern int krb5_max_cryptosystem;	/* max entry in array */
-
-/* This array is indexed by key type, and has (should have) pointers to
-   the same entries as krb5_csarray */
-extern krb5_cs_table_entry * NEAR krb5_enctype_array[];
-extern krb5_enctype krb5_max_enctype;	/* max entry in array */
-
-/* This array is indexed by checksum type */
-extern krb5_checksum_entry * NEAR krb5_cksumarray[];
-extern krb5_cksumtype krb5_max_cksum;	/* max entry in array */
-
-#define valid_enctype(ktype)	 ((((ktype)) <= krb5_max_enctype) && ((ktype) > 0) && krb5_enctype_array[ktype])
-
-#define valid_cksumtype(cktype)	    ((((cktype)) <= krb5_max_cksum) && ((cktype) > 0) && krb5_cksumarray[cktype])
-
-#define is_coll_proof_cksum(cktype) (krb5_cksumarray[cktype]->is_collision_proof)
-#define is_keyed_cksum(cktype) (krb5_cksumarray[cktype]->uses_key)
-
-/* set up *eblockp to use etype */
-#define krb5_use_enctype(context, eblockp, enctype) (eblockp)->crypto_entry = krb5_enctype_array[(enctype)]->system
 
 #if 1
 #define krb5_x(ptr,args) ((ptr)?((*(ptr)) args):(abort(),1))
@@ -430,6 +405,7 @@ extern krb5_cksumtype krb5_max_cksum;	/* max entry in array */
 #define krb5_x(ptr,args) ((*(ptr)) args)
 #define krb5_xc(ptr,args) ((*(ptr)) args)
 #endif
+
 #define krb5_encrypt(context, inptr, outptr, size, eblock, ivec) krb5_x((eblock)->crypto_entry->encrypt_func,(inptr, outptr, size, eblock, ivec))
 #define krb5_decrypt(context, inptr, outptr, size, eblock, ivec) krb5_x((eblock)->crypto_entry->decrypt_func,(inptr, outptr, size, eblock, ivec))
 #define krb5_process_key(context, eblock, key) krb5_x((eblock)->crypto_entry->process_key,(eblock, key))
@@ -442,15 +418,43 @@ extern krb5_cksumtype krb5_max_cksum;	/* max entry in array */
 #define krb5_eblock_enctype(context, eblockp) ((eblockp)->crypto_entry->proto_enctype)
 
 /*
- * Here's the stuff for the checksum switch:
+ * cryptosystem routine prototypes
  */
-#define krb5_checksum_size(context, ctype)  (krb5_cksumarray[ctype]->checksum_length)
-#define krb5_calculate_checksum(context, ctype, in, in_length, seed, seed_length, outcksum) krb5_x(((*krb5_cksumarray[ctype]->sum_func)),(in, in_length, seed, seed_length, outcksum))
-#define krb5_verify_checksum(context, ctype, cksum, in, in_length, seed, seed_length) krb5_x((*krb5_cksumarray[ctype]->sum_verf_func),(cksum, in, in_length, seed, seed_length))
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_use_enctype
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_encrypt_block FAR * eblockp,
+		krb5_enctype enctype));
+KRB5_DLLIMP size_t KRB5_CALLCONV krb5_encrypt_size
+	KRB5_PROTOTYPE((size_t length,
+		krb5_cryptosystem_entry FAR * crypto));
+KRB5_DLLIMP size_t KRB5_CALLCONV krb5_checksum_size
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_cksumtype ctype));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_calculate_checksum
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_cksumtype ctype,
+		krb5_pointer in, size_t in_length,
+		krb5_pointer seed, size_t seed_length,
+		krb5_checksum FAR * outcksum));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_verify_checksum
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_cksumtype ctype,
+		krb5_checksum FAR * cksum,
+		krb5_pointer in, size_t in_length,
+		krb5_pointer seed, size_t seed_length));
 
-/*
- * encryption routine prototypes
- */
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_random_confounder
+	KRB5_PROTOTYPE((size_t, krb5_pointer));
+
+krb5_boolean KRB5_CALLCONV valid_enctype
+	KRB5_PROTOTYPE((krb5_enctype ktype));
+krb5_boolean KRB5_CALLCONV valid_cksumtype
+	KRB5_PROTOTYPE((krb5_cksumtype ctype));
+krb5_boolean KRB5_CALLCONV is_coll_proof_cksum
+	KRB5_PROTOTYPE((krb5_cksumtype ctype));
+krb5_boolean KRB5_CALLCONV is_keyed_cksum
+	KRB5_PROTOTYPE((krb5_cksumtype ctype));
+
 krb5_error_code krb5_encrypt_data
 	KRB5_PROTOTYPE((krb5_context context, krb5_keyblock *key, 
 		krb5_pointer ivec, krb5_data *data, 
@@ -1294,9 +1298,9 @@ krb5_error_code krb5_get_cred_from_kdc_renew
 		krb5_creds *,
 		krb5_creds **,
 		krb5_creds *** ));
-void krb5_free_tgt_creds
+KRB5_DLLIMP void KRB5_CALLCONV krb5_free_tgt_creds
 	KRB5_PROTOTYPE((krb5_context,
-		krb5_creds ** ));	/* XXX too hard to do with const */
+		krb5_creds FAR * FAR* )); /* XXX too hard to do with const */
 
 #define	KRB5_GC_USER_USER	1	/* want user-user ticket */
 #define	KRB5_GC_CACHED		2	/* want cached ticket only */
