@@ -1,3 +1,7 @@
+Sun Feb  2 11:22:57 1997  Richard Basch  <basch@lehman.com>
+
+	* Makefile.in: Use CCOPTS2, not COPTS (win16)
+
 Fri Dec 20 10:28:59 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* krb5.def: New file, modelled after krbnet.def
