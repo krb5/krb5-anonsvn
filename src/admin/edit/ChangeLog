@@ -1,3 +1,7 @@
+Sun May 12 00:27:44 1996  Marc Horowitz  <marc@mit.edu>
+
+	* cpw.c (enter_pwd_key): krb5_dbe_cpw() takes a kvno now.
+
 Tue May  7 23:16:57 1996  Marc Horowitz  <marc@mit.edu>
 
 	* configure.in: USE_KADM_LIBRARY replaced by USE_KADMSRV_LIBRARY
