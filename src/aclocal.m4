@@ -243,7 +243,7 @@ else
 	AC_MSG_RESULT(built in krb4 support)
 	KRB4_DEPLIB='$(TOPLIBD)/libkrb4$(DEPLIBEXT)'
 	KRB4_LIB=-lkrb4
-	KRB4_INCLUDES="-I$SRCTOP/include/kerberosIV"
+	KRB4_INCLUDES='-I$(SRCTOP)/include/kerberosIV -I$(BUILDTOP)/include/kerberosIV'
 	KRB4_LIBPATH=
 	krb5_cv_build_krb4_libs=yes
 	krb5_cv_krb4_libdir=
