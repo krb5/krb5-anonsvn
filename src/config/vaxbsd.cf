@@ -52,4 +52,4 @@
 #endif
 #endif
 
-#define DefaultCDebugFlags OptimizedCDebugFlags
+#define DefaultCDebugFlags DebuggableCDebugFlags
