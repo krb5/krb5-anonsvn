@@ -1,3 +1,8 @@
+Thu Feb  6 15:33:34 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in:
+	* configure.in: Update to new program build procedure.
+
 Wed Jan  8 01:59:15 1997  Ezra Peisach  <epeisach@mit.edu>
 
 	* Makefile.in, configure.in: Convert to new build procedure for libs.
