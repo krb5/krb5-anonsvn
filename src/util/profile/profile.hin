@@ -70,7 +70,7 @@ extern "C" {
 #endif
 
 /* We use file paths as unique file identifiers except Mac OS 8 and 9*/
-#if TARGET_API_MAC_OS8
+#if TARGET_API_MAC_OS8 || (TARGET_API_MAC_CARBON && !TARGET_API_MAC_OSX)
     /* On CFM MacOS, we use native file specifiers as unique file identifiers */
     typedef FSSpec profile_filespec_t;
     typedef FSSpec* profile_filespec_list_t;
@@ -93,7 +93,7 @@ KRB5_DLLIMP long KRB5_CALLCONV profile_init_path
 	PROTOTYPE ((const_profile_filespec_list_t filelist, profile_t *ret_profile));
 
 /* On Mac Carbon, also provide FSSpec variants */
-#if TARGET_API_MAC_OSX || TARGET_API_MAC_OS8
+#if TARGET_OS_MAC
 KRB5_DLLIMP long KRB5_CALLCONV FSp_profile_init
 	PROTOTYPE ((const FSSpec* files, profile_t *ret_profile));
 
