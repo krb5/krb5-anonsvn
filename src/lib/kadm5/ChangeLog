@@ -1,3 +1,7 @@
+Thu Jan 16 19:01:00 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in (all-prerecurse): Update to use double-colon rules.
+
 Wed Jan 15 20:43:01 1997  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in:
