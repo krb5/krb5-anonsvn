@@ -14,19 +14,23 @@ Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 #include <malloc.h>
 #include <errno.h>
 extern int errno; /* this should be in errno.h, but isn't on some systems */
+#ifdef notdef
+/* these are all in our include files */
 extern char *getenv(char *); /* ain't there an include file for this? */
 extern int open(char *,int,int);
 extern char *sprintf(char *,char *,...);
 extern int getpid(void);
 extern int rename(char *,char *);
 extern int free(char *);
-#define FREE(x) ((void) free((char *) (x)))
 extern int close(int);
 extern int unlink(char *);
 extern int lseek(int,int,int);
 extern int read(int,char *,int);
 extern int write(int,char *,int);
 extern int fsync(int);
+#endif
+#define FREE(x) ((void) free((char *) (x)))
+
 #include "rc_io.h"
 #include "rc_io_err.h"
 
