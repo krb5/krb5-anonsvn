@@ -869,7 +869,12 @@ krb5_read_realm_params(kcontext, realm, kdcprofile, kdcenv, rparamp)
     /* XXX This is so that the kdc will search a different
        enctype list than kadmind */
     hierarchy[2] = "kdc_supported_enctypes";
-    if (!krb5_aprof_get_string(aprofile, hierarchy, TRUE, &svalue)) {
+    kret = krb5_aprof_get_string(aprofile, hierarchy, TRUE, &svalue);
+    if (kret) {
+	hierarchy[2] = "supported_enctypes";
+	kret = krb5_aprof_get_string(aprofile, hierarchy, TRUE, &svalue);
+    }
+    if (!kret) {
 	krb5_string_to_keysalts(svalue,
 				", \t",	/* Tuple separators	*/
 				":.-",	/* Key/salt separators	*/
