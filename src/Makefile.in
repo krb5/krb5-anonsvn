@@ -373,30 +373,67 @@ GG  = lib/gssapi/generic/
 GK  = lib/gssapi/krb5/
 PR  = util/profile/
 
-awk-windows-mac:
-	gawk -f $(AH) outfile=$(INC)asn1_err.h $(ET)asn1_err.et
-	gawk -f $(AH) outfile=$(INC)kdb5_err.h $(ET)kdb5_err.et
-	gawk -f $(AH) outfile=$(INC)krb5_err.h $(ET)krb5_err.et
-	gawk -f $(AH) outfile=$(INC)kv5m_err.h $(ET)kv5m_err.et
-	gawk -f $(AH) outfile=$(INC)adm_err.h $(ET)adm_err.et
-	cat $(INC)/krb5.hin $(INC)/krb5_err.h $(INC)/kdb5_err.h \
-		$(INC)/kv5m_err.h $(INC)/asn1_err.h > $(INC)/krb5.h
-	gawk -f $(AC) outfile=$(ET)asn1_err.c $(ET)asn1_err.et
-	gawk -f $(AC) outfile=$(ET)kdb5_err.c $(ET)kdb5_err.et
-	gawk -f $(AC) outfile=$(ET)krb5_err.c $(ET)krb5_err.et
-	gawk -f $(AC) outfile=$(ET)kv5m_err.c $(ET)kv5m_err.et
-	gawk -f $(AC) outfile=$(ET)adm_err.c $(ET)adm_err.et
-	gawk -f $(AH) outfile=$(GG)gssapi_err_generic.h $(GG)gssapi_err_generic.et
-	gawk -f $(AC) outfile=$(GG)gssapi_err_generic.c $(GG)gssapi_err_generic.et
-	cat $(GG)gssapi.hin > $(GG)gssapi.h
-	gawk -f $(AH) outfile=$(GK)gssapi_err_krb5.h $(GK)gssapi_err_krb5.et
-	gawk -f $(AC) outfile=$(GK)gssapi_err_krb5.c $(GK)gssapi_err_krb5.et
-	gawk -f $(AH) outfile=$(PR)prof_err.h $(PR)prof_err.et
-	gawk -f $(AC) outfile=$(PR)prof_err.c $(PR)prof_err.et
-	cat $(PR)/profile.hin $(PR)prof_err.h > $(PR)profile.h
-	$(RM) include/profile.h
-	cp $(PR)profile.h include/profile.h
-	-chmod +w include/profile.h
-	$(RM) $(INC)/krb5/osconf.h
-	cp $(INC)/krb5/stock/osconf.h $(INC)/krb5
-	-chmod +w $(INC)/krb5/osconf.h
+ETOUT =	$(INC)asn1_err.h $(ET)asn1_err.c \
+	$(INC)kdb5_err.h $(ET)kdb5_err.c \
+	$(INC)krb5_err.h $(ET)krb5_err.c \
+	$(INC)kv5m_err.h $(ET)kv5m_err.c \
+	$(INC)adm_err.h $(ET)adm_err.c \
+	$(PR)prof_err.h $(PR)prof_err.c \
+	$(GG)gssapi_err_generic.h $(GG)gssapi_err_generic.c \
+	$(GK)gssapi_err_krb5.h $(GK)gssapi_err_krb5.c
+
+$(INC)asn1_err.h: $(AH) $(ET)asn1_err.et
+	gawk -f $(AH) outfile=$@ $(ET)asn1_err.et
+$(INC)kdb5_err.h: $(AH) $(ET)kdb5_err.et
+	gawk -f $(AH) outfile=$@ $(ET)kdb5_err.et
+$(INC)krb5_err.h: $(AH) $(ET)krb5_err.et
+	gawk -f $(AH) outfile=$@ $(ET)krb5_err.et
+$(INC)kv5m_err.h: $(AH) $(ET)kv5m_err.et
+	gawk -f $(AH) outfile=$@ $(ET)kv5m_err.et
+$(INC)adm_err.h: $(AH) $(ET)adm_err.et
+	gawk -f $(AH) outfile=$@ $(ET)adm_err.et
+$(PR)prof_err.h: $(AH) $(PR)prof_err.et
+	gawk -f $(AH) outfile=$@ $(PR)prof_err.et
+$(GG)gssapi_err_generic.h: $(AH) $(GG)gssapi_err_generic.et
+	gawk -f $(AH) outfile=$@ $(GG)gssapi_err_generic.et
+$(GK)gssapi_err_krb5.h: $(AH) $(GK)gssapi_err_krb5.et
+	gawk -f $(AH) outfile=$@ $(GK)gssapi_err_krb5.et
+
+$(ET)asn1_err.c: $(AC) $(ET)asn1_err.et
+	gawk -f $(AC) outfile=$@ $(ET)asn1_err.et
+$(ET)kdb5_err.c: $(AC) $(ET)kdb5_err.et
+	gawk -f $(AC) outfile=$@ $(ET)kdb5_err.et
+$(ET)krb5_err.c: $(AC) $(ET)krb5_err.et
+	gawk -f $(AC) outfile=$@ $(ET)krb5_err.et
+$(ET)kv5m_err.c: $(AC) $(ET)kv5m_err.et
+	gawk -f $(AC) outfile=$@ $(ET)kv5m_err.et
+$(ET)adm_err.c: $(AC) $(ET)adm_err.et
+	gawk -f $(AC) outfile=$@ $(ET)adm_err.et
+$(PR)prof_err.c: $(AC) $(PR)prof_err.et
+	gawk -f $(AC) outfile=$@ $(PR)prof_err.et
+$(GG)gssapi_err_generic.c: $(AC) $(GG)gssapi_err_generic.et
+	gawk -f $(AC) outfile=$@ $(GG)gssapi_err_generic.et
+$(GK)gssapi_err_krb5.c: $(AC) $(GK)gssapi_err_krb5.et
+	gawk -f $(AC) outfile=$@ $(GK)gssapi_err_krb5.et
+
+HOUT =	$(INC)krb5.h $(GG)gssapi.h $(PR)profile.h
+KRBHDEP = $(INC)krb5.hin $(INC)krb5_err.h $(INC)kdb5_err.h \
+	$(INC)kv5m_err.h $(INC)asn1_err.h
+
+$(INC)krb5.h: $(KRBHDEP)
+	$(RM) $@
+	cat $(KRBHDEP) > $@
+$(INC)krb5/osconf.h: $(INC)krb5/stock/osconf.h
+	$(RM) $@
+	cp $(INC)krb5/stock/osconf.h $@
+$(PR)profile.h: $(PR)profile.hin $(PR)prof_err.h
+	$(RM) $@
+	cat $(PR)profile.hin $(PR)prof_err.h > $@
+$(GG)gssapi.h: $(GG)gssapi.hin
+	$(RM) $@
+	cat $(GG)gssapi.hin > $@
+
+awk-windows-mac: $(ETOUT) $(HOUT)
+
+clean-windows-mac:
+	$(RM) $(ETOUT) $(HOUT)

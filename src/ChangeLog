@@ -1,3 +1,9 @@
+Mon Feb  3 00:11:37 1997  Richard Basch  <basch@lehman.com>
+
+	* Makefile.in:
+		awk-windows-mac: Only rebuild based on what has changed
+		clean-windows-mac: Cleanup files built by awk-windows-mac.
+
 Thu Dec 19 03:44:38 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* Makefile.in (WINFILES): The NT build must include the
