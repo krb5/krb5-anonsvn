@@ -1,0 +1,23 @@
+Tue Jul  9 16:26:26 1996  Barry Jaspan  <bjaspan@mit.edu>
+
+	* svr_principal.c (kadm5_decrypt_key): add kadm5_decrypt_key
+
+Mon Jul  8 16:55:22 1996  Barry Jaspan  <bjaspan@mit.edu>
+
+	* svr_iters.c (kadm5_get_either): append local ream to globs with
+ 	no realm
+
+	* alt_prof.c: fix dbname, admin_dbname, and admin_lockfile to
+ 	derive from each other as in spec
+
+	* adb_policy.c: add create_db/destroy_db
+
+	* adb_openclose.c: add create_db/destroy_db, fix handling of
+ 	permanent locks, handle multiple lock files via static linked list
+
+	* adb.h: update create_db/destroy_db to make params instead of
+ 	explicit values
+
+	* Makefile.ov (TOP): Use ../../kadmin, not kadmin.ov
+	
+
