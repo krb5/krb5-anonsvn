@@ -1,3 +1,8 @@
+Thu Jun 20 20:19:44 1996  Marc Horowitz  <marc@mit.edu>
+
+	* kinit.M, kinit.c (main): Add a -s option to kinit which specifies
+ 	the service name to be used in the TGS_REQ.
+
 Thu Feb 15 12:31:03 1996  Ezra Peisach  <epeisach@kangaroo.mit.edu>
 
 	* kinit.c (main): Do not free memory until all done using it.
