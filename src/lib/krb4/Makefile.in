@@ -98,8 +98,8 @@ STOBJLISTS=OBJS.ST
 # Depends on libkrb5, expect to find
 #	krb5_init_context, krb5_free_context, profile_get_values
 #
-KRB4_CRYPTO_LIBS=@KRB4_CRYPTO_LIB@
-DEPKRB4_LIBS=@DEPKRB4_CRYPTO_LIB@
+KRB4_CRYPTO_LIBS=-ldes425
+DEPKRB4_LIBS=	$(TOPLIBD)/libdes425$(SHLIBEXT) 
 SHLIB_EXPDEPS = $(DEPKRB4_LIBS) \
 	$(TOPLIBD)/libcrypto$(SHLIBEXT) \
 	$(TOPLIBD)/libkrb5$(SHLIBEXT)
