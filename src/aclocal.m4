@@ -1126,6 +1126,7 @@ dnl Pull in the necessary stuff to create the libraries.
 AC_DEFUN(KRB5_BUILD_LIBRARY,
 [AC_REQUIRE([KRB5_LIB_AUX])
 AC_REQUIRE([AC_LN_S])
+AC_REQUIRE([AC_PROG_RANLIB])
 AC_CHECK_PROG(AR, ar, ar, false)
 # add frag for building libraries
 krb5_append_frags=$ac_config_fragdir/lib.in:$krb5_append_frags
@@ -1133,6 +1134,8 @@ AC_SUBST(LIBLIST)
 AC_SUBST(LIBLINKS)
 AC_SUBST(LDCOMBINE)
 AC_SUBST(LDCOMBINE_TAIL)
+AC_SUBST(SHLIB_RFLAG)
+AC_SUBST(SHLIB_EXPFLAGS)
 AC_SUBST(STLIBEXT)
 AC_SUBST(SHLIBEXT)
 AC_SUBST(SHLIBVEXT)
@@ -1254,6 +1257,8 @@ alpha-dec-osf*)
 	# Alpha OSF/1 doesn't need separate PIC objects
 	SHOBJEXT=.o
 	LDCOMBINE='ld -shared -expect_unresolved \* -update_registry $(BUILDTOP)/so_locations'
+	SHLIB_EXPFLAGS='$(SHLIB_RPATH) $(SHLIB_DIRS)'
+	SHLIB_RFLAG='"-rpath "'
 	PROFFLAGS=-pg
 	;;
 *-*-netbsd*)
@@ -1261,6 +1266,8 @@ alpha-dec-osf*)
 	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
 	SHLIBEXT=.so
 	LDCOMBINE='ld -Bshareable'
+	SHLIB_RFLAG=-R
+	SHLIB_EXPFLAGS='$(SHLIB_RPATH) $(SHLIB_DIRS)'
 	PROFFLAGS=-pg
 	;;
 *-*-solaris*)
@@ -1274,7 +1281,20 @@ alpha-dec-osf*)
 	fi
 	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
 	SHLIBEXT=.so
+	SHLIB_RFLAG=-R
+	SHLIB_EXPFLAGS='$(SHLIB_RPATH) $(SHLIB_DIRS)'
 	PROFFLAGS=-pg
+	;;
+*-*-sunos*)
+	PICFLAGS=-fpic
+	# The following grossness is to prevent relative paths from
+	# creeping into the RPATH of an executable or library built
+	# under SunOS; the explicit setting of LD_LIBRARY_PATH does
+	# does not make it into the output file, while directories
+	# passed by "-Ldirname" do.
+	LDCOMBINE='LD_LIBRARY_PATH=`echo $(SHLIB_DIRS) | sed -e "s/-L//g" -e "s/ /:/g"` ld -dp -assert pure-text'
+	SHLIB_RFLAG=-L
+	SHLIB_EXPFLAGS='$(SHLIB_RPATH)'
 	;;
 *-*-linux*)
 	PICFLAGS=-fPIC
