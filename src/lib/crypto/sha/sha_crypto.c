@@ -1,6 +1,4 @@
-#include "k5-int.h"
 #include "shs.h"
-#include "des_int.h"	/* we cheat a bit and call it directly... */
 
 /* Windows needs to these prototypes for the assignment below */
 
@@ -21,7 +19,7 @@ krb5_sha_crypto_verify_func
 		   krb5_const size_t seed_length));
 
 static krb5_error_code
-shs_crypto_sum_func(in, in_length, seed, seed_length, outcksum)
+krb5_sha_crypto_sum_func(in, in_length, seed, seed_length, outcksum)
     krb5_const krb5_pointer in;
     krb5_const size_t in_length;
     krb5_const krb5_pointer seed;
@@ -41,7 +39,7 @@ shs_crypto_sum_func(in, in_length, seed, seed_length, outcksum)
 }
 
 static krb5_error_code
-shs_crypto_verify_func(cksum, in, in_length, seed, seed_length)
+krb5_sha_crypto_verify_func(cksum, in, in_length, seed, seed_length)
     krb5_const krb5_checksum FAR *cksum;
     krb5_const krb5_pointer in;
     krb5_const size_t in_length;
@@ -70,8 +68,8 @@ cleanup:
 krb5_checksum_entry hmac_sha_cksumtable_entry =
 {
     0,
-    shs_crypto_sum_func,
-    shs_crypto_verify_func,
+    krb5_sha_crypto_sum_func,
+    krb5_sha_crypto_verify_func,
     HMAC_SHA_CKSUM_LENGTH,
     1,					/* is collision proof */
     1,					/* uses key */

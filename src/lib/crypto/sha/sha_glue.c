@@ -1,4 +1,3 @@
-#include "k5-int.h"
 #include "shs.h"
 
 krb5_error_code
