@@ -40,6 +40,7 @@ shared::
 
 clean-unix::
 	$(RM) shared/*
+	-rmdir shared
 
 DONE: $(OBJS)
 	$(RM) DONE
