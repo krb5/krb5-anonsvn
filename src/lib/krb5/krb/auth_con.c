@@ -183,7 +183,7 @@ krb5_auth_con_setuseruserkey(context, auth_context, keyblock)
     return(krb5_copy_keyblock(context, keyblock, &(auth_context->keyblock)));
 }
 
-krb5_error_code
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV
 krb5_auth_con_getkey(context, auth_context, keyblock)
     krb5_context      	  context;
     krb5_auth_context 	  auth_context;
