@@ -384,7 +384,7 @@ cmd:		USER SP username CRLF
 	|	DELE check_login SP pathname CRLF
 		= {
 			if ($2 && $4 != NULL)
-				delete((char *) $4);
+				delete_file((char *) $4);
 			if ($4 != NULL)
 				free((char *) $4);
 		}

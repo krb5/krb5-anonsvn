@@ -1549,7 +1549,7 @@ yyerror(s)
 	reply(500, "'%s': command not understood.", cbuf);
 }
 
-delete(name)
+delete_file(name)
 	char *name;
 {
 	struct stat st;
