@@ -31,10 +31,10 @@
 #include "adm_proto.h"
 #include "com_err.h"
 #include <stdio.h>
-#if	HAVE_SYSLOG_H
+#ifdef	HAVE_SYSLOG_H
 #include <syslog.h>
 #endif	/* HAVE_SYSLOG_H */
-#if	HAVE_STDARG_H
+#ifdef	HAVE_STDARG_H
 #include <stdarg.h>
 #else	/* HAVE_STDARG_H */
 #include <varargs.h>
@@ -176,7 +176,7 @@ klog_com_err_proc(whoami, code, format, ap)
     char	outbuf[KRB5_KLOG_MAX_ERRMSG_SIZE];
     int		lindex;
     char	*actual_format;
-#if	HAVE_SYSLOG
+#ifdef	HAVE_SYSLOG
     int		log_pri = -1;
 #endif	/* HAVE_SYSLOG */
     char	*cp;
@@ -198,7 +198,7 @@ klog_com_err_proc(whoami, code, format, ap)
     cp = &outbuf[strlen(outbuf)];
     
     actual_format = (char *) format;
-#if	HAVE_SYSLOG
+#ifdef	HAVE_SYSLOG
     /*
      * This is an unpleasant hack.  If the first character is less than
      * 8, then we assume that it is a priority.
@@ -296,7 +296,7 @@ klog_com_err_proc(whoami, code, format, ap)
 			log_control.log_entries[lindex].ldu_devname);
 	    }
 	    break;
-#if	HAVE_SYSLOG
+#ifdef	HAVE_SYSLOG
 	case K_LOG_SYSLOG:
 	    /*
 	     * System log.
@@ -431,7 +431,7 @@ krb5_klog_init(kcontext, ename, whoami, do_com_err)
 			}
 		    }
 		}
-#if	HAVE_SYSLOG
+#ifdef	HAVE_SYSLOG
 		/*
 		 * Is this a syslog?
 		 */
@@ -674,7 +674,7 @@ krb5_klog_init(kcontext, ename, whoami, do_com_err)
 	    strcpy(log_control.log_whoami, whoami);
 	if (log_control.log_hostname = (char *) malloc(MAXHOSTNAMELEN))
 	    gethostname(log_control.log_hostname, MAXHOSTNAMELEN);
-#if	HAVE_OPENLOG
+#ifdef	HAVE_OPENLOG
 	if (do_openlog) {
 	    openlog(whoami, LOG_NDELAY|LOG_PID, log_facility);
 	    log_control.log_opened = 1;
@@ -711,7 +711,7 @@ krb5_klog_close(kcontext)
 	     */
 	    DEVICE_CLOSE(log_control.log_entries[lindex].ldu_filep);
 	    break;
-#if	HAVE_SYSLOG
+#ifdef	HAVE_SYSLOG
 	case K_LOG_SYSLOG:
 	    /*
 	     * System log.
@@ -734,7 +734,7 @@ krb5_klog_close(kcontext)
     if (log_control.log_hostname)
 	free(log_control.log_hostname);
     log_control.log_hostname = (char *) NULL;
-#if	HAVE_CLOSELOG
+#ifdef	HAVE_CLOSELOG
     if (log_control.log_opened)
 	closelog();
 #endif	/* HAVE_CLOSELOG */
@@ -811,7 +811,7 @@ klog_vsyslog(priority, format, arglist)
     char	*syslogp;
     char	*cp;
     time_t	now;
-#if	HAVE_STRFTIME
+#ifdef	HAVE_STRFTIME
     size_t	soff;
 #endif	/* HAVE_STRFTIME */
 
@@ -826,7 +826,7 @@ klog_vsyslog(priority, format, arglist)
      */
     cp = outbuf;
     (void) time(&now);
-#if	HAVE_STRFTIME
+#ifdef	HAVE_STRFTIME
     /*
      * Format the date: mon dd hh:mm:ss
      */
@@ -855,7 +855,7 @@ klog_vsyslog(priority, format, arglist)
     syslogp = &outbuf[strlen(outbuf)];
 
     /* Now format the actual message */
-#if	HAVE_VSPRINTF
+#ifdef	HAVE_VSPRINTF
     vsprintf(syslogp, format, arglist);
 #else	/* HAVE_VSPRINTF */
     sprintf(syslogp, format, ((int *) arglist)[0], ((int *) arglist)[1],
@@ -897,7 +897,7 @@ klog_vsyslog(priority, format, arglist)
 			log_control.log_entries[lindex].ldu_devname);
 	    }
 	    break;
-#if	HAVE_SYSLOG
+#ifdef	HAVE_SYSLOG
 	case K_LOG_SYSLOG:
 	    /*
 	     * System log.
@@ -914,7 +914,7 @@ klog_vsyslog(priority, format, arglist)
     return(0);
 }
 
-#if	HAVE_STDARG_H
+#ifdef	HAVE_STDARG_H
 int
 krb5_klog_syslog(int priority, const char *format, ...)
 #else	/* HAVE_STDARG_H */
@@ -928,7 +928,7 @@ krb5_klog_syslog(priority, format, va_alist)
     int		retval;
     va_list	pvar;
 
-#if	HAVE_STDARG_H
+#ifdef	HAVE_STDARG_H
     va_start(pvar, format);
 #else	/* HAVE_STDARG_H */
     va_start(pvar);
