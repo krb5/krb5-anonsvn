@@ -29,7 +29,9 @@
 #ifndef UTMP_FILE
 #define	UTMP_FILE	"/etc/utmp"
 #endif
+#ifndef NO_UT_PID
 #define WTMP_REQUIRES_USERNAME
+#endif
 long pty_update_utmp (process_type, pid, username, line, host, flags)
     int process_type;
     int pid;
@@ -48,6 +50,7 @@ long pty_update_utmp (process_type, pid, username, line, host, flags)
     char *tmpx;
     char utmp_id[5];
 #endif
+    char userbuf[32];
     int fd;
 
     strncpy(ent.ut_line, line+sizeof("/dev/")-1, sizeof(ent.ut_line));
@@ -85,7 +88,10 @@ long pty_update_utmp (process_type, pid, username, line, host, flags)
 #else
     strncpy(ent.ut_name, username, sizeof(ent.ut_name));
 #endif
-    
+    if(username)
+	strncpy(userbuf, username, sizeof(userbuf));
+    else userbuf[0] = '\0';
+
 #ifdef HAVE_SETUTENT
 
     utmpname(UTMP_FILE);
@@ -96,7 +102,6 @@ long pty_update_utmp (process_type, pid, username, line, host, flags)
  * out the utmp structure and change the username pointer so  it is used by
  * update_wtmp.*/
 #ifdef WTMP_REQUIRES_USERNAME
-strncpy(ut.ut_user, ent.ut_user, sizeof(ut.ut_user));
     if (( !username) && (flags&PTY_UTMP_USERNAME_VALID)
 	&&line)  
 	{
@@ -104,15 +109,12 @@ struct utmp *utptr;
 strncpy(ut.ut_line, line, sizeof(ut.ut_line));
 utptr = getutline(&ut);
 if (utptr)
-    ut = *utptr;
+    strncpy(userbuf,ut.ut_user,sizeof(ut.ut_user));
 	}
 #endif
     
     pututline(&ent);
     endutent();
-#ifdef WTMP_REQUIRES_USERNAME
-    username = (char *) &ut.ut_user;
-#endif
     
 #ifdef HAVE_SETUTXENT
     setutxent();
@@ -141,7 +143,7 @@ if (host)
 		tty = lc;
 #ifdef WTMP_REQUIRES_USERNAME
 		if (!username&&(flags&PTY_UTMP_USERNAME_VALID))
-		    username = (char *) &ut.ut_user;
+		    strncpy(userbuf, ut.ut_user, sizeof(ut.ut_user));
 #endif
 		break;
 	    }

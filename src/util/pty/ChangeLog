@@ -1,5 +1,7 @@
 Tue Jan 16 13:52:22 1996  Sam Hartman  <hartmans@tertius.mit.edu>
 
+	* logwtmp.c (pty_logwtmp): Pass user argument to update_wtmp.
+
 	* update_utmp.c (update_utmp): Implement PTY_UTMP_USERNAME_VALID flag
 
 Mon Jan 15 15:48:37 1996  Sam Hartman  (hartmans@justforfun)
