@@ -1,5 +1,0 @@
-#define IHaveSubdirs
-#define PassCDebugFlags
-
-SUBDIRS=klist kinit kdestroy
-MakeSubdirs($(SUBDIRS))

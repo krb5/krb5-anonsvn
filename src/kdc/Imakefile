@@ -1,4 +1,0 @@
-SRCS= dispatch.c do_as_req.c do_tgs_req.c kdc_util.c main.c policy.c extern.c
-all::
-	/*placebo*/
-	@echo nothing to build yet.
