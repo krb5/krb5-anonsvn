@@ -1,5 +1,11 @@
 2001-02-27	Alexandra Ellwood <lxs@mit.edu>
 
+	* prof_parse.c: Fixed a bug in profile_parse_file's support of
+    foreign newlines.  We weren't taking into account fgets truncating
+    the string at BUF_SIZE bytes.
+
+2001-02-27	Alexandra Ellwood <lxs@mit.edu>
+
 	* prof_init.c, prof_int.h, profile.hin: Updated Mac OS #defines 
 	and #includes for new header layout and Mac OS X frameworks
 

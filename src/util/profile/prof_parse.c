@@ -254,34 +254,50 @@ in output of fgets () */
 		}
 #else
 		{
-                    char* p;
-                    char* end;
-                    /* First change all newlines to \n */
-                    for (p = bptr; *p != '\0'; p++) {
-                            if (*p == '\r')
-                                    *p = '\n';
+            char* p;
+            char* end;
+
+            if (strlen(bptr) >= BUF_SIZE - 1) {
+                /* The string may have foreign newlines and gotten chopped off
+                    on a non-newline boundary.  Seek backwards to the last known newline.  */
+                long offset;
+                char *c = bptr + strlen (bptr);  /* the last character of bptr */
+                for (offset = 0; offset > -BUF_SIZE; offset--) {
+                    if (*c == '\r' || *c == '\n') {
+                        *c = '\0';
+                        fseek (f, offset, SEEK_CUR);
+                        break;
                     }
-                    /* Then parse all lines */
-                    p = bptr;
-                    end = bptr + strlen (bptr);
-                    while (p < end) {
-                        char* newline;
-                        char* newp;
+                    c--;
+                }
+            }
+            
+            /* First change all newlines to \n */
+            for (p = bptr; *p != '\0'; p++) {
+                    if (*p == '\r')
+                            *p = '\n';
+            }
+            /* Then parse all lines */
+            p = bptr;
+            end = bptr + strlen (bptr);
+            while (p < end) {
+                char* newline;
+                char* newp;
 
-                        newline = strchr (p, '\n');
-                        if (newline != NULL)
-                                *newline = '\0';
+                newline = strchr (p, '\n');
+                if (newline != NULL)
+                        *newline = '\0';
 
-                        /* parse_line modifies contents of p */
-                        newp = p + strlen (p) + 1;
-                        retval = parse_line (p, &state);
-                        if (retval) {
-                            free (bptr);
-                            return retval;
-                        }
+                /* parse_line modifies contents of p */
+                newp = p + strlen (p) + 1;
+                retval = parse_line (p, &state);
+                if (retval) {
+                    free (bptr);
+                    return retval;
+                }
 
-                        p = newp;
-                    }
+                p = newp;
+            }
 		}
 #endif
 	}
