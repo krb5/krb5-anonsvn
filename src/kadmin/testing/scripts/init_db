@@ -53,7 +53,7 @@ fi
 sed -e "s/__REALM__/$REALM/" < $TESTDIR/proto/krb5.conf.proto > /krb5/krb5.conf
 sed -e "s/__REALM__/$REALM/" < $TESTDIR/proto/kdc.conf.proto > /krb5/kdc.conf
 
-kadmin_create -P mrroot -s -r $REALM $REDIRECT
+kdb5_create -P mrroot -s -r $REALM $REDIRECT
 
 cp $TESTDIR/proto/ovsec_adm.dict /krb5/ovsec_adm.dict
 
