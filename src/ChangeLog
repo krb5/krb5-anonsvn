@@ -1,3 +1,7 @@
+Sun Jan 26 22:37:16 1997  Ezra Peisach  <epeisach@mit.edu>
+
+	* aclocal.m4:: Remove V5_MAKE_SHARED_LIB, V5_SHARED_LIB_OBJS
+
 Fri Jan  3 22:30:05 1997  Tom Yu  <tlyu@mit.edu>
 
 	* aclocal.m4: Alter conventions for libraries with dependencies;
