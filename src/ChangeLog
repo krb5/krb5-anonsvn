@@ -1,3 +1,9 @@
+Fri Jan  3 22:30:05 1997  Tom Yu  <tlyu@mit.edu>
+
+	* aclocal.m4: Alter conventions for libraries with dependencies;
+	make a separate macro, KRB5_BUILD_LIBRARY_WITH_DEPS, that adds in
+	the flags for explicit library dependencies.
+
 Thu Jan  2 18:21:22 1997  Tom Yu  <tlyu@mit.edu>
 
 	* aclocal.m4: Add SunOS support (untested yet); add support for

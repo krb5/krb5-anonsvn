@@ -1130,11 +1130,36 @@ AC_REQUIRE([AC_PROG_RANLIB])
 AC_CHECK_PROG(AR, ar, ar, false)
 # add frag for building libraries
 krb5_append_frags=$ac_config_fragdir/lib.in:$krb5_append_frags
+# null out SHLIB_EXPFLAGS because we lack any dependencies
+SHLIB_EXPFLAGS=
 AC_SUBST(LIBLIST)
 AC_SUBST(LIBLINKS)
 AC_SUBST(LDCOMBINE)
 AC_SUBST(LDCOMBINE_TAIL)
-AC_SUBST(SHLIB_RFLAG)
+AC_SUBST(SHLIB_EXPFLAGS)
+AC_SUBST(STLIBEXT)
+AC_SUBST(SHLIBEXT)
+AC_SUBST(SHLIBVEXT)
+AC_SUBST(PFLIBEXT)
+AC_SUBST(LIBINSTLIST)])
+
+dnl
+dnl KRB5_BUILD_LIBRARY_WITH_DEPS
+dnl
+dnl Like KRB5_BUILD_LIBRARY, but adds in explicit dependencies in the
+dnl generated shared library.
+
+AC_DEFUN(KRB5_BUILD_LIBRARY_WITH_DEPS,
+[AC_REQUIRE([KRB5_LIB_AUX])
+AC_REQUIRE([AC_LN_S])
+AC_REQUIRE([AC_PROG_RANLIB])
+AC_CHECK_PROG(AR, ar, ar, false)
+# add frag for building libraries
+krb5_append_frags=$ac_config_fragdir/lib.in:$krb5_append_frags
+AC_SUBST(LIBLIST)
+AC_SUBST(LIBLINKS)
+AC_SUBST(LDCOMBINE)
+AC_SUBST(LDCOMBINE_TAIL)
 AC_SUBST(SHLIB_EXPFLAGS)
 AC_SUBST(STLIBEXT)
 AC_SUBST(SHLIBEXT)
@@ -1257,8 +1282,7 @@ alpha-dec-osf*)
 	# Alpha OSF/1 doesn't need separate PIC objects
 	SHOBJEXT=.o
 	LDCOMBINE='ld -shared -expect_unresolved \* -update_registry $(BUILDTOP)/so_locations'
-	SHLIB_EXPFLAGS='$(SHLIB_RPATH) $(SHLIB_DIRS)'
-	SHLIB_RFLAG='"-rpath "'
+	SHLIB_EXPFLAGS='-rpath $(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
 	;;
 *-*-netbsd*)
@@ -1266,8 +1290,7 @@ alpha-dec-osf*)
 	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
 	SHLIBEXT=.so
 	LDCOMBINE='ld -Bshareable'
-	SHLIB_RFLAG=-R
-	SHLIB_EXPFLAGS='$(SHLIB_RPATH) $(SHLIB_DIRS)'
+	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS)'
 	PROFFLAGS=-pg
 	;;
 *-*-solaris*)
@@ -1281,8 +1304,7 @@ alpha-dec-osf*)
 	fi
 	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
 	SHLIBEXT=.so
-	SHLIB_RFLAG=-R
-	SHLIB_EXPFLAGS='$(SHLIB_RPATH) $(SHLIB_DIRS)'
+	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
 	;;
 *-*-sunos*)
@@ -1293,8 +1315,7 @@ alpha-dec-osf*)
 	# does not make it into the output file, while directories
 	# passed by "-Ldirname" do.
 	LDCOMBINE='LD_LIBRARY_PATH=`echo $(SHLIB_DIRS) | sed -e "s/-L//g" -e "s/ /:/g"` ld -dp -assert pure-text'
-	SHLIB_RFLAG=-L
-	SHLIB_EXPFLAGS='$(SHLIB_RPATH)'
+	SHLIB_EXPFLAGS='-L$(SHLIB_RDIRS) $(SHLIB_EXPLIBS)'
 	;;
 *-*-linux*)
 	PICFLAGS=-fPIC
@@ -1303,6 +1324,7 @@ alpha-dec-osf*)
 	# Linux ld doesn't default to stuffing the SONAME field...
 	# Use objdump -x to examine the fields of the library
 	LDCOMBINE='ld -shared -h lib$(LIB)$(SHLIBEXT).$(LIBMAJOR).$(LIBMINOR)'
+	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
 	;;
 esac])
