@@ -1,3 +1,8 @@
+Tue Sep  1 19:33:38 1998  Tom Yu  <tlyu@mit.edu>
+
+	* etypes.c: Add ETYPE_LOCAL_DES3_HMAC_SHA1 to deal with marc's
+	des3 code.  ETYPE_DES3_HMAC_SHA1 remains the same for now.
+
 Mon Aug 17 23:40:11 1998  Tom Yu  <tlyu@mit.edu>
 
 	* keyhash_provider/k5_md4des.c (k5_md4des_verify): Add
