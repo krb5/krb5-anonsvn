@@ -241,6 +241,11 @@ KADMCLNT_LIBS	= -lkadm5clnt $(KADM_COMM_LIBS)
 UTIL_LIB	= -lkrb5util
 PTY_LIB		= -lpty
 
+#
+# some more stuff for --with-krb4
+KRB4_LIBPATH	= @KRB4_LIBPATH@
+KRB4_INCLUDES	= @KRB4_INCLUDES@
+
 # error table rules
 #
 ### /* these are invoked as $(...) foo.et, which works, but could be better */

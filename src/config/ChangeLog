@@ -1,3 +1,8 @@
+Tue Feb  4 20:23:31 1997  Tom Yu  <tlyu@mit.edu>
+
+	* pre.in: Add more --with-krb4 support (KRB4_LIBPATH and
+	KRB4_INCLUDES).
+
 Mon Feb  3 23:29:02 1997  Tom Yu  <tlyu@mit.edu>
 
 	* pre.in: Add GEN_LIB support (-lgen); also fix --with-krb4 stuff
