@@ -147,21 +147,29 @@ kadm5_get_principal(void *server_handle,
     if(princ == NULL)
 	return EINVAL;
     arg.princ = princ;
-    arg.mask = mask;
+    if (handle->api_version == KADM5_API_VERSION_1)
+       arg.mask = KADM5_PRINCIPAL_NORMAL_MASK;
+    else
+       arg.mask = mask;
     arg.api_version = handle->api_version;
     r = get_principal_1(&arg, handle->clnt);
     if(r == NULL)
 	return KADM5_RPC_ERROR;
     if (handle->api_version == KADM5_API_VERSION_1) {
-	 kadm5_principal_ent_t *entp;
+	 kadm5_principal_ent_t_v1 *entp;
 
-	 entp = (kadm5_principal_ent_t *) ent;
-	 if(r->code == 0) {
-	      if(!(*entp = (kadm5_principal_ent_t)
-		   malloc(sizeof(kadm5_principal_ent_rec))))
+	 entp = (kadm5_principal_ent_t_v1 *) ent;
+	 if (r->code == 0) {
+	      if (!(*entp = (kadm5_principal_ent_t_v1)
+		    malloc(sizeof(kadm5_principal_ent_rec_v1))))
 		   return ENOMEM;
-	      **entp = r->rec;
-	 } else *entp = NULL;
+	      /* this memcpy works because the v1 structure is an initial
+		 subset of the v2 struct.  C guarantees that this will
+		 result in the same layout in memory */
+	      memcpy(*entp, &r->rec, sizeof(**entp));
+	 } else {
+	    *entp = NULL;
+	 }
     } else {
 	 if (r->code == 0)
 	      memcpy(ent, &r->rec, sizeof(r->rec));

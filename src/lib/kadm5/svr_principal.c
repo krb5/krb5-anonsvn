@@ -604,11 +604,12 @@ done:
 kadm5_ret_t
 kadm5_get_principal(void *server_handle, krb5_principal principal,
 		    kadm5_principal_ent_t entry,
-		    long mask)
+		    long in_mask)
 {
     krb5_db_entry		kdb;
     osa_princ_ent_rec		adb;
     osa_adb_ret_t		ret = 0;
+    long			mask;
     int i;
     kadm5_server_handle_t handle = server_handle;
     kadm5_principal_ent_rec	entry_local, *entry_orig;
@@ -624,6 +625,8 @@ kadm5_get_principal(void *server_handle, krb5_principal principal,
 	 mask = KADM5_PRINCIPAL_NORMAL_MASK;
 	 entry_orig = entry;
 	 entry = &entry_local;
+    } else {
+	 mask = in_mask;
     }
 
     memset((char *) entry, 0, sizeof(*entry));
