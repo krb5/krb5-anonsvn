@@ -6,15 +6,15 @@ Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 
 #include <string.h>
 #include <malloc.h>
+#ifdef notdef
 extern int free(char *);
+#endif
 #define FREE(x) ((void) free((char *) (x)))
 #include "krb5/krb5.h"
 krb5_error_code krb5_timeofday PROTOTYPE((krb5_int32 *)); /* aargh */
 #include "rc_base.h"
 #include "rc_dfl.h"
 #include "rc_io.h"
-#include "rc_err.h"
-#include "rc_io_err.h"
 
 /*
 If NOIOSTUFF is defined at compile time, dfl rcaches will be per-process.
