@@ -1,3 +1,6 @@
+2002-03-28 Alexandra Ellwood <lxs@mit.edu>
+    * profile.hin: Conditionalized pragmas for Metrowerks
+
 2002-03-14 Alexandra Ellwood <lxs@mit.edu>
     * prof_get.c: made conf_yes and conf_no const to improve load time 
     on Mach-O

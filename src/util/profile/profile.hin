@@ -17,9 +17,11 @@ extern "C" {
 #endif /* __cplusplus */
 
 #if TARGET_OS_MAC
-    #pragma import on
+    #if defined(__MWERKS__)
+        #pragma import on
+        #pragma enumsalwaysint on
+    #endif
     #pragma options align=mac68k
-    #pragma enumsalwaysint on
 #endif
 
 /* We use file paths as unique file identifiers */
@@ -52,14 +54,6 @@ typedef char* profile_filespec_list_t;	/* list of : separated paths, C string */
 typedef const char* const_profile_filespec_t;	/* path as C string */
 typedef const char* const_profile_filespec_list_t;	/* list of : separated paths, C string */
 
-#if TARGET_OS_MAC
-    /* declare an opaque struct FSSpec so we don't need MacTypes.h */
-    #if !defined(__FILES__) && !defined(OPAQUE_FSSPEC)
-        typedef struct FSSpec FSSpec;
-        #define OPAQUE_FSSPEC
-    #endif
-#endif
-
 #if !defined(PROTOTYPE)
 #if defined(__STDC__) || defined(__cplusplus) || defined(_MSDOS) || defined(_WIN32)
 #define PROTOTYPE(x) x
@@ -75,7 +69,7 @@ KRB5_DLLIMP long KRB5_CALLCONV profile_init_path
 	PROTOTYPE ((const_profile_filespec_list_t filelist, profile_t *ret_profile));
 
 /* On Mac Carbon, also provide FSSpec variants */
-#if TARGET_OS_MAC
+#if TARGET_OS_MAC && defined(__FILES__)
 KRB5_DLLIMP long KRB5_CALLCONV FSp_profile_init
 	PROTOTYPE ((const FSSpec* files, profile_t *ret_profile));
 
@@ -146,9 +140,11 @@ KRB5_DLLIMP long KRB5_CALLCONV profile_add_relation
 		   const char *new_value));
 
 #if TARGET_OS_MAC
-    #pragma enumsalwaysint reset
+    #if defined(__MWERKS__)
+        #pragma enumsalwaysint reset
+        #pragma import reset
+    #endif
 	#pragma options align=reset
-    #pragma import reset
 #endif
 
 #ifdef __cplusplus
