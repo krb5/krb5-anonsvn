@@ -1,7 +1,8 @@
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..
-##DOSLIBNAME=..\krb5.lib
+##DOSMYNAME=free
+##DOSOBJFILE=..\$(MYNAME).lst
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
@@ -77,7 +78,11 @@ SRCS=	\
 
 all-unix:: shared $(OBJS)
 all-mac:: $(OBJS)
-all-windows:: $(OBJS)
+all-windows:: $(OBJFILE)
+
+##DOS$(OBJFILE):: $(OBJS)
+##DOS	$(RM) $(OBJFILE)
+##DOS	$(LIBECHO) -p $(MYNAME)\ *.obj > $(OBJFILE)
 
 shared:
 	mkdir shared
@@ -87,5 +92,5 @@ clean-unix::
 
 clean-mac::
 clean-windows::
-
+	$(RM) $(OBJFILE)
 
