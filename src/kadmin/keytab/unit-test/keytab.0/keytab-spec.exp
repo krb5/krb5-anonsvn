@@ -21,12 +21,12 @@ if {[info exists env(KRB5_KTNAME)]} {
     unset env(KRB5_KTNAME)
 }
 
-setup_keytab "K1" WRFILE:/etc/v5srvtab admin admin "host/$qname"
-klist_check "K1" FILE:/etc/v5srvtab "host/$qname 0"
+setup_keytab "K1" WRFILE:/krb5/v5srvtab admin admin "host/$qname"
+klist_check "K1" FILE:/krb5/v5srvtab "host/$qname 0" 
 keytab_run "K1" "-a host/$qname" 0
-klist_check "K1" FILE:/etc/v5srvtab "host/$qname 0" "host/$qname 0"
+klist_check "K1" FILE:/krb5/v5srvtab "host/$qname 0" "host/$qname 0"
 keytab_run "K1" "-r host/$qname old" 0
-klist_check "K1" FILE:/etc/v5srvtab "host/$qname 0"
+klist_check "K1" FILE:/krb5/v5srvtab "host/$qname 0"
 
 if {[info exists ktname_orig]} {
     set env(KRB5_KTNAME) $ktname_orig

@@ -97,7 +97,7 @@ proc klist_check { testname ktname args } {
 		set filename $ktname
 	}
 
-	set lines [list "^Keytab name: $filename" \
+	set lines [list "^Keytab name: (WR)?FILE:$filename" \
 			"^KVNO Principal" "^---- -------"]
 
 	foreach entry $args {

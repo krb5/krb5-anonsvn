@@ -77,7 +77,7 @@ krb5_error_code print_princ(krb5_pointer data, krb5_db_entry *kdb)
     tl_data.tl_data_type = KRB5_TL_KADM_DATA;
     if ((ret = krb5_dbe_lookup_tl_data(d->context, kdb, &tl_data))
 	|| (tl_data.tl_data_length == 0))
-	 return;
+	 return(0);
 
     memset(&adb, 0, sizeof(adb));
     xdrmem_create(&xdrs, tl_data.tl_data_contents,
@@ -125,7 +125,7 @@ krb5_error_code print_princ(krb5_pointer data, krb5_db_entry *kdb)
     d->count++;
     fputc('\n', d->fp);
     free(princstr);
-    return;
+    return(0);
 }
 
 /*

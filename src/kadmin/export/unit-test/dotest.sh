@@ -18,7 +18,7 @@ DEXPORT=/tmp/dbexport
 ./add-to-db.sh
 
 rm -f $DEXPORT
-../ovsec_adm_export > $DEXPORT
+../kadm5_export > $DEXPORT
 
 if $KDB5_EDIT -R ddb | sort > $DPRINC1; then
 	:
@@ -34,7 +34,7 @@ fi
 rm -f /krb5/kadb5*
 touch /krb5/ovsec_adm.lock
 
-../../import/ovsec_adm_import < $DEXPORT
+../../import/kadm5_import < $DEXPORT
 
 if $KDB5_EDIT -R ddb | sort > $DPRINC2; then
 	:

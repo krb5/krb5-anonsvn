@@ -9,7 +9,7 @@ unit-test:: unit-test-setup unit-test-body unit-test-cleanup
 
 unit-test-body::
 	$(CLNTTCL) ./del-princs.tcl
-	$(RUNTEST) KEYTAB=../ovsec_edit_keytab \
+	$(RUNTEST) KEYTAB=../kadm5_keytab \
 		KLIST=../../../clients/klist/klist \
 		QUALNAME=../../testing/scripts/qualname --tool keytab
     

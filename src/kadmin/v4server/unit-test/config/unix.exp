@@ -11,11 +11,11 @@ if {[file exists /bin/sleep]} {
 set kpasswd_v4 /usr/athena/bin/kpasswd
 set ovpasswd $env(TOP)/kpasswd/kpasswd
 set kadmin_local $env(TOP)/cli/kadmin.local
-set kdb5_edit $KDB5_EDIT
+set kdb5_edit $KDBFIVE_EDIT
 set remove_changepw_perms ./remove_changepw_perms.sh
 set getpid ./getpid.sh
 set ovsec_adm_server $env(TOP)/server/kadmind
-set ovsec_edit_keytab $env(TOP)/keytab/ovsec_edit_keytab
+set ovsec_edit_keytab $env(TOP)/keytab/kadm5_keytab
 set hostname [exec hostname]
 
 # change-password.exp sends ^C to kpasswd to kill it; on HP-UX the

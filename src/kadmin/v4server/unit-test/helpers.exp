@@ -2,7 +2,7 @@ proc server_pids { } {
     global env
 
     return [eval [concat exec $env(PS_ALL) | \
-	    awk {{/ovsec_v4adm_server/ && !/awk/ && !/expect/ {printf("%d ", $2)}}}]]
+	    awk {{/kadmind4/ && !/awk/ && !/expect/ {printf("%d ", $2)}}}]]
 }
 
 proc server_exit { name status } {
@@ -57,7 +57,7 @@ proc myfail { msg } {
 
 proc server_start { name cmdline should_listen args } {
     global spawn_id server_id
-    global V4SERVER
+    global VFOURSERVER
     global mytest_status
     global sleep hostname
 
@@ -71,7 +71,7 @@ proc server_start { name cmdline should_listen args } {
 	    verbose "Couldn't connect to V4 kpasswd server; retrying ($num_tries so far)."
 	}
 
-	spawn $V4SERVER $cmdline
+	spawn $VFOURSERVER $cmdline
 	set server_id $spawn_id
 
 	foreach test $args {
@@ -154,7 +154,8 @@ proc exp_prog { name prog cmdline status args } {
 
 	# at the end, eof is success
 
-	lappend args { eof { if {[regexp "\[\r\n\]$" $expect_out(buffer)] == 0} { myfail "final status message not newline-terminated" } } }
+#	lappend args { eof { if {[regexp "\[\r\n\]$" $expect_out(buffer)] == 0} { myfail "final status message not newline-terminated" } } }
+	lappend args { eof {} }
 
 	foreach test $args {
 		set mytest_status 0

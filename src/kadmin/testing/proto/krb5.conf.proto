@@ -1,5 +1,6 @@
 [libdefaults]
 	default_realm = __REALM__
+	default_keytab_name = FILE:/krb5/v5srvtab
 
 [realms]
 	__REALM__ = {
