@@ -42,7 +42,7 @@ struct dfl_data
   data stored in this cache type, namely "dfl"
 struct authlist
   multilinked list of reps
-static int store(krb5_RC id,struct auth_replay *rep)
+static int store(krb5_rcache id,struct auth_replay *rep)
   store rep in cache id; return CMP_REPLAY if replay, else CMP_MALLOC/CMP_HOHUM
 
 */
@@ -79,16 +79,19 @@ int hsize;
  /* We take this opportunity to once again complain about C's idiotic %. */
 }
 
-static int auth_to_rep(auth, rep)
+static krb5_error_code auth_to_rep(auth, rep)
 krb5_tkt_authent *auth;
 struct auth_replay *rep;
 {
+ krb5_error_code retval;
  rep->cmsec = auth->authenticator->cmsec;
  rep->ctime = auth->authenticator->ctime;
- if (krb5_unparse_name(auth->ticket->server,&rep->server))
-   return -1; /* shouldn't happen */
- if (krb5_unparse_name(auth->authenticator->client,&rep->client))
-   return -1; /* shouldn't happen. */
+ if (retval = krb5_unparse_name(auth->ticket->server,&rep->server))
+   return retval; /* shouldn't happen */
+ if (retval = krb5_unparse_name(auth->authenticator->client,&rep->client)) {
+     FREE(rep->server);
+     return retval; /* shouldn't happen. */
+ }
  return 0;
 }
 
@@ -97,6 +100,7 @@ struct auth_replay *rep;
 #define CMP_REPLAY -1
 #define CMP_HOHUM 0
 
+/*ARGSUSED*/
 static int cmp(old, new, t)
 struct auth_replay *old;
 struct auth_replay *new;
@@ -150,7 +154,7 @@ struct authlist
 /* hash could be forwards since we have to search on match, but naaaah */
 
 static int store(id, rep)
-krb5_RC id;
+krb5_rcache id;
 struct auth_replay *rep;
 {
  struct dfl_data *t = (struct dfl_data *)id->data;
@@ -170,7 +174,10 @@ struct auth_replay *rep;
 		     break;
      default: ; /* wtf? */
     }
- 
+
+  if (alive(rep, t->lifespan) == CMP_EXPIRED)
+     return CMP_EXPIRED;
+
  if (!(ta = (struct authlist *) malloc(sizeof(struct authlist))))
    return CMP_MALLOC;
  ta->na = t->a; t->a = ta;
@@ -181,13 +188,13 @@ struct auth_replay *rep;
 }
 
 char *krb5_rc_dfl_get_name(id)
-krb5_RC id;
+krb5_rcache id;
 {
  return ((struct dfl_data *) (id->data))->name;
 }
 
 krb5_error_code krb5_rc_dfl_get_span(id, lifespan)
-krb5_RC id;
+krb5_rcache id;
 krb5_deltat *lifespan;
 {
  *lifespan = ((struct dfl_data *) (id->data))->lifespan;
@@ -195,7 +202,7 @@ krb5_deltat *lifespan;
 }
 
 krb5_error_code krb5_rc_dfl_init(id, lifespan)
-krb5_RC id;
+krb5_rcache id;
 krb5_deltat lifespan;
 {
  struct dfl_data *t = (struct dfl_data *)id->data;
@@ -219,7 +226,7 @@ krb5_deltat lifespan;
 }
 
 krb5_error_code krb5_rc_dfl_close(id)
-krb5_RC id;
+krb5_rcache id;
 {
  struct dfl_data *t = (struct dfl_data *)id->data;
  struct authlist *q;
@@ -240,7 +247,7 @@ krb5_RC id;
 }
 
 krb5_error_code krb5_rc_dfl_destroy(id)
-krb5_RC id;
+krb5_rcache id;
 {
 #ifndef NOIOSTUFF
  if (krb5_rc_io_destroy(&((struct dfl_data *) (id->data))->d))
@@ -250,7 +257,7 @@ krb5_RC id;
 }
 
 krb5_error_code krb5_rc_dfl_resolve(id, name)
-krb5_RC *id;
+krb5_rcache id;
 char *name;
 {
  struct dfl_data *t;
@@ -258,13 +265,13 @@ char *name;
  /* allocate id? no */
  if (!(t = (struct dfl_data *) malloc(sizeof(struct dfl_data))))
    return KRB5_RC_MALLOC;
- (*id)->data = (krb5_pointer) t;
+ id->data = (krb5_pointer) t;
  t->name = name; /* gee, difficult... */
  return 0;
 }
 
 krb5_error_code krb5_rc_dfl_recover(id)
-krb5_RC id;
+krb5_rcache id;
 {
 #ifdef NOIOSTUFF
  return KRB5_RC_NOIO;
@@ -342,21 +349,26 @@ would be inefficient. */
 }
 
 krb5_error_code krb5_rc_dfl_store(id, auth)
-krb5_RC id;
+krb5_rcache id;
 krb5_tkt_authent *auth;
 {
  struct dfl_data *t = (struct dfl_data *)id->data;
  struct auth_replay *rep;
  int i;
+ krb5_error_code retval;
 
  if (!(rep = (struct auth_replay *) malloc(sizeof(struct auth_replay))))
    return KRB5_RC_MALLOC;
- if (auth_to_rep(auth,rep))
-  { FREE(rep); return KRB5_RC_UNKNOWN; }
+ if (retval = auth_to_rep(auth,rep))
+  { FREE(rep); return retval; }
  switch(store(id,rep))
   {
-   case CMP_MALLOC: FREE(rep); return KRB5_RC_MALLOC; break;
-   case CMP_REPLAY: FREE(rep); return KRB5_RC_REPLAY; break;
+   case CMP_MALLOC: FREE(rep->client); FREE(rep->server); FREE(rep);
+       return KRB5_RC_MALLOC; break;
+   case CMP_REPLAY: FREE(rep->client); FREE(rep->server); FREE(rep);
+       return KRB5KRB_AP_ERR_REPEAT; break;
+   case CMP_EXPIRED:FREE(rep->client); FREE(rep->server); FREE(rep);
+       return KRB5KRB_AP_ERR_SKEW; break;
    case 0: break;
    default: /* wtf? */ ;
   }
@@ -383,7 +395,7 @@ krb5_tkt_authent *auth;
 }
 
 krb5_error_code krb5_rc_dfl_expunge(id)
-krb5_RC id;
+krb5_rcache id;
 {
  struct dfl_data *t = (struct dfl_data *)id->data;
  int i;
@@ -417,8 +429,13 @@ krb5_RC id;
 #else
  struct krb5_rc_iostuff tmp;
  struct authlist *q;
+ char *name = t->name;
 
  (void) krb5_rc_dfl_close(id);
+ switch(krb5_rc_dfl_resolve(id, name)) {
+   case KRB5_RC_MALLOC: return KRB5_RC_MALLOC;
+   default: ;
+ }
  switch(krb5_rc_dfl_recover(id))
   {
    case KRB5_RC_MALLOC: return KRB5_RC_MALLOC;
@@ -451,18 +468,3 @@ krb5_RC id;
 #endif
  return 0;
 }
-
-struct krb5_rc_type krb5_rc_dfl_ops =
- {
-  "dfl",
-  krb5_rc_dfl_init,
-  krb5_rc_dfl_recover,
-  krb5_rc_dfl_destroy,
-  krb5_rc_dfl_close,
-  krb5_rc_dfl_store,
-  krb5_rc_dfl_expunge,
-  krb5_rc_dfl_get_span,
-  krb5_rc_dfl_get_name,
-  krb5_rc_dfl_resolve
- }
-;
