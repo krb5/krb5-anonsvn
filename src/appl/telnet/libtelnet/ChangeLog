@@ -1,3 +1,9 @@
+Wed Dec 18 18:23:10 EST 1996	Richard Basch <basch@lehman.com>
+
+	* kerberos5.c: Fixed the first argument to krb5_verify_checksum;
+	previously this was a macro which ignored the first argument,
+	so the error was not noticed.
+
 Thu Nov  7 15:29:09 1996  Theodore Ts'o  <tytso@rsts-11.mit.edu>
 
 	* kerberos5.c (kerberos5_init): Check the error return from
