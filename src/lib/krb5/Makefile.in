@@ -117,3 +117,4 @@ clean-windows::
 	cd ..
 	@echo Making clean locally
 
+install-unix:: install-libs
