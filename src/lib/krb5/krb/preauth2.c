@@ -247,6 +247,7 @@ krb5_error_code pa_sam(krb5_context context,
     char			prompt[100], response[100];
     krb5_data			response_data;
     krb5_prompt			kprompt;
+    krb5_prompt_type		prompt_type;
     krb5_data			defsalt;
     krb5_sam_challenge		*sam_challenge = 0;
     krb5_sam_response		sam_response;
@@ -254,6 +255,9 @@ krb5_error_code pa_sam(krb5_context context,
     krb5_enc_sam_response_enc	enc_sam_response_enc;
     krb5_data *			scratch;
     krb5_pa_data *		pa;
+
+    if (prompter == NULL)
+	return KRB5_LIBOS_CANTREADPWD;
 
     tmpsam.length = in_padata->length;
     tmpsam.data = (char *) in_padata->contents;
@@ -287,12 +291,17 @@ krb5_error_code pa_sam(krb5_context context,
     kprompt.prompt = prompt;
     kprompt.hidden = sam_challenge->sam_challenge.length?0:1;
     kprompt.reply = &response_data;
+    prompt_type = KRB5_PROMPT_TYPE_PREAUTH;
 
+    /* PROMPTER_INVOCATION */
+    krb5int_set_prompt_types(context, &prompt_type);
     if (ret = ((*prompter)(context, prompter_data, name,
 			   banner, 1, &kprompt))) {
 	krb5_xfree(sam_challenge);
+	krb5int_set_prompt_types(context, 0);
 	return(ret);
     }
+    krb5int_set_prompt_types(context, 0);
 
     enc_sam_response_enc.sam_nonce = sam_challenge->sam_nonce;
     if (sam_challenge->sam_nonce == 0) {
@@ -523,6 +532,11 @@ krb5_do_preauth(krb5_context context,
 			krb5_free_pa_data(context, out_pa_list);
 		    }
 		    return ret;
+		}
+		if (etype_info[0] == NULL) {
+		    krb5_free_etype_info(context, etype_info);
+		    etype_info = NULL;
+		    break;
 		}
 		salt->data = (char *) etype_info[0]->salt;
 		salt->length = etype_info[0]->length;
