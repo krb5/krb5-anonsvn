@@ -16,12 +16,13 @@ ETSRCS= gssapi_err_krb5.c
 ETOBJS= gssapi_err_krb5.$(OBJEXT)
 ETHDRS= gssapi_err_krb5.h
 
-gssapi_err_krb5.$(OBJEXT): gssapi_err_krb5.c
+gssapi_err_krb5.o: gssapi_err_krb5.c
 	$(CC) $(CFLAGS) -c $*.c
+
 @SHARED_RULE_LOCAL@
 
+gssapi_err_krb5.$(OBJEXT): gssapi_err_krb5.c
 gssapi_err_krb5.h: gssapi_err_krb5.et
-
 gssapi_err_krb5.c: gssapi_err_krb5.et
 
 SRCS = \
