@@ -11,7 +11,6 @@ extern char *getenv(char *); /* ain't there an include file for this? */
 #include <semaphore.h>
 #endif
 #include "rc_base.h"
-#include "rc_err.h"
 
 static struct krb5_rc_typelist
  {
@@ -36,7 +35,7 @@ krb5_error_code krb5_rc_register_type(struct krb5_rc_type *ops)
  up(&ex_typelist);
 #endif
  if (t)
-   return KRB5_RC_EXIST;
+   return KRB5_RC_TYPE_EXISTS;
  if (!(t = (struct krb5_rc_typelist *) malloc(sizeof(struct krb5_rc_typelist))))
    return KRB5_RC_MALLOC;
 #ifdef SEMAPHORE
@@ -63,7 +62,7 @@ krb5_error_code krb5_rc_resolve_type(krb5_RC *id,char *type)
  up(&ex_typelist);
 #endif
  if (!t)
-   return KRB5_RC_NOTFOUND;
+   return KRB5_RC_TYPE_NOTFOUND;
  /* allocate *id? nah */
  (*id)->ops = t->ops;
  return 0;
