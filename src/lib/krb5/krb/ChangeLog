@@ -1,4 +1,4 @@
-Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
+Thu Nov 21 14:55:16 EST 1996    Richard Basch   <basch@lehman.com>
 
         * Makefile.in: win32 build
 
@@ -11,6 +11,13 @@ Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
 	rd_error.c rd_priv.c rd_rep.c rd_req.c rd_safe.c recvauth.c
 	sendauth.c str_conv.c unparse.c valid_times.c
 		DLL export various functions (see lib/krb5.def for full list)
+
+Thu Nov 21 13:54:01 1996  Ezra Peisach  <epeisach@mit.edu>
+
+	* recvauth.c (krb5_recvauth): If there is an error, and the server
+		argument to krb5_recvauth is NULL, create a dummy server
+		entry for the krb5_error structure so that krb5_mk_error
+		will not die with missing required fields. [krb5-libs/209]
 
 Wed Nov 13 14:30:47 1996  Tom Yu  <tlyu@mit.edu>
 

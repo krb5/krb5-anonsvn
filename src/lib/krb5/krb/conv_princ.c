@@ -55,6 +55,12 @@ struct krb_convert {
  * we'll fix that in the next release.
  */
 static const struct krb_convert sconv_list[] = {
+#ifdef LEHMAN
+    {"cron",	"cron",		DO_REALM_CONVERSION},
+    {"hdcm",	"hdcm",		DO_REALM_CONVERSION},
+    {"moira",	"moira",	DO_REALM_CONVERSION},
+    {"news",	"news",		DO_REALM_CONVERSION},
+#endif
     {"kadmin",	"kadmin",	0},
     {"rcmd",	"host",		DO_REALM_CONVERSION},
     {"discuss",	"discuss",	DO_REALM_CONVERSION},
