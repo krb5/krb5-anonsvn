@@ -74,6 +74,7 @@ lib$(LIB)$(SHLIBVEXT): $(SHOBJLISTS)
 				$$d/OBJS.SH; done` \
 			$(LDCOMBINE_TAIL)
 lib$(LIB)$(SHLIBEXT): lib$(LIB)$(SHLIBVEXT)
+	$(RM) $@
 	$(LN_S) lib$(LIB)$(SHLIBVEXT) $@
 
 lib$(LIB)$(PFLIBEXT): $(PFOBJLISTS)

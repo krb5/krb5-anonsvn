@@ -1,3 +1,7 @@
+Mon Dec 30 12:54:23 1996  Ezra Peisach  <epeisach@mit.edu>
+
+	* lib.in: Remove object of symlink before creating.
+
 Sun Dec 29 22:40:14 1996  Tom Yu  <tlyu@mit.edu>
 
 	* pre.in: Add missing Makefiles rules.
