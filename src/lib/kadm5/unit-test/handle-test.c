@@ -1,4 +1,4 @@
-#include <ovsec_admin/admin.h>
+#include <kadm5/admin.h>
 #include <com_err.h>
 #include <stdio.h>
 #include <krb5.h>
@@ -6,7 +6,7 @@
 #include <sys/file.h>
 #include <unistd.h>
 #include <netinet/in.h>
-#include "../client_internal.h"
+#include <kadm5/client_internal.h>
 
 
 main(int argc, char *argv[])

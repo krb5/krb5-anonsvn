@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <ovsec_admin/admin.h>
+#include <kadm5/admin.h>
 
 main(int argc, char **argv)
 {

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <krb5.h>
-#include <ovsec_admin/admin.h>
-#include <ovsec_admin/adb.h>
+#include <kadm5/admin.h>
+#include <kadm5/adb.h>
 
 char *whoami;
 

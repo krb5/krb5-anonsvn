@@ -1,4 +1,4 @@
-#include <ovsec_admin/admin.h>
+#include <kadm5/admin.h>
 #include <com_err.h>
 #include <stdio.h>
 #include <krb5.h>
