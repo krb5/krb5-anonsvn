@@ -1,3 +1,8 @@
+Sun Feb  9 01:07:37 1997  Tom Yu  <tlyu@mit.edu>
+
+	* env-setup.shin: Fix to deal with multiple variables in
+	KRB5_RUN_ENV.
+
 Sat Feb  8 22:12:32 1997  Tom Yu  <tlyu@mit.edu>
 
 	* env-setup.shin: Hack to deal with new usage of KRB5_RUN_ENV.
