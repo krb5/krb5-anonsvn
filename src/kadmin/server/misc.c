@@ -8,7 +8,6 @@
 static char *rcsid = "$Header$";
 #endif
 
-#include    <kadm5/adb.h>
 #include    <kadm5/server_internal.h>
 #include    <krb5/kdb.h>
 #include    "misc.h"
@@ -23,8 +22,8 @@ static char *rcsid = "$Header$";
  * Arguments:
  *	principal	(input) krb5_principals whose password we are
  *				changing
- *	passoword	(input) passowrd we are going to change to.
- * 	<return value>	0 on sucsess error code on failure.
+ *	passoword	(input) password we are going to change to.
+ * 	<return value>	0 on success error code on failure.
  *
  * Requires:
  *	kadm5_init to have been run.

@@ -1,7 +1,7 @@
 /*
  * lib/kdb/kdb_xdr.c
  *
- * Copyright 1995 by the Massachusetts Institute of Technology. 
+ * Copyright 1995,2001 by the Massachusetts Institute of Technology. 
  * All Rights Reserved.
  *
  * Export of this software from the United States of America may
@@ -119,6 +119,70 @@ krb5_dbe_lookup_tl_data(context, entry, ret_tl_data)
 
     ret_tl_data->tl_data_length = 0;
     ret_tl_data->tl_data_contents = NULL;
+    return(0);
+}
+
+krb5_error_code
+krb5_dbe_set_generation_number_general(context, entry, newval)
+    krb5_context          context;
+    krb5_db_entry       * entry;
+    krb5_int32            newval;
+{
+    krb5_error_code     ret;
+    krb5_tl_data        tl_data;
+    krb5_octet          buf[4]; /* this is the encoded size of an int32 */
+
+    tl_data.tl_data_type = KRB5_TL_GENERATION_NUMBER;
+    tl_data.tl_data_length = sizeof(newval);
+    krb5_kdb_encode_int32(newval, buf);
+    tl_data.tl_data_contents = buf;
+
+    return(krb5_dbe_update_tl_data(context, entry, &tl_data));
+}
+
+krb5_error_code
+krb5_dbe_increment_generation_number_general(context, entry)
+    krb5_context          context;
+    krb5_db_entry       * entry;
+{
+    krb5_error_code     ret;
+    krb5_tl_data        tl_data;
+    krb5_int32          generation_number;
+    krb5_octet          buf[4]; /* this is the encoded size of an int32 */
+
+    if ((ret = krb5_dbe_lookup_generation_number_general(context, entry,
+                                                        &generation_number)))
+        generation_number = 0; /* Didn't exist before. */
+    tl_data.tl_data_type = KRB5_TL_GENERATION_NUMBER;
+    tl_data.tl_data_length = sizeof(generation_number);
+    krb5_kdb_encode_int32(++generation_number, buf);
+    tl_data.tl_data_contents = buf;
+
+    return(krb5_dbe_update_tl_data(context, entry, &tl_data));
+}
+
+krb5_error_code
+krb5_dbe_lookup_generation_number_general(context, entry, generation_number)
+    krb5_context          context;
+    krb5_db_entry       * entry;
+    krb5_int32          * generation_number;
+{
+    krb5_tl_data        tl_data;
+    krb5_error_code     code;
+    krb5_int32          tmp;
+
+    tl_data.tl_data_type = KRB5_TL_GENERATION_NUMBER;
+
+    if ((code = krb5_dbe_lookup_tl_data(context, entry, &tl_data)))
+        return(code);
+
+    if (tl_data.tl_data_length == 0) /* Generation number not found */
+        return(KRB5KRB_ERR_GENERIC);
+
+    krb5_kdb_decode_int32(tl_data.tl_data_contents, tmp);
+
+    *generation_number = tmp;
+
     return(0);
 }
 
@@ -338,7 +402,7 @@ krb5_encode_princ_contents(context, content, entry)
 
     /* 
      * Now we go through entry again, this time copying data 
-     * These first entries are always saved regaurdless of version
+     * These first entries are always saved regardless of version
      */
     nextloc = content->data;
 

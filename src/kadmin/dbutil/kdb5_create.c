@@ -57,6 +57,7 @@
 #include <k5-int.h>
 #include <kadm5/admin.h>
 #include <kadm5/adb.h>
+#include <krb5/adm_proto.h>
 #include "kdb5_util.h"
 
 enum ap_op {
@@ -104,11 +105,13 @@ static krb5_error_code add_principal
  *
  * 2) get a realm name for the new db
  *
- * 3) get a master password for the new db; convert to an encryption key.
+ * 3) get a master password for the new db; convert to an encryption key
  *
  * 4) create various required entries in the database
  *
- * 5) close & exit
+ * 5) initialize the database generation number
+ *
+ * 6) close & exit
  */
 
 extern krb5_keyblock master_keyblock;
@@ -408,6 +411,9 @@ add_principal(context, princ, op, pblock)
 						  &master_keyblock, NULL, 
 						  1, entry.key_data)))
 	    return retval;
+        if ((retval = krb5_dbe_set_generation_number_general(util_context,
+                                                             &entry, 1)))
+            return retval;
 	break;
     case TGT_KEY:
 	iargs.ctx = context;

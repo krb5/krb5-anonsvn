@@ -1,7 +1,7 @@
 /*
  * include/krb5/kdb.h
  *
- * Copyright 1990,1991 by the Massachusetts Institute of Technology.
+ * Copyright 1990,1991,2001 by the Massachusetts Institute of Technology.
  * All Rights Reserved.
  *
  * Export of this software from the United States of America may
@@ -151,6 +151,7 @@ typedef struct _krb5_db_entry_new {
 #ifdef SECURID
 #define KRB5_TL_SECURID_STATE           0x0006
 #endif /* SECURID */
+#define KRB5_TL_GENERATION_NUMBER	0x0007
     
 /*
  * Determines the number of failed KDC requests before DISALLOW_ALL_TIX is set
@@ -257,6 +258,14 @@ krb5_error_code krb5_dbe_update_tl_data (krb5_context,
 krb5_error_code krb5_dbe_lookup_tl_data (krb5_context,
 					 krb5_db_entry *,
 					 krb5_tl_data *);
+krb5_error_code krb5_dbe_set_generation_number_general(krb5_context,
+						       krb5_db_entry *,
+						       krb5_int32);
+krb5_error_code krb5_dbe_increment_generation_number_general(krb5_context,
+							     krb5_db_entry *);
+krb5_error_code krb5_dbe_lookup_generation_number_general(krb5_context,
+							  krb5_db_entry *,
+							  krb5_int32 *);
 krb5_error_code krb5_dbe_update_last_pwd_change (krb5_context,
 						 krb5_db_entry *,
 						 krb5_timestamp);
@@ -369,7 +378,7 @@ typedef struct _krb5_db_entry {
     krb5_int32 expansion[8];
 } krb5_db_entry_OLD;
 
-#endif	/* OLD_AND_KRUFTY */
+#endif	/* KRB5_OLD_AND_KRUFTY */
 
 /* This is now a structure that is private to the database backend. */
 #ifdef notdef

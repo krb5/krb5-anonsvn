@@ -34,7 +34,7 @@ typedef long		kadm5_ret_t;
 	(error_message(CHPASS_UTIL_NEW_PASSWORD_AGAIN_PROMPT))
 
 /*
- * Succsessfull return code
+ * Successful return code
  */
 #define KADM5_OK	0
 
@@ -447,6 +447,11 @@ kadm5_ret_t    kadm5_free_key_data(void *server_handle,
 kadm5_ret_t    kadm5_free_name_list(void *server_handle, char **names, 
 				    int count);
 
+#if USE_KADM5_API_VERSION > 1
+kadm5_ret_t    kadm5_get_generation_number(void *server_handle,
+					   krb5_int32 *generation);
+#endif
+
 #if USE_KADM5_API_VERSION == 1
 /*
  * OVSEC_KADM_API_VERSION_1 should be, if possible, compile-time
@@ -476,7 +481,7 @@ enum	ovsec_kadm_saltmod  { OVSEC_KADM_MOD_KEEP, OVSEC_KADM_MOD_V4, OVSEC_KADM_MO
 	((char *) error_message(CHPASS_UTIL_NEW_PASSWORD_AGAIN_PROMPT))
 
 /*
- * Succsessfull return code
+ * Successful return code
  */
 #define OVSEC_KADM_OK	0
  
