@@ -1,0 +1,42 @@
+CFLAGS = $(CCOPTS) $(DEFS) $(LOCALINCLUDE)
+
+all::
+
+LOCALINCLUDE=-I$(SRCTOP)/include/kerberosIV -I$(BUILDTOP)/include/kerberosIV
+
+OBJS= kdb5_util.o \
+	kdb5_util_ct.o \
+	dump.o \
+	dumpv4.o \
+	loadv4.o \
+	ss_wrapper.o \
+	$(LIBOBJS)
+
+SRCS= $(srcdir)/kdb5_util.c \
+	$(srcdir)/kdb5_util_ct.c \
+	$(srcdir)/dump.c \
+	$(srcdir)/ss_wrapper.c \
+	$(srcdir)/dumpv4.c \
+	$(srcdir)/loadv4.c
+
+all:: kdb5_util
+
+kdb5_util: kdb5_util.o $(DEPLIBS) $(OBJS)
+	$(LD) $(LDFLAGS) $(LDARGS) -o kdb5_util $(OBJS) $(LIBS)
+
+install::
+	$(INSTALL_PROGRAM) kdb5_util ${DESTDIR}$(ADMIN_BINDIR)/kdb5_util
+	$(INSTALL_DATA) $(srcdir)/kdb5_util.M ${DESTDIR}$(ADMIN_MANDIR)/kdb5_util.8
+
+# needed until we run makedepend
+kdb5_util_ct.c: kdb5_util_ct.ct
+
+kdb5_util_ct.o: kdb5_util_ct.c
+
+clean::
+	$(RM) kdb5_util_ct.c
+
+depend:: kdb5_util_ct.c
+
+clean::
+	$(RM) kdb5_util 
