@@ -1,3 +1,7 @@
+Thu Jul 18 20:40:32 1996  Marc Horowitz  <marc@mit.edu>
+
+	* configure.in: removed ET_RULES, replaced with AC_PROG_AWK
+
 Mon Jul 15 16:58:08 1996  Marc Horowitz  <marc@mit.edu>
 
 	* configure.in (USE_GSSAPI_LIBRARY): shared libraries require all
