@@ -1,3 +1,12 @@
+Tue May  7 22:56:46 1996  Marc Horowitz  <marc@mit.edu>
+
+	* aclocal.m4 (V5_AC_OUTPUT_MAKEFILE): add a second optional
+ 	argument to specify files besides Makefile.in which should be
+ 	configureified.
+	* aclocal.m4 (USE_KADM_LIBRARY): removed.
+	* aclocal.m4 (USE_KADMSRV_LIBRARY, USE_GSSRPC_LIBRARY,
+ 	USE_GSSAPI_LIBRARY, USE_DYN_LIBRARY, USE_DB_LIBRARY): added.
+
 Wed Apr 17 13:24:02 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* .Sanitize: Removed kadmin.old from list of things to keep.

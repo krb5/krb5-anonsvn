@@ -613,8 +613,8 @@ dnl V5_OUTPUT_MAKEFILE
 dnl
 define(V5_AC_OUTPUT_MAKEFILE,
 [ifelse($1, , ac_v5_makefile_dirs=., ac_v5_makefile_dirs="$1")
+ifelse($2, , filelist="", filelist="$2")
 dnl OPTIMIZE THIS FOR COMMON CASE!!
-filelist=""
 for x in $ac_v5_makefile_dirs; do
   filelist="$filelist $x/Makefile.tmp:$x/Makefile.in $x/pre.tmp:$ac_prepend $x/post.tmp:$ac_postpend"
 done
@@ -808,13 +808,29 @@ ADD_DEF(-Dvolatile=)
 fi
 ])dnl
 dnl
-dnl This rule tells KRB5_LIBRARIES to use the kadm library.
+dnl This rule tells KRB5_LIBRARIES to use the kadmsrv library.
 dnl
-kadm_deplib=''
-kadm_lib=''
-define(USE_KADM_LIBRARY,[
-kadm_deplib="\[$](TOPLIBD)/libkadm.a"
-kadm_lib=-lkadm])
+kadmsrv_deplib=''
+kadmsrv_lib=''
+define(USE_KADMSRV_LIBRARY,[
+kadmsrv_deplib="\[$](TOPLIBD)/libkadmsrv.a"
+kadmsrv_lib=-lkadmsrv])
+dnl
+dnl This rule tells KRB5_LIBRARIES to use the gssrpc library.
+dnl
+gssrpc_deplib=''
+gssrpc_lib=''
+define(USE_GSSRPC_LIBRARY,[
+gssrpc_deplib="\[$](TOPLIBD)/libgssrpc.a"
+gssrpc_lib=-lgssrpc])
+dnl
+dnl This rule tells KRB5_LIBRARIES to use the gssapi library.
+dnl
+gssapi_deplib=''
+gssapi_lib=''
+define(USE_GSSAPI_LIBRARY,[
+gssapi_deplib="\[$](TOPLIBD)/libgssapi_krb5.a"
+gssapi_lib=-lgssapi_krb5])
 dnl
 dnl This rule tells KRB5_LIBRARIES to use the krb5util library.
 dnl
@@ -885,11 +901,29 @@ ss_deplib="\[$](TOPLIBD)/libss.a"
 ss_lib=-lss
 ])
 dnl
+dnl This rule tells KRB5_LIBRARIES to include the dyn library.
+dnl
+dyn_deplib=''
+dyn_lib=''
+define(USE_DYN_LIBRARY,[
+dyn_deplib="\[$](TOPLIBD)/libdyn.a"
+dyn_lib=-ldyn
+])
+dnl
+dnl This rule tells KRB5_LIBRARIES to include the db library.
+dnl
+db_deplib=''
+db_lib=''
+define(USE_DB_LIBRARY,[
+db_deplib="\[$](TOPLIBD)/libdb.a"
+db_lib=-ldb
+])
+dnl
 dnl This rule generates library lists for programs.
 dnl
 define(KRB5_LIBRARIES,[
-DEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadm_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib \[$](TOPLIBD)/libcom_err.a"
-LIBS="\[$](LOCAL_LIBRARIES) $kadm_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib -lcom_err $LIBS"
+DEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmsrv_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
+LIBS="\[$](LOCAL_LIBRARIES) $kadmsrv_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
 LDFLAGS="$LDFLAGS -L\$(TOPLIBD)"
 AC_SUBST(LDFLAGS)
 AC_SUBST(LDARGS)
