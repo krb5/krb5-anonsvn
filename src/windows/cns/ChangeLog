@@ -1,5 +1,7 @@
 Fri Dec 20 10:28:59 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
+	* krb5.def: New file, modelled after krbnet.def
+
 	* cns.h, cns.c, krbini.h, cnsres5.c, Makefile: remove
 		Cygnus/KerbNet(tm) name from MIT distribution
 
