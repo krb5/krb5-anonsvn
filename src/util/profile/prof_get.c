@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #endif
 #include <errno.h>
-
+#include <limits.h>
 #include "prof_int.h"
 
 /*
@@ -252,11 +252,12 @@ profile_get_integer(profile, name, subname, subsubname,
 	const char	*value;
 	errcode_t	retval;
 	const char	*names[4];
+	char            *end_value;
+	long		ret_long;
 
-	if (profile == 0) {
-		*ret_int = def_val;
+    *ret_int = def_val;
+	if (profile == 0)
 		return 0;
-	}
 
 	names[0] = name;
 	names[1] = subname;
@@ -268,9 +269,94 @@ profile_get_integer(profile, name, subname, subsubname,
 		return 0;
 	} else if (retval)
 		return retval;
+	
+    /* Empty string is no good. */
+    if (value[0] == 0)
+        return PROF_BAD_INTEGER;
+    errno = 0;
+    
+    ret_long = strtol (value, &end_value, 10);
+    
+    /* Overflow or underflow.  */
+    if ((ret_long == LONG_MIN || ret_long == LONG_MAX) && errno != 0)
+        return PROF_BAD_INTEGER;
+    /* Value outside "int" range.  */
+    if ((long) (int) ret_long != ret_long)
+        return PROF_BAD_INTEGER;
+    /* Garbage in string.  */
+    if (end_value != value + strlen (value))
+        return PROF_BAD_INTEGER;	
    
-	*ret_int = atoi(value);
+	*ret_int = ret_long;
 	return 0;
+}
+
+static const char *conf_yes[] = {
+    "y", "yes", "true", "t", "1", "on",
+    0,
+};
+
+static const char *conf_no[] = {
+    "n", "no", "false", "nil", "0", "off",
+    0,
+};
+
+static errcode_t
+profile_parse_boolean(s, ret_boolean)
+     char *s;
+     int* ret_boolean;
+{
+    char **p;
+    
+    if (ret_boolean == NULL)
+    	return PROF_EINVAL;
+
+    for(p=conf_yes; *p; p++) {
+		if (!strcasecmp(*p,s)) {
+			*ret_boolean = 1;
+	    	return 0;
+		}
+    }
+
+    for(p=conf_no; *p; p++) {
+		if (!strcasecmp(*p,s)) {
+			*ret_boolean = 0;
+			return 0;
+		}
+    }
+	
+	return PROF_BAD_BOOLEAN;
+}
+
+KRB5_DLLIMP errcode_t KRB5_CALLCONV
+profile_get_boolean(profile, name, subname, subsubname,
+			      def_val, ret_boolean)
+	profile_t	profile;
+	const char	*name, *subname, *subsubname;
+	int		def_val;
+	int		*ret_boolean;
+{
+	const char	*value;
+	errcode_t	retval;
+	const char	*names[4];
+
+	if (profile == 0) {
+		*ret_boolean = def_val;
+		return 0;
+	}
+
+	names[0] = name;
+	names[1] = subname;
+	names[2] = subsubname;
+	names[3] = 0;
+	retval = profile_get_value(profile, names, &value);
+	if (retval == PROF_NO_SECTION || retval == PROF_NO_RELATION) {
+		*ret_boolean = def_val;
+		return 0;
+	} else if (retval)
+		return retval;
+   
+	return profile_parse_boolean (value, ret_boolean);
 }
 
 /*
