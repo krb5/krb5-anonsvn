@@ -1,5 +1,9 @@
 Fri Dec 27 17:06:41 1996  Tom Yu  <tlyu@mit.edu>
 
+	* lib.in: Fix up loops to deal with an OBJS.ST that is in the
+	current directory; add a comment documenting possible make
+	incompatibility if OBJS.ST is specified as ./OBJS.ST.
+
 	* pre.in:
 	* post.in: Fix up recursion to be somewhat saner.
 	* lib.in:

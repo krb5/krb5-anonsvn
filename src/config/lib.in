@@ -8,8 +8,8 @@
 # LIBMAJOR	library major version
 # LIBMINOR	library minor version
 # STOBJLISTS	list of files, each of which is an OBJS.ST created by
-#			libobj.in; each filename must have a directory;
-#			i.e. ./OBJS.ST for the current directory
+#			libobj.in; *DO NOT* use ./OBJS.ST for the current
+#			directory as that will cause some makes to lose.
 # RELDIR	path to this directory relative to $(TOPLIBD)
 
 LN_S=@LN_S@
@@ -50,7 +50,8 @@ PFOBJLISTS=$(STOBJLISTS:.ST=.PF)
 lib$(LIB)$(STLIBEXT): $(STOBJLISTS)
 	$(RM) $@
 	@echo "building static $(LIB) library"
-	@dirs=`echo $(STOBJLISTS) | sed -e 's%/OBJS.ST%%g'`; \
+	@dirs=`echo $(STOBJLISTS) | \
+		sed -e 's%/OBJS.ST%%g' -e 's%OBJS.ST%.%'`; \
 		$(AR) cq $@ `for d in $$dirs; do \
 			sed -e "s%^%$$d/%" $$d/OBJS.ST; done`
 	$(RANLIB) $@
@@ -58,7 +59,8 @@ lib$(LIB)$(STLIBEXT): $(STOBJLISTS)
 lib$(LIB)$(SHLIBVEXT): $(SHOBJLISTS)
 	$(RM) $@
 	@echo "building shared $(LIB) library ($(LIBMAJOR).$(LIBMINOR))"
-	@dirs=`echo $(SHOBJLISTS) | sed -e 's%/OBJS.SH%%g'`; \
+	@dirs=`echo $(SHOBJLISTS) | \
+		sed -e 's%/OBJS.SH%%g' -e 's%OBJS.SH%.%'`; \
 		$(LDCOMBINE) -o $@ `for d in $$dirs; do \
 			sed -e "s%^%$$d/%" $$d/OBJS.SH; done`
 lib$(LIB)$(SHLIBEXT): lib$(LIB)$(SHLIBVEXT)
@@ -67,7 +69,8 @@ lib$(LIB)$(SHLIBEXT): lib$(LIB)$(SHLIBVEXT)
 lib$(LIB)$(PFLIBEXT): $(PFOBJLISTS)
 	$(RM) $@
 	@echo "building profiled $(LIB) library"
-	@dirs=`echo $(PFOBJLISTS) | sed -e 's%/OBJS.PF%%g'`; \
+	@dirs=`echo $(PFOBJLISTS) | \
+		sed -e 's%/OBJS.PF%%g' -e 's%OBJS.PF%.%'`; \
 		$(AR) cq $@ `for d in $$dirs; do \
 			sed -e "s%^%$$d/%" $$d/OBJS.PF; done`
 	$(RANLIB) $@
