@@ -16,7 +16,10 @@ OBJS = setenv.$(OBJEXT)	@LIBOBJS@
 
 all-unix:: shared $(OBJS) DONE
 DONE: $(OBJS)
-	@if test -n "$(OBJS)"; then echo $(OBJS) > DONE; fi
+	@if test -z "$(OBJS)" && test -r $@; \
+		then :; \
+		else echo $(OBJS) > DONE; \
+	fi
 
 all-mac: $(OBJS)
 all-windows:: syslog.obj sscanf.obj
