@@ -1,3 +1,12 @@
+Thu Jan 16 18:58:16 1997  Tom Yu  <tlyu@mit.edu>
+
+	* post.in (Makefiles-prerecurse): Change to use double-colon
+	rule.
+
+	* pre.in (recursion rules): Change *-prerecurse and *-postrecurse
+	targets to be double-colon rules, to allow for multiple targets to
+	be evaluated in sequence.
+
 Fri Jan  3 23:16:31 1997  Tom Yu  <tlyu@mit.edu>
 
 	* lib.in: Change semantics of SHLIB_EXPFLAGS somewhat to sync with

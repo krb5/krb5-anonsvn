@@ -32,7 +32,7 @@ clean-windows::
 	$(RM) *.$(OBJEXT)
 	$(RM) msvc.pdb *.err
 
-Makefiles-prerecurse: Makefile
+Makefiles-prerecurse:: Makefile
 
 Makefile: $(srcdir)/Makefile.in $(thisconfigdir)/config.status \
 		$(SRCTOP)/config/pre.in $(SRCTOP)/config/post.in
