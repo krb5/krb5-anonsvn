@@ -1,3 +1,8 @@
+Tue Jun 18 20:47:30 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* post.in: fix up subdir recursion and makefile remaking somewhat;
+		still needs work
+
 Thu Jun 13 23:02:23 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* post.in,pre.in: break some things out from aclocal.m4 and put
