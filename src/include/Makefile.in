@@ -60,7 +60,7 @@ clean-mac::
 
 clean-windows::
 	$(RM) com_err.h
-	$(RM) gssapi\gssapi.h gssapi\gssapi_generic.h
+	$(RM) gssapi\gssapi.h gssapi\gssapi_generic.h gssapi\gssapi_krb5.h
 	if exist gssapi\nul rmdir gssapi
 	cd krb5
 	@echo Making clean in include\krb5
