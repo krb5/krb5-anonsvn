@@ -2,7 +2,7 @@
 ;   GSSAPI.DEF - GSSAPI.DLL module definition file
 ;----------------------------------------------------
 
-;LIBRARY		GSSAPI
+LIBRARY		GSSAPI
 DESCRIPTION	'Base Generic Security Service API'
 EXETYPE		WINDOWS
 CODE		PRELOAD MOVEABLE DISCARDABLE

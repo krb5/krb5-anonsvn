@@ -1,7 +1,8 @@
 Tue Feb  4 15:52:34 1997  Richard Basch  <basch@lehman.com>
 
-	* krb5_16.def krb5_32.def:
-		New ComErr interface definitions
+	* gssapi16.def: Declare the library name (win16)
+
+	* krb5_16.def krb5_32.def: New ComErr interface definitions
 
 	* krb5_32.def: Remove unsupported statements (EXETYPE, RESIDENTNAME)
 
