@@ -32,6 +32,7 @@
 #include "stdcc.h"
 #include "stdcc_util.h"
 #include "string.h"
+#include "k5-int.h"
 #include <stdio.h>
 
 apiCB *gCntrlBlock = NULL;
@@ -40,7 +41,7 @@ apiCB *gCntrlBlock = NULL;
 #include "winccld.h"	
 #endif
 
-#if !defined(_MSDOS) && !defined(_WIN32)
+#ifndef CC_API_VER2
 #define CC_API_VER2
 #endif
 
@@ -620,13 +621,11 @@ krb5_stdcc_destroy (krb5_context context, krb5_ccache id)
 	int err;
 	krb5_error_code	retval;
 	stdccCacheDataPtr	ccapi_data = id->data;
-	
+
 	if ((retval = stdcc_setup(context, ccapi_data))) {
-		if (retval == KRB5_FCC_NOFILE)
-			return 0;
 		return retval;
 	}
-	
+
 	/* free memory associated with the krb5_ccache */
 	if (ccapi_data) {
 		if (ccapi_data->cache_name)
@@ -634,14 +633,20 @@ krb5_stdcc_destroy (krb5_context context, krb5_ccache id)
 		if (ccapi_data->NamedCache) {
 			/* destroy the named cache */
 			err = cc_destroy(gCntrlBlock, &ccapi_data->NamedCache);
+			retval = cc_err_xlate(err);
 			cache_changed();
 		}
 		free(ccapi_data);
 		id->data = NULL;
 	}
 	free(id);
-	
-	return cc_err_xlate(err);
+
+	/* If the cache does not exist when we tried to destroy it,
+	   that's fine.  That means someone else destryoed it since
+	   we resolved it. */
+	if (retval == KRB5_FCC_NOFILE)
+		return 0;
+	return retval;
 }
 
 /*
