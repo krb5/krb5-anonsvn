@@ -7,7 +7,7 @@ OBJS 	 = gss.obj gss-client.obj gss-misc.obj
 ##### Options
 DEBUG 	 = 1
 BUILDTOP =..\..
-##WIN16##WLIB	 = $(LIBDIR)\winsock.lib
+##WIN16##WLIB	 = $(BUILDTOP)\lib\winsock.lib
 INCLUDES = /I$(BUILDTOP)\include /I$(BUILDTOP)\include\krb5
 
 ##### C Compiler

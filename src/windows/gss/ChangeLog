@@ -1,3 +1,7 @@
+Tue Feb  4 16:18:25 1997  Richard Basch  <basch@lehman.com>
+
+	* Makefile.in: win16 - fixed the winsock.lib path reference
+
 Thu Jan 30 22:07:35 1997  Richard Basch  <basch@lehman.com>
 
 	* Makefile.in: Win32 - link in the resource file
