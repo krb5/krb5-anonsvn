@@ -24,6 +24,10 @@ AC_SUBST(CRYPTO_SH_VERS)
 COMERR_SH_VERS=$krb5_cv_shlib_version_libcom_err
 AC_SUBST(COMERR_SH_VERS)
 AC_REPLACE_FUNCS(vfprintf vsprintf strdup strcasecmp strerror memmove daemon getuid sscanf syslog)
+KRB5_RUN_FLAGS
+USE_ANAME
+USE_KDB5_LIBRARY
+KRB5_LIBRARIES
 AC_OUTPUT(Makefile:../../config/pre.in+Makefile.in+../../config/recurse.in+../../config/post.in
   error_tables/Makefile:../../config/pre.in+error_tables/Makefile.in+../../config/post.in
   asn.1/Makefile:../../config/pre.in+asn.1/Makefile.in+../../config/post.in
