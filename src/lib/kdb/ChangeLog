@@ -1,3 +1,15 @@
+Sun May 12 01:03:07 1996  Marc Horowitz  <marc@mit.edu>
+
+	* kdb_cpw.c (add_key_rnd): handle kvno incrementing in the caller,
+ 	not here.
+	(krb5_dbe_crk): increment the kvno here, not in add_key_rnd
+	(krb5_dbe_ark): increment the kvno here, not in add_key_rnd
+	(add_key_pwd): handle kvno incrementing in the caller, not here.
+	(krb5_dbe_cpw): take an arg to specify the new kvno.  if it's
+	<= the old kvno, just increment.  Otherwise, pass it to add_key_pwd.
+	This is why all the code in this revision was changed.
+	(krb5_dbe_apw): increment the kvno here, not in add_key_pwd
+
 Thu Mar 21 20:38:38 1996  Richard Basch  <basch@lehman.com>
 
 	* decrypt_key.c (krb5_dbekd_decrypt_key_data): bullet-proofing the
