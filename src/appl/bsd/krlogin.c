@@ -568,7 +568,7 @@ main(argc, argv)
       authopts |= OPTS_FORWARDABLE_CREDS;
 
     status = kcmd(&sock, &host, debug_port,
-		  null_local_username ? "" : pwd->pw_name,
+		  null_local_username ? NULL : pwd->pw_name,
 		  name ? name : pwd->pw_name, term,
 		  0, "host", krb_realm,
 		  &cred,
@@ -582,7 +582,7 @@ main(argc, argv)
 #ifdef KRB5_KRB4_COMPAT
 	fprintf(stderr, "Trying krb4 rlogin...\n");
 	status = k4cmd(&sock, &host, debug_port,
-		       null_local_username ? "" : pwd->pw_name,
+		       null_local_username ? NULL : pwd->pw_name,
 		       name ? name : pwd->pw_name, term,
 		       0, &v4_ticket, "rcmd", krb_realm,
 		       &v4_cred, v4_schedule, &v4_msg_data, &local, &foreign,
@@ -599,10 +599,10 @@ main(argc, argv)
     
 #else
     rem = rcmd(&host, debug_port,
-	       null_local_username ? "" : pwd->pw_name,
+	       null_local_username ? NULL : pwd->pw_name,
 	       name ? name : pwd->pw_name, term, 0);
 #endif /* KERBEROS */
-
+    
     if (rem < 0)
       exit(1);
     
@@ -1206,6 +1206,8 @@ void oob()
     mark = 0;
     
     recv(rem, &mark, 1, MSG_OOB);
+
+
     if (mark & TIOCPKT_WINDOW) {
 	/*
 	 * Let server know about window size changes
@@ -1271,6 +1273,7 @@ void oob()
 	    if (atmark)
 	      break;
 	    n = read(rem, waste, sizeof (waste));
+	    printf("tossed %d bytes\n", n);
 	    if (n <= 0)
 	      break;
 return;
@@ -1354,6 +1357,13 @@ fd_set readset, excset, writeset;
 		bufp += n;
 	    }
 	    if (FD_ISSET(rem, &readset)) {
+		{
+		    int x;
+		    
+		    if (!ioctl(rem, FIONREAD, &x));
+
+		}
+
 	  	rcvcnt = rcmd_stream_read(rem, rcvbuf, sizeof (rcvbuf));
 		if (rcvcnt == 0)
 		    return (0);
