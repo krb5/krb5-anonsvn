@@ -1,3 +1,8 @@
+Fri Dec 27 17:09:46 1996  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in:
+	* configure.in: Changes to use new library build system.
+
 Thu Dec  5 22:43:35 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* update_utmp.c (pty_update_utmp): Apply platform specific patch
