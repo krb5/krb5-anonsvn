@@ -1,4 +1,4 @@
-TOP	=	../../../kadmin.ov
+TOP	=	../../../kadmin
 include 	$(TOP)/config.mk/template
 
 CFLAGS  :=	$(CFLAGS) -DUSE_KADM5_API_VERSION=1
@@ -132,7 +132,7 @@ capi.2: api.2
 	ln -s api.2 capi.2
 
 unit-test-client-body: capi.0 capi.2 site.exp test-noauth test-destroy test-handle-client test-sizes
-	$(RUNTEST) --tool capi API=$(CLNTTCL) KDB5_EDIT=$(TOP)/../admin/edit/kdb5_edit KINIT=$(TOP)/../clients/kinit/kinit KDESTROY=$(TOP)/../clients/kdestroy/kdestroy TOP=$(TOP) RPC=1
+	$(RUNTEST) --tool capi API=$(CLNTTCL) KDB5_EDIT=$(TOP)/../admin/edit/kdb5_edit KINIT=$(TOP)/../clients/kinit/kinit KDESTROY=$(TOP)/../clients/kdestroy/kdestroy KADMIN_LOCAL=$(TOP)/cli/kadmin.local TOP=$(TOP) RPC=1
 
 sapi.0: api.0
 	-rm -f sapi.0
@@ -148,8 +148,7 @@ sapi.2: api.2
 
 unit-test-server-body: sapi.0 sapi.1 sapi.2 site.exp randkey-test test-handle-server \
 	lock-test test-sizes
-	$(RUNTEST) --tool sapi API=$(SRVTCL) LOCKTEST=./lock-test \
-		KDB5_EDIT=$(TOP)/../admin/edit/kdb5_edit TOP=$(TOP) RPC=0
+	$(RUNTEST) --tool sapi API=$(SRVTCL) LOCKTEST=./lock-test KDB5_EDIT=$(TOP)/../admin/edit/kdb5_edit KADMIN_LOCAL=$(TOP)/cli/kadmin.local TOP=$(TOP) RPC=0
 
 clean::
 	$(CLEAN) -r *.log *.plog *.sum *.psum unit-test-log.*

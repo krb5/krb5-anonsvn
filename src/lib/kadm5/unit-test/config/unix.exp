@@ -1,5 +1,6 @@
 set stty_init {-onlcr -opost intr \^C kill \^U}
 set kdb5_edit $KDB5_EDIT
+set kadmin_local $KADMIN_LOCAL
 
 # Backward compatibility until we're using expect 5 everywhere
 if {[info exists exp_version_4]} {

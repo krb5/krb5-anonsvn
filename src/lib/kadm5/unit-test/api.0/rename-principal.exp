@@ -401,10 +401,13 @@ test "rename-principal 14"
 proc test14 {} {
     global test
     
-    if {! ((  [principal_exists "$test/a"]) ||
-	   [create_principal "$test/a"])} {
-	    error_and_restart "$test: couldn't create principal \"$test/a\""
-	    return
+    if {[principal_exists "$test/a"]} {
+	delete_principal "$test/a"
+    }
+
+    if {[create_principal_with_keysalts "$test/a" "des-cbc-crc:v4"]} {
+	error_and_restart "$test: couldn't create no-salt principal \"$test/a\""
+	return
     }
     if {! (( ! [principal_exists "$test/b"]) ||
 	   [delete_principal "$test/b"])} {
@@ -470,5 +473,37 @@ proc test16 {} {
 }
 test16
 
+test "rename-principal 18"
+proc test18 {} {
+    global test
+    
+    if {! ((  [principal_exists "$test/a"]) ||
+	   [create_principal "$test/a"])} {
+	    error_and_restart "$test: couldn't create principal \"$test/a\""
+	    return
+    }
+    if {! (( ! [principal_exists "$test/b"]) ||
+	   [delete_principal "$test/b"])} {
+	    error_and_restart "$test: couldn't delete principal \"$test/a\""
+	    return
+    }
+    if {! [cmd {
+	ovsec_kadm_init admin/rename admin $OVSEC_KADM_ADMIN_SERVICE null \
+		$OVSEC_KADM_STRUCT_VERSION $OVSEC_KADM_API_VERSION_1 \
+		server_handle
+    }]} {
+	error "$test: unexpected failure in init"
+	return
+    }
+    one_line_fail_test [format {
+	ovsec_kadm_rename_principal $server_handle "%s/a" "%s/b"
+    } $test $test] "NO_RENAME_SALT"
+
+    if { ! [cmd {ovsec_kadm_destroy $server_handle}]} {
+	error "$test: unexpected failure in destroy"
+	return
+    }
+}
+test18
 
 return ""

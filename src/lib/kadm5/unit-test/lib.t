@@ -337,3 +337,31 @@ proc kdestroy {} {
 		unset errorInfo
 	}
 }
+
+proc create_principal_with_keysalts {name keysalts} {
+    global kadmin_local
+
+    spawn $kadmin_local -e "$keysalts"
+    expect {
+	"kadmin.local:" {}
+	default { error "waiting for kadmin.local prompt"; return 1}
+    }
+    send "ank -pw \"$name\" \"$name\"\n"
+    expect {
+	-re "Principal \"$name.*\" created." {}
+	"kadmin.local:" {
+	    error "expecting principal created message"; 
+	    return 1
+	}
+	default { error "waiting for principal created message"; return 1 }
+    }
+    expect {
+	"kadmin.local:" {}
+	default { error "waiting for kadmin.local prompt"; return 1 }
+    }
+    close
+    wait
+    return 0
+}
+
+    
