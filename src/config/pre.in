@@ -246,6 +246,13 @@ PTY_LIB		= -lpty
 KRB4_LIBPATH	= @KRB4_LIBPATH@
 KRB4_INCLUDES	= @KRB4_INCLUDES@
 
+#
+# variables for --with-tcl=
+TCL_LIBS	= @TCL_LIBS@
+TCL_LIBPATH	= @TCL_LIBPATH@
+TCL_RPATH	= @TCL_RPATH@
+TCL_INCLUDES	= @TCL_INCLUDES@
+
 # error table rules
 #
 ### /* these are invoked as $(...) foo.et, which works, but could be better */
