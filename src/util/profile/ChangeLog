@@ -1,3 +1,7 @@
+2002-01-08	Miro Jurisic <meeroh@mit.edu>
+	* prof_file.c, prof_file.h, profil.hin: Preserve resource fork of the profile
+	file when modifying an existing one on Mac OS 9 and X.
+
 2001-03-20	Alexandra Ellwood <lxs@mit.edu>
 
 	* profile.hin: Changed KerberosConditionalMacros.h to KerberosSupport.h

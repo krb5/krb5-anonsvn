@@ -45,6 +45,9 @@ static OSErr GetMacOSTempFilespec (
 			FSSpec*	outFilespec);
 
 #endif
+#ifdef COPY_RESOURCE_FORK
+#include <KerberosSupport/FileCopy.h>
+#endif
 
 static int rw_access(filespec)
 	profile_filespec_t filespec;
@@ -414,8 +417,26 @@ errcode_t profile_flush_file_data(data)
 		retval = errno;
 		goto end;
 	}
-
+        
 #ifdef PROFILE_USES_PATHS
+#ifdef COPY_RESOURCE_FORK
+	{
+		FSSpec from;
+		FSSpec to;
+		OSErr err = FSpLocationFromFullPOSIXPath (data -> filespec, &from);
+		if (err == noErr) {
+			err = FSpLocationFromFullPOSIXPath (new_file, &to);
+		}
+		if (err == noErr) {
+			err = FSpResourceForkCopy (&from, &to);
+		}
+		if (err != noErr) {
+			retval = ENOENT;
+			goto end;
+		}
+	}
+#endif
+
 	unlink(old_file);
 	if (rename(data->filespec, old_file)) {
 		retval = errno;
@@ -428,11 +449,20 @@ errcode_t profile_flush_file_data(data)
 	}
 #else
 	{
-		OSErr err = FSpExchangeFiles (&data->filespec, &new_file);
+		OSErr err = noErr;
+#ifdef COPY_RESOURCE_FORK
+		err = FSpResourceForkCopy (&data -> filespec, &new_file);
+#endif
+
+		if (err == noErr) {
+			err = FSpExchangeFiles (&data->filespec, &new_file);
+		}
+
 		if (err != noErr) {
 			retval = ENOENT;
 			goto end;
 		}
+
 		FSpDelete (&new_file);
 	}
 #endif

@@ -77,8 +77,12 @@ extern "C" {
     /* array should be terminated with {0, 0, ""} */
     typedef FSSpec const_profile_filespec_t;
     typedef FSSpec* const_profile_filespec_list_t;	
+    #define COPY_RESOURCE_FORK 1
 #else
     #define PROFILE_USES_PATHS
+    #if TARGET_API_MAC_OSX
+        #define COPY_RESOURCE_FORK 1
+    #endif
 
     typedef char* profile_filespec_t;	/* path as C string */
     typedef char* profile_filespec_list_t;	/* list of : separated paths, C string */
