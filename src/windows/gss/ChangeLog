@@ -1,7 +1,6 @@
-Wed Jan 29 20:59:20 EST 1997	Richard Basch	<basch@lehman.com>
+Thu Jan 30 22:07:35 1997  Richard Basch  <basch@lehman.com>
 
-	* Makefile.in:
-		Win32 GSS client did not link in the resource file.
+	* Makefile.in: Win32 - link in the resource file
 
 Tue Oct 29 10:17:25 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
