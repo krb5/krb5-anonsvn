@@ -1,3 +1,8 @@
+2000-10-02  Alexandra Ellwood <lxs@mit.edu>
+
+        * profile.pbexp: added a Mac OS X export file.  This
+        will eventually be replaced by a script that generates it.
+
 2000-07-06  Miro Jurisic  <meeroh@mit.edu>
 
 	* prof_set.c (rw_setup): Initialize retval before using it
