@@ -118,7 +118,7 @@ krb5_crypto_us_timeofday(seconds, microseconds)
     	absoluteTime = UpTime ();
     	AbsoluteToSecsNanosecs (absoluteTime, seconds, &nanoseconds);
     	
-    	*microseconds = nanoseconds / 1000;
+    	usec = nanoseconds / 1000;
 
     } else {
 	    usec = 0;
@@ -217,7 +217,7 @@ void AbsoluteToSecsNanosecs (
     * residualNanoseconds = eventNanoseconds % 10e9;
     * Finally, compute the local time (seconds) and fraction.
     */
-   eventSeconds64 = U64Divide (eventNanoseconds, kTenE9);
+   eventSeconds64 = U64Div (eventNanoseconds, kTenE9);
    eventNanoseconds = U64Subtract (eventNanoseconds, U64Multiply (eventSeconds64, kTenE9));
    *eventSeconds = (UInt64ToUnsignedWide (eventSeconds64)).lo;
    *residualNanoseconds = (UInt64ToUnsignedWide (eventNanoseconds)).lo;
