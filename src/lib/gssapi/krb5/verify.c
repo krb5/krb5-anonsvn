@@ -60,7 +60,7 @@ krb5_gss_verify_mic(minor_status, context_handle,
 {
     krb5_context	context;
     OM_uint32		rstat;
-    int			qstate;
+    OM_uint32		qstate;
 
     if (GSS_ERROR(kg_get_context(minor_status, &context)))
        return(GSS_S_FAILURE);
