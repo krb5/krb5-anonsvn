@@ -29,7 +29,7 @@
 
 static krb5_error_code
 make_ap_req(context, auth_context, cred, server, endtime, chan_bindings, 
-	    req_flags, flags, token)
+	    req_flags, flags, mech_type, token)
     krb5_context context;
     krb5_auth_context * auth_context;
     krb5_gss_cred_id_t cred;
@@ -38,6 +38,7 @@ make_ap_req(context, auth_context, cred, server, endtime, chan_bindings,
     gss_channel_bindings_t chan_bindings;
     OM_uint32 req_flags;
     krb5_flags *flags;
+    gss_OID mech_type;
     gss_buffer_t token;
 {
     krb5_flags mk_req_flags = 0;
@@ -163,7 +164,7 @@ make_ap_req(context, auth_context, cred, server, endtime, chan_bindings,
    /* build up the token */
 
    /* allocate space for the token */
-   tlen = g_token_size((gss_OID) gss_mech_krb5, ap_req.length);
+   tlen = g_token_size((gss_OID) mech_type, ap_req.length);
 
    if ((t = (unsigned char *) xmalloc(tlen)) == NULL) {
       code = ENOMEM;
@@ -174,7 +175,7 @@ make_ap_req(context, auth_context, cred, server, endtime, chan_bindings,
 
    ptr = t;
 
-   g_make_token_header((gss_OID) gss_mech_krb5, ap_req.length,
+   g_make_token_header((gss_OID) mech_type, ap_req.length,
 		       &ptr, KG_TOK_CTX_AP_REQ);
 
    TWRITE_STR(ptr, (unsigned char *) ap_req.data, ap_req.length);
@@ -238,15 +239,7 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
    output_token->length = 0;
    output_token->value = NULL;
    if (actual_mech_type)
-      *actual_mech_type = (gss_OID) gss_mech_krb5;
-
-   /* verify the mech_type */
-
-   if ((mech_type != GSS_C_NULL_OID) &&
-       (! g_OID_equal(mech_type, gss_mech_krb5))) {
-      *minor_status = 0;
-      return(GSS_S_BAD_MECH);
-   }
+      *actual_mech_type = NULL;
 
    /* verify the credential, or use the default */
    /*SUPPRESS 29*/
@@ -265,6 +258,17 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
    }
 
    cred = (krb5_gss_cred_id_t) claimant_cred_handle;
+
+   /* verify the mech_type */
+
+   if (mech_type == GSS_C_NULL_OID) {
+      mech_type = cred->rfc_mech?gss_mech_krb5:gss_mech_krb5_old;
+   } else if ((g_OID_equal(mech_type, gss_mech_krb5) && !cred->rfc_mech) ||
+	      (g_OID_equal(mech_type, gss_mech_krb5_old) &&
+	       !cred->prerfc_mech)) {
+      *minor_status = 0;
+      return(GSS_S_BAD_MECH);
+   }
 
    /* verify that the target_name is valid and usable */
 
@@ -302,7 +306,7 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
 
       /* fill in the ctx */
       memset(ctx, 0, sizeof(krb5_gss_ctx_id_rec));
-      ctx->mech_used = gss_mech_krb5;
+      ctx->mech_used = mech_type;
       ctx->auth_context = NULL;
       ctx->initiate = 1;
       ctx->mutual = req_flags & GSS_C_MUTUAL_FLAG;
@@ -338,7 +342,7 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
 
       if ((code = make_ap_req(context, &(ctx->auth_context), cred, 
 			      ctx->there, &ctx->endtime, input_chan_bindings, 
-			      req_flags, &ctx->flags, &token))) {
+			      req_flags, &ctx->flags, mech_type, &token))) {
 	 krb5_free_principal(context, ctx->here);
 	 krb5_free_principal(context, ctx->there);
 	 xfree(ctx);
@@ -424,6 +428,9 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
       if (ret_flags)
 	 *ret_flags = KG_IMPLFLAGS(req_flags);
 
+      if (actual_mech_type)
+	 *actual_mech_type = mech_type;
+
       /* return successfully */
 
       *minor_status = 0;
@@ -485,7 +492,7 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
 
       ptr = (unsigned char *) input_token->value;
 
-      if (err = g_verify_token_header((gss_OID) gss_mech_krb5, &(ap_rep.length),
+      if (err = g_verify_token_header((gss_OID) mech_type, &(ap_rep.length),
 				      &ptr, KG_TOK_CTX_AP_REP,
 				      input_token->length)) {
 	 *minor_status = err;
@@ -538,6 +545,9 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
 
       if (ret_flags)
 	 *ret_flags = KG_IMPLFLAGS(req_flags);
+
+      if (actual_mech_type)
+	 *actual_mech_type = mech_type;
 
       /* success */
 

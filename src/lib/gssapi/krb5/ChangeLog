@@ -1,5 +1,13 @@
 Thu Jun 20 23:15:57 1996  Marc Horowitz  <marc@mit.edu>
 
+	* init_sec_context.c (make_ap_req, krb5_gss_init_sec_context): -
+ 	gss_init_sec_context should use the mech set in the credential.
+  	If the default mech is requested, but the old mech oid was
+ 	explicitly passed to gss_acquire_cred, then the context should be
+ 	the old mech, otherwise, the new mech.  If a mech was requested
+ 	explicitly, then the code should insure that the credential is
+ 	compatible.
+
 	* acquire_cred.c (krb5_gss_acquire_cred), gssapiP_krb5.h (struct
  	_krb5_gss_cred_it_rec), gssapi_krb5.c (gss_mech_set_krb5*),
  	inq_cred.c (krb5_gss_inquire_cred): gss_acquire_cred needs to be
