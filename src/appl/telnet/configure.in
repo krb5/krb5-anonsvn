@@ -1,4 +1,0 @@
-AC_INIT(configure.in)
-CONFIG_DIRS(libtelnet telnet telnetd)
-CONFIG_RULES
-AC_OUTPUT(Makefile,[EXTRA_RULES])
