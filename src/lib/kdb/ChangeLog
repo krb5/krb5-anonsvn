@@ -1,3 +1,7 @@
+Wed Jul 10 16:22:14 1996  Marc Horowitz  <marc@mit.edu>
+
+	* Makefile.in (clean-unix): remove the shared/ subdir
+
 Tue Jul  9 17:55:30 1996  Marc Horowitz  <marc@mit.edu>
 
 	* configure.in, Makefile.in: added rules and macros to do shared

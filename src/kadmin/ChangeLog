@@ -1,3 +1,7 @@
+Wed Jul 10 16:27:11 1996  Marc Horowitz  <marc@mit.edu>
+
+	* configure.in: kdbkeys is no longer necessary.
+
 Thu Aug 24 19:21:14 1995  Theodore Y. Ts'o  <tytso@dcl>
 
 	* .Sanitize: Add ktutil directory
