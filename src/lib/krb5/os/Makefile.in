@@ -10,6 +10,7 @@ KRB5_RUN_ENV = @KRB5_RUN_ENV@
 @SHARED_RULE@
 
 OBJS= \
+	appdefault.$(OBJEXT) \
 	an_to_ln.$(OBJEXT)	\
 	def_realm.$(OBJEXT)	\
 	DNR.$(OBJEXT)	\

@@ -36,7 +36,7 @@ static int conf_boolean(s)
 	return 0;
 }
 
-static errcode_t appdefault_get(context, appname, realm, option,
+static krb5_error_code appdefault_get(context, appname, realm, option,
 				ret_value)
 krb5_context context;
 	const char *appname, *option;
@@ -44,9 +44,9 @@ const krb5_data *realm;
 	char **ret_value;
 {
 profile_t profile;
-Rrrconst char *names[5];
+const char *names[5];
 	char **nameval = NULL;
-	errcode_t retval;
+	krb5_error_code retval;
 	const char * realmstr =  realm?realm->data:NULL;
 
 	    if (!context || (context->magic != KV5M_CONTEXT)) 
@@ -145,12 +145,12 @@ goodbye:
 				     default_value, ret_value)
 	   krb5_context context;
 	const char *appname,  *option;
-	krb5_data *realm;
+	   const krb5_data *realm;
 	int default_value;
 	int *ret_value;
 {
 	char *string = NULL;
-	errcode_t retval;
+	krb5_error_code retval;
 
 	retval = appdefault_get(context, appname, realm, option, &string);
 
@@ -163,11 +163,12 @@ goodbye:
 
 void krb5_appdefault_string(context, appname, realm, option, default_value,
 				ret_value)
-  krb5_context context;
+     krb5_context context;
 	const char *appname, *option, *default_value;
 	char **ret_value;
+     const krb5_data *realm;
 	{
-	errcode_t retval;
+	krb5_error_code retval;
 	char *string;
 
 	retval = appdefault_get(context, appname, realm, option, &string);
