@@ -1,3 +1,9 @@
+Sun Apr 21 03:07:02 1996  Marc Horowitz  <marc@mit.edu>
+
+	* gssapi_generic.c, release_buffer.c, release_oid_set.c: added
+ 	files which should have been added before, but either I or commit
+ 	was confused.
+
 Wed Apr 17 20:59:23 1996  Marc Horowitz  <marc@mit.edu>
 
 	* oid_ops.c: moved from mechglue
