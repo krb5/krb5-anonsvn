@@ -5,7 +5,23 @@
 #ifndef _KRB5_PROFILE_H
 #define _KRB5_PROFILE_H
 
-#if defined(_MSDOS) || defined(_WIN32) || defined(MACINTOSH)
+#if defined(macintosh) || (defined(__MACH__) && defined(__APPLE__))
+	#include <KerberosSupport/KerberosSupport.h>
+	
+	#if TARGET_API_MAC_OS8 || (TARGET_API_MAC_CARBON && !TARGET_API_MAC_OSX)
+		#include <Kerberos5/win-mac.h>
+	#endif
+#endif
+
+#if TARGET_API_MAC_OSX && TARGET_API_MAC_CARBON
+	#include <CoreServices/CoreServices.h>
+#elif TARGET_API_MAC_OS8 || TARGET_API_MAC_CARBON
+	#include <Files.h>
+#else
+	#error "Unknown OS"
+#endif
+
+#if defined(_MSDOS) || defined(_WIN32)
 #include <win-mac.h>
 #endif
 
@@ -36,33 +52,38 @@ typedef struct _profile_t *profile_t;
 #define PROFILE_ITER_SECTIONS_ONLY	0x0002
 #define PROFILE_ITER_RELATIONS_ONLY	0x0004
 
-/* Macintoh CFM-68K magic incantation */
-#if defined(macintosh) && defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
-#pragma import on
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
 
-/* On everything but MacOS, we use file paths as unique file identifiers */
-#ifndef macintosh
-#define PROFILE_USES_PATHS
+/* Macintoh CFM-68K magic incantation */
+#if PRAGMA_IMPORT
+#pragma import on
 #endif
 
-#ifdef PROFILE_USES_PATHS
-typedef char* profile_filespec_t;	/* path as C string */
-typedef char* profile_filespec_list_t;	/* list of : separated paths, C string */
-typedef const char* const_profile_filespec_t;	/* path as C string */
-typedef const char* const_profile_filespec_list_t;	/* list of : separated paths, C string */
+#if PRAGMA_STRUCT_ALIGN
+	#pragma options align=mac68k
+#elif PRAGMA_STRUCT_PACKPUSH
+	#pragma pack(push, 2)
+#elif PRAGMA_STRUCT_PACK
+	#pragma pack(2)
+#endif
+
+/* We use file paths as unique file identifiers except Mac OS 8 and 9*/
+#if TARGET_API_MAC_OS8 || (TARGET_API_MAC_CARBON && !TARGET_API_MAC_OSX)
+    /* On CFM MacOS, we use native file specifiers as unique file identifiers */
+    typedef FSSpec profile_filespec_t;
+    typedef FSSpec* profile_filespec_list_t;
+    /* array should be terminated with {0, 0, ""} */
+    typedef FSSpec const_profile_filespec_t;
+    typedef FSSpec* const_profile_filespec_list_t;	
 #else
-/* On MacOS, we use native file specifiers as unique file identifiers */
-#include <Files.h>
-typedef FSSpec profile_filespec_t;
-typedef FSSpec* profile_filespec_list_t;
-/* array should be terminated with {0, 0, ""} */
-typedef FSSpec const_profile_filespec_t;
-typedef FSSpec* const_profile_filespec_list_t;	
+    #define PROFILE_USES_PATHS
+
+    typedef char* profile_filespec_t;	/* path as C string */
+    typedef char* profile_filespec_list_t;	/* list of : separated paths, C string */
+    typedef const char* const_profile_filespec_t;	/* path as C string */
+    typedef const char* const_profile_filespec_list_t;	/* list of : separated paths, C string */
 #endif
 
 KRB5_DLLIMP long KRB5_CALLCONV profile_init
@@ -70,6 +91,15 @@ KRB5_DLLIMP long KRB5_CALLCONV profile_init
 
 KRB5_DLLIMP long KRB5_CALLCONV profile_init_path
 	PROTOTYPE ((const_profile_filespec_list_t filelist, profile_t *ret_profile));
+
+/* On Mac Carbon, also provide FSSpec variants */
+#if TARGET_OS_MAC
+KRB5_DLLIMP long KRB5_CALLCONV FSp_profile_init
+	PROTOTYPE ((const FSSpec* files, profile_t *ret_profile));
+
+KRB5_DLLIMP long KRB5_CALLCONV FSp_profile_init_path
+	PROTOTYPE ((const FSSpec* files, profile_t *ret_profile));
+#endif
 
 KRB5_DLLIMP long KRB5_CALLCONV profile_flush
 	PROTOTYPE ((profile_t profile));
@@ -91,6 +121,11 @@ KRB5_DLLIMP long KRB5_CALLCONV profile_get_string
 			const char *subsubname, const char *def_val,
 			char **ret_string));
 KRB5_DLLIMP long KRB5_CALLCONV profile_get_integer
+	PROTOTYPE((profile_t profile, const char *name, const char *subname,
+			const char *subsubname, int def_val,
+			int *ret_default));
+
+KRB5_DLLIMP long KRB5_CALLCONV profile_get_boolean
 	PROTOTYPE((profile_t profile, const char *name, const char *subname,
 			const char *subsubname, int def_val,
 			int *ret_default));
@@ -128,13 +163,23 @@ KRB5_DLLIMP long KRB5_CALLCONV profile_add_relation
 	PROTOTYPE((profile_t profile, const char **names, 
 		   const char *new_value));
 
+/* Macintosh CFM-68K magic incantation */
+#if PRAGMA_STRUCT_ALIGN
+	#pragma options align=reset
+#elif PRAGMA_STRUCT_PACKPUSH
+	#pragma pack(pop)
+#elif PRAGMA_STRUCT_PACK
+	#pragma pack()
+#endif
+
+#ifdef PRAGMA_IMPORT_OFF
+#pragma import off
+#elif PRAGMA_IMPORT
+#pragma import reset
+#endif
+
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
-
-/* Macintoh CFM-68K magic incantation */
-#if defined(macintosh) && defined(__CFM68K__) && !defined(__USING_STATIC_LIBS__)
-#pragma import reset
-#endif
 
 #endif /* _KRB5_PROFILE_H */
