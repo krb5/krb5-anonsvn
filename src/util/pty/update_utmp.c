@@ -30,15 +30,14 @@
 #define	UTMP_FILE	"/etc/utmp"
 #endif
 
-long pty_update_utmp (process_type, pid, username, line, host)
+long pty_update_utmp (process_type, pid, username, line, host, flags)
     int process_type;
     int pid;
     char *username, *line, *host;
+    int flags;
 {
-    struct utmp ent;
-#ifdef HAVE_SETUTENT
-    struct utmp ut;
-#else
+    struct utmp ent, ut;
+#ifndef HAVE_SETUTENT
     struct stat statb;
     int tty;
 #endif
@@ -128,14 +127,30 @@ if (host)
 #endif /* HAVE_SETUTXENT */
 
 #else /* HAVE_SETUTENT */
-	
-    tty = ttyslot();
-    if (tty > 0 && (fd = open(UTMP_FILE, O_WRONLY, 0)) >= 0) {
+    if (flags&PTY_TTYSLOT_USABLE) 
+	tty = ttyslot();
+    else {
+	int lc;
+	tty = -1;
+	for (lc = 0;
+	     lseek(fd, (off_t)(lc * sizeof(struct utmp)), SEEK_SET) == 0;
+	     lc++) {
+	    if (read(fd, (char *) &ut, sizeof(struct utmp)) != sizeof(struct utmp))
+		break;
+	    if (strncmp(ut.line, ent.line, sizeof(ut.line)) == 0) {
+		tty = lc;
+		break;
+	    }
+	}
+    }
+    
+	     if (tty > 0 && (fd = open(UTMP_FILE, O_WRONLY, 0)) >= 0) {
 	(void)lseek(fd, (off_t)(tty * sizeof(struct utmp)), SEEK_SET);
 	(void)write(fd, (char *)&ent, sizeof(struct utmp));
 	(void)close(fd);
     }
 
+	
 #endif /* HAVE_SETUTENT */
 
     return ptyint_update_wtmp(&ent, host);
