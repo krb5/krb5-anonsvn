@@ -1,3 +1,8 @@
+Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
+
+        * lndir: Rather than printing an error because a file/directory
+		already exists, test for its existance first.
+
 Tue Nov 12 17:32:08 1996  Barry Jaspan  <bjaspan@mit.edu>
 
 	* send-pr/send-pr.sh (MAIL_AGENT): change "[-x" to "[ -x"

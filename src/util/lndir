@@ -79,12 +79,12 @@ for file in `ls -a $DIRFROM`
 do
 	if [ ! -d $DIRFROM/$file ]
 	then
-		ln -s $DIRFROM/$file .
+		test -f $file || ( ln -s $DIRFROM/$file . && echo $file )
 	else
-	       if [ $file != RCS -a $file != CVS -a $file != . -a $file != .. ]
+		if [ $file != RCS -a $file != CVS -a $file != . -a $file != .. ]
 		then
 			echo $file:
-			mkdir $file
+			test -d $file || mkdir $file
 			(cd $file
 			 pwd=`pwd`
 			 case "$DIRFROM" in
