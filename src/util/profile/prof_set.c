@@ -24,8 +24,8 @@ static errcode_t rw_setup(profile)
 	profile_t	profile;
 {
    	prf_file_t	file;
-	errcode_t	retval;
-
+	errcode_t	retval = 0;
+	
 	if (!profile)
 		return PROF_NO_PROFILE;
 
@@ -33,14 +33,54 @@ static errcode_t rw_setup(profile)
 		return PROF_MAGIC_PROFILE;
 
 	file = profile->first_file;
-	if (!(file->flags & PROFILE_FILE_RW))
+	
+#ifdef SHARE_TREE_DATA
+	prof_mutex_lock (&g_shared_trees_mutex);
+	/* If the file is shared and we want to write to it, get a lock */
+	if ((file -> data -> flags & PROFILE_FILE_SHARED) != 0) {
+		prf_data_t new_data = NULL;
+		new_data = malloc (sizeof (struct _prf_data_t));
+		if (new_data == NULL) {
+			retval = ENOMEM;
+		} else {
+			memcpy (new_data, file -> data, sizeof (struct _prf_data_t));
+			/* We can blow away the information because update will be called further down */
+			new_data -> comment = NULL;
+			new_data -> root = NULL;
+			new_data -> flags &= ~PROFILE_FILE_SHARED;
+#ifdef PROFILE_USES_PATHS
+			/* copy the file spec */
+			new_data -> filespec = malloc (strlen (file -> data -> filespec) + 1);
+			if (new_data -> filespec == NULL) {
+				retval = ENOMEM;
+			} else {
+				strcpy (new_data -> filespec, file -> data -> filespec);
+			}
+#endif /* PROFILE_USES_PATHS */
+		}
+		
+		if (retval == 0) {
+			file -> data = new_data;
+		}
+		
+		prof_mutex_unlock (&g_shared_trees_mutex);
+		
+		if (retval != 0) {
+			return retval;
+		}
+	} else {
+		prof_mutex_unlock (&g_shared_trees_mutex);
+	}
+#endif /* SHARE_TREE_DATA */
+	
+	if (!(file->data->flags & PROFILE_FILE_RW))
 		return PROF_READ_ONLY;
 
 	/* Don't update the file if we've already made modifications */
-	if (file->flags & PROFILE_FILE_DIRTY)
+	if (file->data->flags & PROFILE_FILE_DIRTY)
 		return 0;
 			
-	retval = profile_update_file(file);
+	retval = profile_update_file_data(file->data);
 	
 	return retval;
 }
@@ -73,7 +113,7 @@ profile_update_relation(profile, names, old_value, new_value)
 	if (!old_value || !*old_value)
 		return PROF_EINVAL;
 
-	section = profile->first_file->root;
+	section = profile->first_file->data->root;
 	for (cpp = names; cpp[1]; cpp++) {
 		state = 0;
 		retval = profile_find_node(section, *cpp, 0, 1,
@@ -94,7 +134,7 @@ profile_update_relation(profile, names, old_value, new_value)
 	if (retval)
 		return retval;
 
-	profile->first_file->flags |= PROFILE_FILE_DIRTY;
+	profile->first_file->data->flags |= PROFILE_FILE_DIRTY;
 	
 	return 0;
 }
@@ -121,7 +161,7 @@ profile_clear_relation(profile, names)
 	if (names == 0 || names[0] == 0 || names[1] == 0)
 		return PROF_BAD_NAMESET;
 
-	section = profile->first_file->root;
+	section = profile->first_file->data->root;
 	for (cpp = names; cpp[1]; cpp++) {
 		state = 0;
 		retval = profile_find_node(section, *cpp, 0, 1,
@@ -140,7 +180,7 @@ profile_clear_relation(profile, names)
 			return retval;
 	} while (state);
 
-	profile->first_file->flags |= PROFILE_FILE_DIRTY;
+	profile->first_file->data->flags |= PROFILE_FILE_DIRTY;
 	
 	return 0;
 }
@@ -169,7 +209,7 @@ profile_rename_section(profile, names, new_name)
 	if (names == 0 || names[0] == 0 || names[1] == 0)
 		return PROF_BAD_NAMESET;
 
-	section = profile->first_file->root;
+	section = profile->first_file->data->root;
 	for (cpp = names; cpp[1]; cpp++) {
 		state = 0;
 		retval = profile_find_node(section, *cpp, 0, 1,
@@ -190,7 +230,7 @@ profile_rename_section(profile, names, new_name)
 	if (retval)
 		return retval;
 
-	profile->first_file->flags |= PROFILE_FILE_DIRTY;
+	profile->first_file->data->flags |= PROFILE_FILE_DIRTY;
 	
 	return 0;
 }
@@ -222,7 +262,7 @@ profile_add_relation(profile, names, new_value)
 	if (names == 0 || names[0] == 0 || names[1] == 0)
 		return PROF_BAD_NAMESET;
 
-	section = profile->first_file->root;
+	section = profile->first_file->data->root;
 	for (cpp = names; cpp[1]; cpp++) {
 		state = 0;
 		retval = profile_find_node(section, *cpp, 0, 1,
@@ -245,7 +285,7 @@ profile_add_relation(profile, names, new_value)
 	if (retval)
 		return retval;
 
-	profile->first_file->flags |= PROFILE_FILE_DIRTY;
+	profile->first_file->data->flags |= PROFILE_FILE_DIRTY;
 	
 	return 0;
 }
