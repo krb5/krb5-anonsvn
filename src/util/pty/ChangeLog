@@ -1,5 +1,7 @@
 Fri Dec 27 17:09:46 1996  Tom Yu  <tlyu@mit.edu>
 
+	* Makefile.in: Fix to use OBJS.ST rather than ./OBJS.ST.
+
 	* Makefile.in:
 	* configure.in: Changes to use new library build system.
 
