@@ -885,22 +885,11 @@ kerberos_v4(client, pkt)
 	    des_new_random_key(session_key);
 #endif
 
-	    if (K4KDC_ENCTYPE_OK(k5key.enctype)) {
-		krb_create_ticket(tk, k_flags, ad->pname, ad->pinst,
-				  ad->prealm, client_host.s_addr,
-				  (char *) session_key, lifetime,
-				  kerb_time.tv_sec,
-				  s_name_data.name, s_name_data.instance,
-				  key);
-	    } else {
-		krb_cr_tkt_krb5(tk, k_flags, ad->pname, ad->pinst,
-				ad->prealm, client_host.s_addr,
-				(char *) session_key, lifetime,
-				kerb_time.tv_sec,
-				s_name_data.name, s_name_data.instance,
-				&k5key);
-	    }
-	    krb5_free_keyblock_contents(kdc_context, &k5key);
+	    krb_create_ticket(tk, k_flags, ad->pname, ad->pinst,
+			      ad->prealm, client_host.s_addr,
+			      (char *) session_key, lifetime, kerb_time.tv_sec,
+			      s_name_data.name, s_name_data.instance,
+			      key);
 	    memset(key, 0, sizeof(key));
 	    memset(key_s, 0, sizeof(key_s));
 
