@@ -11,62 +11,67 @@ HEAPSIZE	8192
 
 EXPORTS
 	WEP					@1001 RESIDENTNAME
-	LIBMAIN					@1002
-	GSS_ACQUIRE_CRED			@1
-	GSS_RELEASE_CRED			@2
-	GSS_INIT_SEC_CONTEXT			@3
-	GSS_ACCEPT_SEC_CONTEXT			@4
-	GSS_PROCESS_CONTEXT_TOKEN		@5
-	GSS_DELETE_SEC_CONTEXT			@6
-	GSS_CONTEXT_TIME			@7
-	GSS_SIGN				@8
-	GSS_VERIFY				@9
-	GSS_SEAL				@10
-	GSS_UNSEAL				@11
-	GSS_DISPLAY_STATUS			@12
-	GSS_INDICATE_MECHS			@13
-	GSS_COMPARE_NAME			@14
-	GSS_DISPLAY_NAME			@15
-	GSS_IMPORT_NAME				@16
-	GSS_RELEASE_NAME			@17
-	GSS_RELEASE_BUFFER			@18
-	GSS_RELEASE_OID_SET			@19
-	GSS_INQUIRE_CRED			@20
-
+	LibMain					@1002
+;
+	gss_acquire_cred
+	gss_release_cred
+	gss_init_sec_context
+	gss_accept_sec_context
+	gss_process_context_token
+	gss_delete_sec_context
+	gss_context_time
+	gss_sign
+	gss_verify
+	gss_seal
+	gss_unseal
+	gss_display_status
+	gss_indicate_mechs
+	gss_compare_name
+	gss_display_name
+	gss_import_name
+	gss_release_name
+	gss_release_buffer
+	gss_release_oid_set
+	gss_inquire_cred
+;
 ; GSS-API v2  additional credential calls
 ;
-; XXX we need to add the numbers to this!
+	gss_add_cred
+	gss_inquire_cred_by_mech
 ;
-	GSS_ADD_CRED
-	GSS_INQUIRE_CRED_BY_MECH
-
 ; GSS-API v2  additional context-level calls
 ;
-	GSS_INQUIRE_CONTEXT
-	GSS_WRAP_SIZE_LIMIT
-	GSS_EXPORT_SEC_CONTEXT
-	GSS_IMPORT_SEC_CONTEXT
-
+	gss_inquire_context
+	gss_wrap_size_limit
+	gss_export_sec_context
+	gss_import_sec_context
+;
 ; GSS-API v2  additional calls for OID and OID_set operations
 ;
-	GSS_RELEASE_OID
-	GSS_CREATE_EMPTY_OID_SET
-	GSS_ADD_OID_SET_MEMBER
-	GSS_TEST_OID_SET_MEMBER
-	GSS_OID_TO_STR
-	GSS_STR_TO_OID
-
+	gss_release_oid
+	gss_create_empty_oid_set
+	gss_add_oid_set_member
+	gss_test_oid_set_member
+	gss_oid_to_str
+	gss_str_to_oid
+;
 ; GSS-API v2  renamed message protection calls
 ;
-	GSS_WRAP
-	GSS_UNWRAP
-	GSS_GET_MIC
-	GSS_VERIFY_MIC
-
+	gss_wrap
+	gss_unwrap
+	gss_get_mic
+	gss_verify_mic
+;
 ; GSS-API v2  future extensions
 ;
-	GSS_INQUIRE_NAMES_FOR_MECH
-;	GSS_INQUIRE_MECHS_FOR_NAME
-;	GSS_CANONICALIZE_NAME
-;	GSS_EXPORT_NAME
-
+	gss_inquire_names_for_mech
+;	gss_inquire_mechs_for_name
+;	gss_canonicalize_name
+;	gss_export_name
+;
+; GSS-API variables
+;
+	gss_nt_user_name
+	gss_nt_machine_uid_name
+	gss_nt_string_uid_name
+	gss_nt_service_name
