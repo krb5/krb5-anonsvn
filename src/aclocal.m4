@@ -852,40 +852,20 @@ define(USE_KRB5UTIL_LIBRARY,[
 kutil_deplib="\[$](TOPLIBD)/libkrb5util.a"
 kutil_lib=-lkrb5util])
 dnl
-dnl This rule tells KRB5_LIBRARIES to include the aname dbm library.
+dnl This rule tells KRB5_LIBRARIES to include the aname db library.
 dnl
-kaname_deplib=''
-kaname_libs=''
 define(USE_ANAME,[
-WITH_ANAME_DB
-kaname_libs="$dblibs"
-if test "$dbval" = "db"; then
-  if test -n "$krb5_cv_shlib_version_libdb"; then
-    kaname_deplib="\$(TOPLIBD)/libdb.$krb5_cv_shlibs_ext.$krb5_cv_shlib_version_libdb"
-  else
-    kaname_deplib="\$(TOPLIBD)/libdb.$krb5_cv_noshlibs_ext"
-  fi
-fi
+USE_DB_LIBRARY
 ])dnl
 dnl
-dnl This rule tells KRB5_LIBRARIES to include the kdb5 and dbm libraries.
+dnl This rule tells KRB5_LIBRARIES to include the kdb5 and db libraries.
 dnl
 kdb5_deplib=''
 kdb5_lib=''
-kdbm_deplib=''
-kdbm_libs=''
 define(USE_KDB5_LIBRARY,[
 kdb5_deplib="\[$](TOPLIBD)/libkdb5.a"
 kdb5_lib=-lkdb5
-WITH_KDB_DB
-kdbm_libs="$dblibs"
-if test "$dbval" = "db"; then
-  if test -n "$krb5_cv_shlib_version_libdb"; then
-    kdbm_deplib="\$(TOPLIBD)/libdb.$krb5_cv_shlibs_ext.$krb5_cv_shlib_version_libdb"
-  else
-    kdbm_deplib="\$(TOPLIBD)/libdb.$krb5_cv_noshlibs_ext"
-  fi
-fi
+USE_DB_LIBRARY
 ])
 dnl
 dnl This rule tells KRB5_LIBRARIES to include the kdb4 library.
@@ -936,12 +916,12 @@ dnl
 define(KRB5_LIBRARIES,[
 dnl this is ugly, but it wouldn't be necessary if krb5 didn't abuse
 dnl configure so badly
-SRVDEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmsrv_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
-SRVLIBS="\[$](LOCAL_LIBRARIES) $kadmsrv_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
-CLNTDEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmclnt_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
-CLNTLIBS="\[$](LOCAL_LIBRARIES) $kadmclnt_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
-DEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmclnt_deplib $kadmsrv_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
-LIBS="\[$](LOCAL_LIBRARIES) $kadmclnt_lib $kadmsrv_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
+SRVDEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmsrv_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
+SRVLIBS="\[$](LOCAL_LIBRARIES) $kadmsrv_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
+CLNTDEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmclnt_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
+CLNTLIBS="\[$](LOCAL_LIBRARIES) $kadmclnt_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
+DEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmclnt_deplib $kadmsrv_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
+LIBS="\[$](LOCAL_LIBRARIES) $kadmclnt_lib $kadmsrv_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
 LDFLAGS="$LDFLAGS -L\$(TOPLIBD)"
 AC_SUBST(LDFLAGS)
 AC_SUBST(LDARGS)
