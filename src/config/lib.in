@@ -10,6 +10,17 @@
 # STOBJLISTS	list of files, each of which is an OBJS.ST created by
 #			libobj.in; *DO NOT* use ./OBJS.ST for the current
 #			directory as that will cause some makes to lose.
+# SHLIB_EXPDEPS	list of libraries that this one has explicit
+#			dependencies on, pref. in the form libfoo$(SHLIBEXT)
+# SHLIB_EXPLIBS	list of libraries that this one has explicit
+#			dependencies on, in "-lfoo" form.
+# SHLIB_DIRS	list of directories where $(SHLIB_EXPLIBS) can be
+#			found, in the form -Ldir1 -Ldir2 ...
+#			since there are very few systems where -L is the
+#			wrong thing (notable exception of SunOS but we
+#			deal with it...)
+# SHLIB_RPATH	rpath directories to search; given in the
+#			form $(SHLIB_RFLAG)dir1:dir2 ...
 # RELDIR	path to this directory relative to $(TOPLIBD)
 
 ## Parameters to be set by configure:
@@ -47,8 +58,16 @@ PFLIBEXT=@PFLIBEXT@
 # "cc -G", "ld -Bshareable", etc.
 LDCOMBINE=@LDCOMBINE@
 
-# Misc args to tack on the tail of LDCOMBINE, e.g. "-lc"
+# Misc args to tack on the tail of LDCOMBINE
 LDCOMBINE_TAIL=@LDCOMBINE_TAIL@
+
+# flag that preceds an rpath directory, usually "-R".
+SHLIB_RFLAG=@SHLIB_RFLAG@
+
+# flags for explicit libraries depending on this one,
+# e.g. "$(SHLIB_RPATH) $(SHLIB_SHLIB_DIRFLAGS)"
+# Note that $(SHLIB_EXPLIBS) is not included here.
+SHLIB_EXPFLAGS=@SHLIB_EXPFLAGS@
 
 # STOBJLISTS=dir1/OBJS.ST dir2/OBJS.ST etc...
 SHOBJLISTS=$(STOBJLISTS:.ST=.SH)
@@ -64,7 +83,7 @@ lib$(LIB)$(STLIBEXT): $(STOBJLISTS)
 				$$d/OBJS.ST; done`
 	$(RANLIB) $@
 
-lib$(LIB)$(SHLIBVEXT): $(SHOBJLISTS)
+lib$(LIB)$(SHLIBVEXT): $(SHOBJLISTS) $(SHLIB_EXPDEPS)
 	$(RM) $@
 	@echo "building shared $(LIB) library ($(LIBMAJOR).$(LIBMINOR))"
 	@dirs=`echo $(SHOBJLISTS) | \
@@ -72,6 +91,8 @@ lib$(LIB)$(SHLIBVEXT): $(SHOBJLISTS)
 		$(LDCOMBINE) -o $@ `for d in $$dirs; do \
 			sed -e "s%^%$$d/%" -e "s% % $$d/%g" \
 				$$d/OBJS.SH; done` \
+			$(SHLIB_EXPFLAGS) \
+			$(SHLIB_EXPLIBS) \
 			$(LDCOMBINE_TAIL)
 lib$(LIB)$(SHLIBEXT): lib$(LIB)$(SHLIBVEXT)
 	$(RM) $@
