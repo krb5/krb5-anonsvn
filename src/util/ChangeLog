@@ -1,9 +1,18 @@
+Mon Nov 25 21:00:24 1996  Tom Yu  <tlyu@mit.edu>
+
+	* mkrel: Add support for --srconly, --doconly, --nocheckout,
+	--repository, etc.  They do the obvious things.
+
 Mon Nov 25 17:02:03 EST 1996	Richard Basch	<basch@lehman.com>
 
 	* makeshlib.sh: Depending what compiler and linker is in your
 		path, the Solaris build may fail.  Since we are making
 		assumptions about the link options, just be explicit
 		about the linker's path (/usr/ccs/bin/ld)
+
+Fri Nov 22 11:08:16 1996  Sam Hartman  <hartmans@tertius.mit.edu>
+
+	* makeshlib.sh (VERSION): Fix SunOS shared libs [226]
 
 Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
 
