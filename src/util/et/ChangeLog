@@ -1,3 +1,9 @@
+Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
+
+        * Makefile.in: win32 build
+	* com_err.h error_table.h init_et.c internal.h
+		Win32 support
+
 Wed Nov 13 19:19:08 1996  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in (clean-unix): Remove shared/*.

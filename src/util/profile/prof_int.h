@@ -11,22 +11,16 @@
 #define PROTOTYPE(x) ()
 #endif
 
-#if defined(_MSDOS)
-/* From k5-config.h */
-#define SIZEOF_INT      2
-#define SIZEOF_SHORT    2
-#define SIZEOF_LONG     4
-#endif 
-
-#if defined(_WIN32)
-#define SIZEOF_INT      4
-#define SIZEOF_SHORT    2
-#define SIZEOF_LONG     4
+#if defined(_MSDOS) || defined(_WIN32) || defined(_MACINTOSH)
+#include <win-mac.h>
 #endif
 
-#if defined(_MACINTOSH)
-#define NO_SYS_TYPES_H
-#define NO_SYS_STAT_H
+#ifndef KRB5_CALLCONV
+#define KRB5_CALLCONV
+#define KRB5_CALLCONV_C
+#define KRB5_DLLIMP
+#define FAR
+#define NEAR
 #endif
 
 typedef long errcode_t;
@@ -135,22 +129,23 @@ extern errcode_t profile_close_file
 
 /* prof_init.c */
 
-errcode_t profile_init
+extern errcode_t profile_init
 	PROTOTYPE ((const char **filenames, profile_t *ret_profile));
 
-errcode_t profile_init_path
+extern errcode_t profile_init_path
 	PROTOTYPE ((const char *filepath, profile_t *ret_profile));
 
 extern void profile_release
 	PROTOTYPE ((profile_t profile));
 
-
 extern errcode_t profile_get_values
 	PROTOTYPE ((profile_t profile, const char **names, char ***ret_values));
+
 extern errcode_t profile_get_string
 	PROTOTYPE((profile_t profile, const char *name, const char *subname, 
 			const char *subsubname, const char *def_val,
 			char **ret_string));
+
 extern errcode_t profile_get_integer
 	PROTOTYPE((profile_t profile, const char *name, const char *subname,
 			const char *subsubname, int def_val,

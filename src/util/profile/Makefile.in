@@ -2,6 +2,7 @@ CFLAGS = $(CCOPTS) $(DEFS) $(LOCALINCLUDE) $(DOSDEFS)
 
 ##DOSBUILDTOP = ..\..
 ##DOSLIBNAME=profile.lib
+##DOSOBJFILE=profile.lst
 ##DOSDOSDEFS=-DHAVE_STDLIB_H
 
 LOCALINCLUDE=-I. -I$(srcdir)/../et
@@ -32,7 +33,11 @@ all-unix:: shared includes libprofile.a test_parse test_profile
 shared:
 	mkdir shared
 
-all-windows: $(OBJS)
+all-windows:: $(OBJFILE)
+
+##DOS$(OBJFILE):: $(OBJS)
+##DOS	$(RM) $(OBJFILE)
+##DOS	$(LIBECHO) *.obj > $(OBJFILE)
 
 awk-windows:
 	$(AWK) -f $(BUILDTOP)/util/et/et_h.awk outfile=prof_err.h prof_err.et

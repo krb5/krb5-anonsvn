@@ -3,6 +3,8 @@ SED = sed
 
 ##DOSBUILDTOP = ..\..
 ##DOSLIBNAME=comerr.lib
+##DOSXTRA=-DSYS_ERRLIST_DECLARED
+##DOSOBJFILE=comerr.lst
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
@@ -14,7 +16,10 @@ INSTALLFILE = cp
 
 LINTFLAGS=-uhvb 
 LINTFILES= error_message.c et_name.c init_et.c com_err.c
-LIBOBJS= error_message.o et_name.o init_et.o com_err.o
+LIBOBJS=com_err.$(OBJEXT) \
+	error_message.$(OBJEXT) \
+	et_name.$(OBJEXT) \
+	init_et.$(OBJEXT)
 # for et_lex.lex.c include in error_table.y
 LOCALINCLUDE=-I. -I$(srcdir)
 
@@ -36,8 +41,12 @@ SHLIB_LDFLAGS= $(LDFLAGS) @SHLIB_RPATH_DIRS@
 SHLIB_LIBDIRS= @SHLIB_LIBDIRS@
 STEXT=@STEXT@
 
-all-windows: com_err.obj error_message.obj et_name.obj
+all-windows:: $(OBJFILE)
 	copy com_err.h $(BUILDTOP)\include
+
+##DOS$(OBJFILE):: $(LIBOBJS)
+##DOS	$(RM) $(OBJFILE)
+##DOS	$(LIBECHO) *.obj > $(OBJFILE)
 
 #
 # what to build...

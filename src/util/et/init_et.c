@@ -11,7 +11,9 @@
 #include "error_table.h"
 #include "mit-sipb-copyright.h"
 
+#ifndef _WIN32
 extern char *malloc(), *realloc();
+#endif
 
 struct foobar {
     struct et_list etl;

@@ -60,7 +60,6 @@ int FAR KRB5_CALLCONV MessageBox (void FAR *, const char FAR*, const char FAR*, 
 #define INTERFACE
 #define INTERFACE_C
 #endif /* KRB5_CALLCONV */
-#endif
 
 #ifndef FAR
 #define FAR

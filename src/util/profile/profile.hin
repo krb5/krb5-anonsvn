@@ -2,6 +2,9 @@
  * profile.h
  */
 
+#ifndef _PROFILE_H
+#define _PROFILE_H
+
 typedef struct _profile_t *profile_t;
 
 #if !defined(PROTOTYPE)
@@ -11,6 +14,16 @@ typedef struct _profile_t *profile_t;
 #define PROTOTYPE(x) ()
 #endif
 #endif
+
+#if defined(_MSDOS) || defined(_WIN32) || defined(_MACINTOSH)
+#include <win-mac.h>
+#endif
+
+#ifndef KRB5_CALLCONV
+#define KRB5_CALLCONV
+#define KRB5_DLLIMP
+#endif
+
 
 extern long profile_init
 	PROTOTYPE ((const char **filenames, profile_t *ret_profile));
@@ -32,3 +45,4 @@ extern long profile_get_integer
 			const char *subsubname, int def_val,
 			int *ret_default));
 
+#endif /* _PROFILE_H */
