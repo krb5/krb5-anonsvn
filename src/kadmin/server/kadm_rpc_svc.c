@@ -5,6 +5,9 @@
  * $Source$
  * 
  * $Log$
+ * Revision 1.11.2.2  1996/07/09 20:07:57  marc
+ * 	* kadm_rpc_svc.c: renamed <ovsec_admin/foo.h> to <kadm5/foo.h>
+ *
  * Revision 1.11.2.1  1996/06/20 21:56:44  marc
  * File added to the repository on a branch
  *
@@ -62,9 +65,9 @@ static char *rcsid = "$Header$";
 #include <rpc/rpc.h>
 #include <syslog.h>
 #include <memory.h>
-#include <ovsec_admin/kadm_rpc.h>
+#include <kadm5/kadm_rpc.h>
 #include <krb5.h>
-#include <ovsec_admin/admin.h>
+#include <kadm5/admin.h>
 
 /*
  * Function: kadm_1
