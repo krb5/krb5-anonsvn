@@ -1,5 +1,8 @@
 Fri Jul 19 15:31:22 1996  Marc Horowitz  <marc@mit.edu>
 
+	* Makefile.in (CFLAGS): the tests in Makefile.in have been
+ 	superseded by other tests in the new admin system.
+
 	* configure.in: don't build create, since it doesn't work with the
  	new admin system, and isn't used by anything, anyway.
 
