@@ -620,7 +620,7 @@ krb5_error_code krb5_decrypt_data
 /* #define	KDC_OPT_RESERVED	0x00100000 */
 /* #define	KDC_OPT_RESERVED	0x00080000 */
 /* #define	KDC_OPT_RESERVED	0x00040000 */
-/* #define	KDC_OPT_RESERVED	0x00020000 */
+#define	KDC_OPT_REQUEST_ANONYMOUS	0x00020000
 /* #define	KDC_OPT_RESERVED	0x00010000 */
 /* #define	KDC_OPT_RESERVED	0x00008000 */
 /* #define	KDC_OPT_RESERVED	0x00004000 */
@@ -632,7 +632,7 @@ krb5_error_code krb5_decrypt_data
 /* #define	KDC_OPT_RESERVED	0x00000100 */
 /* #define	KDC_OPT_RESERVED	0x00000080 */
 /* #define	KDC_OPT_RESERVED	0x00000040 */
-/* #define	KDC_OPT_RESERVED	0x00000020 */
+#define	KDC_OPT_DISABLE_TRANSITED_CHECK	0x00000020
 #define	KDC_OPT_RENEWABLE_OK		0x00000010
 #define	KDC_OPT_ENC_TKT_IN_SKEY		0x00000008
 /* #define	KDC_OPT_UNUSED		0x00000004 */
@@ -708,9 +708,9 @@ krb5_error_code krb5_decrypt_data
 #define	TKT_FLG_INITIAL			0x00400000
 #define	TKT_FLG_PRE_AUTH		0x00200000
 #define	TKT_FLG_HW_AUTH			0x00100000
-/* #define	TKT_FLG_RESERVED	0x00080000 */
-/* #define	TKT_FLG_RESERVED	0x00040000 */
-/* #define	TKT_FLG_RESERVED	0x00020000 */
+#define	TKT_FLG_TRANSIT_POLICY_CHECKED	0x00080000
+#define	TKT_FLG_OK_AS_DELEGATE		0x00040000
+#define	TKT_FLG_ANONYMOUS		0x00020000
 /* #define	TKT_FLG_RESERVED	0x00010000 */
 /* #define	TKT_FLG_RESERVED	0x00008000 */
 /* #define	TKT_FLG_RESERVED	0x00004000 */
@@ -1394,13 +1394,15 @@ krb5_error_code krb5_get_default_in_tkt_ktypes
 krb5_error_code krb5_set_default_tgs_ktypes
 	KRB5_PROTOTYPE((krb5_context,
 		krb5_const krb5_enctype *));
-krb5_error_code krb5_get_tgs_ktypes
+krb5_error_code KRB5_CALLCONV krb5_get_tgs_ktypes
 	KRB5_PROTOTYPE((krb5_context,
 		krb5_const_principal,
 		krb5_enctype **));
 
 krb5_error_code krb5_get_permitted_enctypes
 	KRB5_PROTOTYPE((krb5_context, krb5_enctype **));
+void KRB5_CALLCONV krb5_free_ktypes
+	KRB5_PROTOTYPE ((krb5_context, krb5_enctype *));
 
 krb5_boolean krb5_is_permitted_enctype
 	KRB5_PROTOTYPE((krb5_context, krb5_enctype));
@@ -1799,6 +1801,9 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_get_default_realm
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_set_default_realm
 	KRB5_PROTOTYPE((krb5_context,
 		   krb5_const char FAR * ));
+KRB5_DLLIMP void KRB5_CALLCONV krb5_free_default_realm
+	KRB5_PROTOTYPE((krb5_context,
+		   char FAR * ));
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_sname_to_principal
 	KRB5_PROTOTYPE((krb5_context,
 		krb5_const char FAR *,
@@ -1976,6 +1981,15 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_recvauth
 		krb5_int32, 
 		krb5_keytab,
 		krb5_ticket FAR * FAR *));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_recvauth_version
+	KRB5_PROTOTYPE((krb5_context,
+		krb5_auth_context FAR *,
+		krb5_pointer,
+		krb5_principal,
+		krb5_int32, 
+		krb5_keytab,
+		krb5_ticket FAR * FAR *,
+		krb5_data FAR *));
 
 krb5_error_code krb5_walk_realm_tree
 	KRB5_PROTOTYPE((krb5_context,
@@ -2383,6 +2397,24 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV
 krb5_decode_ticket
 KRB5_PROTOTYPE((const krb5_data *code, 
 		krb5_ticket **rep));
+
+KRB5_DLLIMP void KRB5_CALLCONV
+krb5_appdefault_string
+KRB5_PROTOTYPE((krb5_context context,
+		const char *appname,  
+	        const krb5_data *realm,
+ 		const char *option,
+		const char *default_value,
+		char ** ret_value));
+
+KRB5_DLLIMP void KRB5_CALLCONV
+krb5_appdefault_boolean
+KRB5_PROTOTYPE((krb5_context context,
+		const char *appname,  
+	        const krb5_data *realm,
+ 		const char *option,
+		int default_value,
+		int *ret_value));
 
 /*
  * The realm iterator functions
