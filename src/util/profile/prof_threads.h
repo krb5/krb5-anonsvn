@@ -15,6 +15,8 @@ typedef pthread_mutex_t prof_mutex;
 
 #define prof_mutex_init(mutex)											\
 	pthread_mutex_init (mutex, /* default attributes */ NULL)
+#define prof_mutex_destroy(mutex)										\
+	pthread_mutex_destroy (mutex)
 #define prof_mutex_lock(mutex)											\
 	pthread_mutex_lock (mutex)
 #define prof_mutex_unlock(mutex)										\
@@ -28,6 +30,7 @@ typedef pthread_mutex_t prof_mutex;
 typedef struct opaque_prof_mutex*	prof_mutex;
 
 int	prof_mutex_init (prof_mutex*		mutex);
+int	prof_mutex_destroy (prof_mutex*		mutex);
 int prof_mutex_lock (prof_mutex*		mutex);
 int prof_mutex_unlock (prof_mutex*		mutex);
 

@@ -1,3 +1,7 @@
+2002-06-05 Alexandra Ellwood <lxs@mit.edu>
+    * prof_threads.[ch]: Added prof_mutex_destroy so we don't leak memory
+    on library unload.
+
 2002-06-04 Alexandra Ellwood <lxs@mit.edu>
     * prof_file.c: Don't double lock the mutex (causes hang).  Also, only 
     check timestamp if the file is already in the shared tree data.  Otherwise

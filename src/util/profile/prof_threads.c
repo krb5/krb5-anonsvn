@@ -12,6 +12,7 @@ multi-threaded apps calling Kerberos from different threads right now... */
 #if defined (macintosh)
 
 int	prof_mutex_init (prof_mutex*		mutex) {return 0;}
+int	prof_mutex_destroy (prof_mutex*		mutex) {return 0;}
 int prof_mutex_lock (prof_mutex*		mutex) {return 0;}
 int prof_mutex_unlock (prof_mutex*		mutex) {return 0;}
 
