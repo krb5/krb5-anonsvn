@@ -1,3 +1,8 @@
+Wed Apr 17 20:56:51 1996  Marc Horowitz  <marc@mit.edu>
+
+	* k5-int.h, port-sockets.h: moved socket stuff into a separate
+	file so that gssapi doesn't have to include k5-int.h
+
 Thu Mar 28 19:55:04 1996  Richard Basch  <basch@lehman.com>
 
 	* krb5.hin: Added ENCTYPE_DES3_CBC_RAW
