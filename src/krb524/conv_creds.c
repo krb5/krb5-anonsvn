@@ -25,9 +25,13 @@
 #include <string.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#if TARGET_OS_MAC
+#include <Kerberos/krb.h>
+#include <Kerberos/krb524.h>
+#else
 #include <krb.h>
-
 #include "krb524.h"
+#endif
 
 krb5_error_code krb524_convert_creds_plain
 KRB5_PROTOTYPE((krb5_context context, krb5_creds *v5creds, 
@@ -139,7 +143,7 @@ krb524_convert_creds_plain(context, v5creds, v4creds)
 	  if (krb524_debug)
 	       fprintf(stderr, "v5 session keyblock length %d != C_Block size %d\n",
 		       v5creds->keyblock.length,
-		       sizeof(C_Block));
+		       (int) sizeof(C_Block));
 	  return KRB524_BADKEY;
      } else
 	  memcpy(v4creds->session, (char *) v5creds->keyblock.contents,
@@ -147,10 +151,16 @@ krb524_convert_creds_plain(context, v5creds, v4creds)
 
      /* V4 has no concept of authtime or renew_till, so ignore them */
      /* V4 lifetime is 1 byte, in 5 minute increments */
+#if TARGET_OS_MAC
+    /* krb4 long lifetime support --- how should this be done on Unix? */
+    v4creds->lifetime = krb_time_to_life (v5creds->times.starttime, 
+                                          v5creds->times.endtime);
+#else
      lifetime = 
 	  ((v5creds->times.endtime - v5creds->times.starttime) / 300);
      v4creds->lifetime =
 	  ((lifetime > 0xff) ? 0xff : lifetime);
+#endif
      v4creds->issue_date = v5creds->times.starttime;
 
 #if 0
