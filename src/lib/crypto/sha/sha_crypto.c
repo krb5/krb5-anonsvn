@@ -6,26 +6,26 @@
 
 static krb5_error_code
 krb5_sha_crypto_sum_func
-	PROTOTYPE((krb5_pointer in,
-		   size_t in_length,
-		   krb5_pointer seed,
-		   size_t seed_length,
+	PROTOTYPE((krb5_const krb5_pointer in,
+		   krb5_const size_t in_length,
+		   krb5_const krb5_pointer seed,
+		   krb5_const size_t seed_length,
 		   krb5_checksum FAR *outcksum));
 
 static krb5_error_code
 krb5_sha_crypto_verify_func
-	PROTOTYPE((krb5_checksum FAR *cksum,
-		   krb5_pointer in,
-		   size_t in_length,
-		   krb5_pointer seed,
-		   size_t seed_length));
+	PROTOTYPE((krb5_const krb5_checksum FAR *cksum,
+		   krb5_const krb5_pointer in,
+		   krb5_const size_t in_length,
+		   krb5_const krb5_pointer seed,
+		   krb5_const size_t seed_length));
 
 static krb5_error_code
 shs_crypto_sum_func(in, in_length, seed, seed_length, outcksum)
-    krb5_pointer in;
-    size_t in_length;
-    krb5_pointer seed;
-    size_t seed_length;
+    krb5_const krb5_pointer in;
+    krb5_const size_t in_length;
+    krb5_const krb5_pointer seed;
+    krb5_const size_t seed_length;
     krb5_checksum FAR *outcksum;
 {
     krb5_error_code retval;
@@ -42,11 +42,11 @@ shs_crypto_sum_func(in, in_length, seed, seed_length, outcksum)
 
 static krb5_error_code
 shs_crypto_verify_func(cksum, in, in_length, seed, seed_length)
-    krb5_checksum FAR *cksum;
-    krb5_pointer in;
-    size_t in_length;
-    krb5_pointer seed;
-    size_t seed_length;
+    krb5_const krb5_checksum FAR *cksum;
+    krb5_const krb5_pointer in;
+    krb5_const size_t in_length;
+    krb5_const krb5_pointer seed;
+    krb5_const size_t seed_length;
 {
     krb5_octet digest[HMAC_SHA_CKSUM_LENGTH];
     krb5_error_code retval;
