@@ -57,7 +57,7 @@ krb5_error_code do_connection(), lookup_service_key(), kdc_get_server_key();
 void usage(context)
      krb5_context context;
 {
-     fprintf(stderr, "Usage: %s [-m[aster]] [-k[eytab]]\n", whoami);
+     fprintf(stderr, "Usage: %s [-k[eytab]] [-m[aster] [-r realm]]\n", whoami);
      cleanup_and_exit(1, context);
 }
 
@@ -90,6 +90,7 @@ int main(argc, argv)
      fd_set rfds;
      krb5_context context;
      krb5_error_code retval;
+     kadm5_config_params config_params;
 
      retval = krb5_init_context(&context);
      if (retval) {
@@ -101,11 +102,20 @@ int main(argc, argv)
 
      argv++; argc--;
      use_master = use_keytab = 0;
+     config_params.mask = 0;
+     
      while (argc) {
 	  if (strncmp(*argv, "-k", 2) == 0)
 	       use_keytab = 1;
 	  else if (strncmp(*argv, "-m", 2) == 0)
 	       use_master = 1;
+	  else if (strcmp(*argv, "-r") == 0) {
+	       argv++; argc--;
+	       if (argc == 0 || !use_master)
+		    usage(context);
+	       config_params.mask |= KADM5_CONFIG_REALM;
+	       config_params.realm = *argv;
+	  }
 	  else
 	       break;
 	  argv++; argc--;
@@ -123,8 +133,7 @@ int main(argc, argv)
      if (use_keytab)
 	  init_keytab(context);
      if (use_master)
-	  /* someday maybe there will be some config param options */
-	  init_master(context, NULL);
+	  init_master(context, &config_params);
 
      memset((char *) &saddr, 0, sizeof(struct sockaddr_in));
      saddr.sin_family = AF_INET;
@@ -238,6 +247,7 @@ krb5_error_code do_connection(s, context)
      krb5_data msgdata, tktdata;
      char msgbuf[MSGSIZE], tktbuf[TKT_BUFSIZ], *p;
      int n, ret, saddrlen;
+     krb5_kvno v4kvno;
 
      /* Clear out keyblock contents so we don't accidentally free the stack.*/
      v5_service_key.contents = v4_service_key.contents = 0;
@@ -277,14 +287,28 @@ krb5_error_code do_connection(s, context)
 	  printf("V5 ticket decoded\n");
      
      if ((ret = lookup_service_key(context, v5tkt->server,
-				   v5tkt->enc_part.enctype, 
-				   &v5_service_key)))
+				   v5tkt->enc_part.enctype,
+				   v5tkt->enc_part.kvno,
+				   &v5_service_key, NULL)))
 	  goto error;
 
      if ((ret = lookup_service_key(context, v5tkt->server,
+				   ENCTYPE_DES3_CBC_RAW,
+				   0, /* highest kvno */
+				   &v4_service_key, &v4kvno)) &&
+	 (ret = lookup_service_key(context, v5tkt->server,
+				   ENCTYPE_LOCAL_DES3_HMAC_SHA1,
+				   0,
+				   &v4_service_key, &v4kvno)) &&
+	 (ret = lookup_service_key(context, v5tkt->server,
+				   ENCTYPE_DES3_HMAC_SHA1,
+				   0,
+				   &v4_service_key, &v4kvno)) &&
+	 (ret = lookup_service_key(context, v5tkt->server,
 				   ENCTYPE_DES_CBC_CRC,
-				   &v4_service_key)))
-	  goto error;
+				   0,
+				   &v4_service_key, &v4kvno)))
+	 goto error;
 
      if (debug)
 	  printf("service key retrieved\n");
@@ -319,7 +343,7 @@ error:
      if (ret)
 	  goto write_msg;
 
-     n = htonl(v5tkt->enc_part.kvno);
+     n = htonl(v4kvno);
      memcpy(p, (char *) &n, sizeof(int));
      p += sizeof(int);
      msgdata.length += sizeof(int);
@@ -348,32 +372,35 @@ write_msg:
      return ret;
 }
 
-krb5_error_code lookup_service_key(context, p, ktype, key)
+krb5_error_code lookup_service_key(context, p, ktype, kvno, key, kvnop)
      krb5_context context;
      krb5_principal p;
      krb5_enctype ktype;
+     krb5_kvno kvno;
      krb5_keyblock *key;
+     krb5_kvno *kvnop;
 {
      int ret;
      krb5_keytab_entry entry;
 
      if (use_keytab) {
-	  if ((ret = krb5_kt_get_entry(context, kt, p, 0, ktype, &entry)))
+	  if ((ret = krb5_kt_get_entry(context, kt, p, kvno, ktype, &entry)))
 	       return ret;
 	  memcpy(key, (char *) &entry.key, sizeof(krb5_keyblock));
 	  return 0;
      } else if (use_master) {
-	  return kdc_get_server_key(context, p, key, NULL, ktype);
+	  return kdc_get_server_key(context, p, key, kvnop, ktype, kvno);
      }
      return 0;
 }
 
-krb5_error_code kdc_get_server_key(context, service, key, kvno, ktype)
+krb5_error_code kdc_get_server_key(context, service, key, kvnop, ktype, kvno)
     krb5_context context;
     krb5_principal service;
     krb5_keyblock *key;
-    krb5_kvno *kvno;
+    krb5_kvno *kvnop;
     krb5_enctype ktype;
+    krb5_kvno kvno;
 {
     krb5_error_code ret;
     kadm5_principal_ent_rec server;
@@ -394,14 +421,14 @@ krb5_error_code kdc_get_server_key(context, service, key, kvno, ktype)
 				 ktype,
 				 (ktype == ENCTYPE_DES_CBC_CRC) ? 
 				 KRB5_KDB_SALTTYPE_V4 : -1,
-				 -1,
-				 key, NULL, kvno)) &&
+				 kvno,
+				 key, NULL, kvnop)) &&
 	(ret = kadm5_decrypt_key(handle,
 				 &server,
 				 ktype,
 				 -1,
-				 -1,
-				 key, NULL, kvno))) {
+				 kvno,
+				 key, NULL, kvnop))) {
 	 kadm5_free_principal_ent(handle, &server);
 	 return (KRB5KDC_ERR_S_PRINCIPAL_UNKNOWN);
     }

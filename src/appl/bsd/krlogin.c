@@ -61,6 +61,11 @@ char copyright[] =
 #include <setjmp.h>
 #include <netdb.h>
      
+#ifdef HAVE_SYS_FILIO_H
+/* Solaris needs <sys/filio.h> for FIONREAD */
+#include <sys/filio.h>
+#endif
+
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
@@ -120,7 +125,7 @@ char copyright[] =
 #define TIOCPKT_FLUSHWRITE      0x02
 #endif
 
-#ifdef __386BSD__
+#ifdef HAVE_SYS_IOCTL_COMPAT_H
 #include <sys/ioctl_compat.h>
 #endif
 
@@ -1206,6 +1211,8 @@ void oob()
     mark = 0;
     
     recv(rem, &mark, 1, MSG_OOB);
+
+
     if (mark & TIOCPKT_WINDOW) {
 	/*
 	 * Let server know about window size changes
@@ -1271,6 +1278,7 @@ void oob()
 	    if (atmark)
 	      break;
 	    n = read(rem, waste, sizeof (waste));
+	    printf("tossed %d bytes\n", n);
 	    if (n <= 0)
 	      break;
 return;
@@ -1354,6 +1362,13 @@ fd_set readset, excset, writeset;
 		bufp += n;
 	    }
 	    if (FD_ISSET(rem, &readset)) {
+		{
+		    int x;
+		    
+		    if (!ioctl(rem, FIONREAD, &x));
+
+		}
+
 	  	rcvcnt = rcmd_stream_read(rem, rcvbuf, sizeof (rcvbuf));
 		if (rcvcnt == 0)
 		    return (0);
