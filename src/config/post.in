@@ -55,7 +55,7 @@ $(top_srcdir)/config.status: $(top_srcdir)/configure
 #	@case "`echo '$(MAKEFLAGS)'|sed -e 's/ --.*$$//'`" in \
 #		*[ik]*) e=:;; *) e="exit 1";; esac;
 
-all-recurse clean-recurse install-recurse check-recurse Makefiles:
+all-recurse clean-recurse install-recurse check-recurse Makefiles-recurse:
 	@e="exit 1"; \
 	for i in $(SUBDIRS) ; do \
 		if test -d $$i ; then \
