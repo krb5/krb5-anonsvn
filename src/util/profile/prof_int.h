@@ -1,3 +1,6 @@
+#ifndef PROF_INT_H
+#define PROF_INT_H
+
 /*
  * prof-int.h
  */
@@ -238,3 +241,5 @@ errcode_t profile_get_value
 /* Others included from profile.h */
 	
 /* prof_set.c -- included from profile.h */
+
+#endif /* PROF_INT_H */
