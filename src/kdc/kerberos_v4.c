@@ -384,7 +384,8 @@ compat_decrypt_key (in5, out4, out5, issrv)
 	    retval = -1;
 	} else {
 	    /* KLUDGE! If it's a non-raw des3 key, bash its enctype */
-	    if (out5->enctype == ENCTYPE_DES3_HMAC_SHA1)
+	    if (out5->enctype == ENCTYPE_DES3_HMAC_SHA1 ||
+		out5->enctype == ENCTYPE_LOCAL_DES3_HMAC_SHA1)
 		out5->enctype = ENCTYPE_DES3_CBC_RAW;
 	}
     }
@@ -480,6 +481,9 @@ kerb_get_principal(name, inst, principal, maxn, more, k5key, kvno, issrv)
 	/* XXX yes I know this is a hardcoded search order */
 	if (krb5_dbe_find_enctype(kdc_context, &entries,
 				  ENCTYPE_DES3_CBC_RAW,
+				  -1, kvno, &pkey) &&
+	    krb5_dbe_find_enctype(kdc_context, &entries,
+				  ENCTYPE_LOCAL_DES3_HMAC_SHA1,
 				  -1, kvno, &pkey) &&
 	    krb5_dbe_find_enctype(kdc_context, &entries,
 				  ENCTYPE_DES3_HMAC_SHA1,

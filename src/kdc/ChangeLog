@@ -1,3 +1,10 @@
+Tue Sep  1 19:34:30 1998  Tom Yu  <tlyu@mit.edu>
+
+	* kerberos_v4.c (compat_decrypt_key): Add
+ 	ENCTYPE_LOCAL_DES3_HMAC_SHA1 to the list of keytypes to bash.
+	(kerb_get_principal): Add ENCTYPE_LOCAL_DES3_HMAC_SHA1 to the list
+ 	of searched enctypes.
+
 Wed Aug 19 13:37:00 1998  Tom Yu  <tlyu@mit.edu>
 
 	* kerberos_v4.c (set_tgtkey): Add kvno arg to fetch an explicit
