@@ -82,7 +82,7 @@ lib$(LIB)$(PFLIBEXT): $(PFOBJLISTS)
 	@dirs=`echo $(PFOBJLISTS) | \
 		sed -e 's%/OBJS.PF%%g' -e 's%OBJS.PF%.%'`; \
 		$(AR) cq $@ `for d in $$dirs; do \
-			sed -e "s%^%$$d/%" -e "s% % $$d%g" \
+			sed -e "s%^%$$d/%" -e "s% % $$d/%g" \
 				$$d/OBJS.PF; done`
 	$(RANLIB) $@
 
