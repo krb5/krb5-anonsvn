@@ -1,5 +1,0 @@
-thisconfigdir=.
-BUILDTOP=$(REL)$(U)$(S)$(U)
-LOCAL_SUBDIRS = sclient sserver
-
-CFLAGS = $(CCOPTS)
