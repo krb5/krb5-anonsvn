@@ -1,3 +1,9 @@
+Sun Feb  9 01:01:32 1997  Tom Yu  <tlyu@mit.edu>
+
+	* aclocal.m4 (KRB5_LIB_PARAMS): Fix up RUN_ENV for alpha-dec-osf*
+	so that we don't try to set _RLD_ROOT before setting
+	LD_LIBRARY_PATH (which needs to call sed).
+
 Sat Feb  8 15:39:08 1997  Tom Yu  <tlyu@mit.edu>
 
 	* aclocal.m4: Fix up AC_KRB5_TCL somewhat to deal with
