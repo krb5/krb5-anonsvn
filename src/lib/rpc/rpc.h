@@ -69,6 +69,6 @@
  */
 /* routines for parsing /etc/rpc */
 #include <netdb.h>
-/*#include <rpc/netdb.h>	structures and routines to parse /etc/rpc */
+#include <rpc/netdb.h>	/* structures and routines to parse /etc/rpc */
 
 #endif /* ndef __RPC_HEADER__ */

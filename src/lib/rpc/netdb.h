@@ -1,3 +1,6 @@
+#ifndef RPC_NETDB_H
+#define RPC_NETDB_H
+
 /* @(#)netdb.h	2.1 88/07/29 3.9 RPCSRC */
 /*
  * Sun RPC is a product of Sun Microsystems, Inc. and is provided for
@@ -29,7 +32,10 @@
  */
 /*	@(#)rpc.h 1.8 87/07/24 SMI	*/
 
-#ifdef NEEDS_STRUCT_RPCENT /* it *is* in netdb.h! */
+/* since the gssrpc library requires that any application using it be
+built with these header files, I am making the decision that any app
+which uses the rpcent routines must use this header file, or something
+compatible (which most <netdb.h> are) --marc */
 
 /* Really belongs in <netdb.h> */
 
@@ -41,5 +47,4 @@ struct rpcent {
 
 struct rpcent *getrpcbyname(), *getrpcbynumber(), *getrpcent();
 
-#endif /* NEEDS_STRUCT_RPCENT */
-
+#endif
