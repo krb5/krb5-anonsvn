@@ -1,3 +1,11 @@
+Mon Aug 24 15:30:05 1998  Tom Yu  <tlyu@mit.edu>
+
+	* admin_server.c (process_client): Fix call to
+	krb5_dbekd_decrypt_key_data.
+
+	* kadm_ser_wrap.c (kadm_ser_init): Fix call to
+	krb5_db_fetch_mkey.
+
 Fri Jul 31 18:17:16 1998  Tom Yu  <tlyu@mit.edu>
 
 	* kadm_ser_wrap.c (kadm_ser_init): Remove references to
