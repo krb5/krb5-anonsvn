@@ -1,0 +1,5 @@
+Tue Jul  9 16:04:53 1996  Marc Horowitz  <marc@mit.edu>
+
+	* kadm_rpc_svc.c: renamed <ovsec_admin/foo.h> to <kadm5/foo.h>
+	* configure.in: cosmetic changes.
+	* Makefile.in: complete rewrite.
