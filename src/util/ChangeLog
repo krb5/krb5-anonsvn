@@ -1,3 +1,7 @@
+Sat Jun 22 20:51:47 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* configure.in: remove some unneeded cruft
+
 Tue Jun 18 20:44:42 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* Makefile.in, configure.in: various hacks to allow util to be

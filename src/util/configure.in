@@ -36,19 +36,35 @@ AC_PROG_ARCHIVE_ADD
 
 dnl BEG et/configure.in
 dnl
-DECLARE_SYS_ERRLIST
-dnl
 dnl Fancy caching of perror result...
-AC_MSG_CHECKING(for perror declaration)
-AC_CACHE_VAL(krb5_cv_decl_perror,
+AC_CACHE_CHECK([for perror declaration], krb5_cv_decl_perror,
 [AC_HEADER_EGREP(perror, errno.h, 
-  krb5_cv_decl_perror=yes, krb5_cv_decl_perror=no)])dnl
-AC_MSG_RESULT($krb5_cv_decl_perror)
+  krb5_cv_decl_perror=yes, krb5_cv_decl_perror=no)])
 if test $krb5_cv_decl_perror = yes; then
-	AC_DEFINE(HDR_HAS_PERROR)
+  AC_DEFINE(PERROR_DECLARED)
 fi
-dnl
-AC_FUNC_CHECK(strerror,AC_DEFINE(HAS_STRERROR))
+
+AC_CHECK_FUNCS(strerror)
+
+AC_CACHE_CHECK([for sys_errlist declaration], krb5_cv_decl_sys_errlist,
+[AC_TRY_COMPILE([#include <stdio.h>
+#include <errno.h>], [1+sys_nerr;],
+krb5_cv_decl_sys_errlist=yes, krb5_cv_decl_sys_errlist=no)])
+# assume sys_nerr won't be declared w/o being in libc
+if test $krb5_cv_decl_sys_errlist = yes; then
+  AC_DEFINE(SYS_ERRLIST_DECLARED)
+  AC_DEFINE(HAVE_SYS_ERRLIST)
+fi
+
+if test $krb5_cv_decl_sys_errlist = no; then
+  AC_CACHE_CHECK([for sys_errlist in libc], krb5_cv_var_sys_errlist,
+  [AC_TRY_LINK( , [1+sys_nerr;],
+  krb5_cv_var_sys_errlist=yes, krb5_cv_var_sys_errlist=no)])
+  if test $krb5_cv_var_sys_errlist = yes; then
+    AC_DEFINE(HAVE_SYS_ERRLIST)
+  fi
+fi
+
 AC_HEADER_STDARG
 AC_HAVE_HEADERS(stdlib.h)
 dnl
@@ -56,10 +72,11 @@ dnl END et/configure.in
 
 dnl BEG ss/configure.in
 dnl
-AC_PROG_YACC
-HAVE_YYLINENO
-AC_FUNC_CHECK(strdup,AC_DEFINE(HAS_STRDUP))
-CHECK_DIRENT
+dnl not needed for shell script!
+dnl AC_PROG_YACC
+dnl HAVE_YYLINENO
+dnl AC_FUNC_CHECK(strdup,AC_DEFINE(HAS_STRDUP))
+AC_CHECK_HEADERS(dirent.h)
 CHECK_WAIT_TYPE
 CHECK_SIGNALS
 CHECK_SIGPROCMASK
