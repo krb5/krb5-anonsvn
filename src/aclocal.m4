@@ -904,31 +904,7 @@ fi
 fi dnl stdarg test failure
 
 ])dnl
-dnl
-dnl Set environment variables so that shared library executables can run
-dnl in the build tree.
-dnl
-define(KRB5_RUN_FLAGS,[
-if test "$krb5_cv_shlibs_enabled" = yes ; then
-	KRB5_RUN_ENV=
-	if test "$krb5_cv_shlibs_run_ldpath" = default ; then
-		KRB5_RUN_ENV="$KRB5_RUN_ENV LD_LIBRARY_PATH=\$(TOPLIBD) ;  export LD_LIBRARY_PATH;"
-	elif test "$krb5_cv_shlibs_run_ldpath" != no ; then
-		KRB5_RUN_ENV="$KRB5_RUN_ENV LD_LIBRARY_PATH=\$(TOPLIBD):$krb5_cv_shlibs_run_ldpath ; export LD_LIBRARY_PATH;"
-	fi
-	# For OSF/1 this commits us to ignore built in rpath libraries
-	if test "$krb5_cv_shlibs_run_rldroot" = dummy ; then
-		KRB5_RUN_ENV="$KRB5_RUN_ENV _RLD_ROOT=/dev/dummy/d; export _RLD_ROOT;"
-	fi
-	# For AIX
-	if test "$krb5_cv_shlibs_run_libpath" != no ; then
-		KRB5_RUN_ENV="$KRB5_RUN_ENV LIBPATH=\$(TOPLIBD):$krb5_cv_shlibs_run_libpath ; export LIBPATH;"
-	fi
-else
-	KRB5_RUN_ENV=
-fi
-AC_SUBST(KRB5_RUN_ENV)
-])dnl
+
 dnl
 dnl AC_KRB5_TCL - determine if the TCL library is present on system
 dnl
@@ -1056,6 +1032,16 @@ AC_SUBST(CC_LINK)
 AC_SUBST(DEPLIBEXT)])
 
 dnl
+dnl KRB5_RUN_FLAGS
+dnl
+dnl Set up environment for running dynamic execuatbles out of build tree
+
+AC_DEFUN(KRB5_RUN_FLAGS,
+[AC_REQUIRE([KRB5_LIB_AUX])
+KRB5_RUN_ENV="$RUN_ENV"
+AC_SUBST(KRB5_RUN_ENV)])
+
+dnl
 dnl KRB5_LIB_AUX
 dnl
 dnl Parse configure options related to library building.
@@ -1087,6 +1073,8 @@ AC_ARG_ENABLE([shared],
 	case "$SHLIBEXT" in
 	.so-nobuild)
 		AC_MSG_WARN([shared libraries not supported on this architecture])
+		RUN_ENV=
+		CC_LINK="$CC_LINK_STATIC"
 		;;
 	*)
 		AC_MSG_RESULT([Enabling shared libraries.])
@@ -1095,8 +1083,12 @@ AC_ARG_ENABLE([shared],
 		OBJLISTS="$OBJLISTS OBJS.SH"
 		LIBINSTLIST="$LIBINSTLIST install-shared"
 		DEPLIBEXT=$SHLIBEXT
+		CC_LINK="$CC_LINK_SHARED"
 		;;
 	esac
+else
+	RUN_ENV=
+	CC_LINK="$CC_LINK_STATIC"
 fi])dnl
 
 if test -z "$LIBLIST"; then
@@ -1156,7 +1148,10 @@ alpha-dec-osf*)
 	LDCOMBINE='ld -shared -expect_unresolved \* -update_registry $(BUILDTOP)/so_locations'
 	SHLIB_EXPFLAGS='-rpath $(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
-	CC_LINK='$(CC) $(PROG_LIBPATH) -Wl,-rpath -Wl,$(PROG_RPATH)'
+	CC_LINK_SHARED='$(CC) $(PROG_LIBPATH) -Wl,-rpath -Wl,$(PROG_RPATH)'
+	CC_LINK_STATIC='$(CC) $(PROG_LIBPATH)'
+	# $(PROG_RPATH) is here to handle things like a shared tcl library
+	RUN_ENV='_RLD_ROOT=/dev/dummy/d; export _RLD_ROOT; LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:/g"`:$(PROG_RPATH):/usr/shlib:/usr/ccs/lib:/usr/lib/cmplrs/cc:/usr/lib:/usr/local/lib; export LD_LIBRARY_PATH;'
 	;;
 *-*-netbsd*)
 	PICFLAGS=-fpic
@@ -1164,7 +1159,9 @@ alpha-dec-osf*)
 	SHLIBEXT=.so
 	LDCOMBINE='ld -Bshareable'
 	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS)'
-	CC_LINK='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
+	CC_LINK_SHARED='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
+	CC_LINK_STATIC='$(CC) $(PROG_LIBPATH)'
+	RUN_ENV='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:/g"`; export LD_LIBRARY_PATH;'
 	PROFFLAGS=-pg
 	;;
 *-*-solaris*)
@@ -1180,7 +1177,9 @@ alpha-dec-osf*)
 	SHLIBEXT=.so
 	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
-	CC_LINK='$(PURE) $(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
+	CC_LINK_SHARED='$(PURE) $(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
+	CC_LINK_STATIC='$(PURE) $(CC) $(PROG_LIBPATH)'
+	RUN_ENV='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:/g"`; export LD_LIBRARY_PATH;'
 	;;
 *-*-sunos*)
 	PICFLAGS=-fpic
@@ -1194,7 +1193,9 @@ alpha-dec-osf*)
 	LDCOMBINE='LD_LIBRARY_PATH=`echo $(SHLIB_DIRS) | sed -e "s/-L//g" -e "s/ /:/g"` ld -dp -assert pure-text'
 	SHLIB_EXPFLAGS='-L$(SHLIB_RDIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
-	CC_LINK='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:g"` $(PURE) $(CC) -L$(PROG_RPATH)'
+	CC_LINK_SHARED='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:/g"` $(PURE) $(CC) -L$(PROG_RPATH)'
+	CC_LINK_STATIC='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:/g` $(PURE) $(CC)'
+	RUN_ENV='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:/g"`; export LD_LIBRARY_PATH;'
 	;;
 *-*-linux*)
 	PICFLAGS=-fPIC
@@ -1205,6 +1206,7 @@ alpha-dec-osf*)
 	LDCOMBINE='ld -shared -h lib$(LIB)$(SHLIBEXT).$(LIBMAJOR).$(LIBMINOR)'
 	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
-	CC_LINK='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
+	CC_LINK_SHARED='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
+	CC_LINK_STATIC='$(CC) $(PROG_LIBPATH)'
 	;;
 esac])

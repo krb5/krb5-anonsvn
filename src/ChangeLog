@@ -1,3 +1,10 @@
+Sat Feb  8 15:39:08 1997  Tom Yu  <tlyu@mit.edu>
+
+	* aclocal.m4 (KRB5_RUN_FLAGS): Convert to no longer use old cache
+	variable kludge.
+	(KRB5_LIB_AUX): Set CC_LINK to CC_LINK_SHARED or CC_LINK_STATIC,
+	depending on whether we're building with shared libraries.
+
 Wed Feb  5 21:03:41 1997  Tom Yu  <tlyu@mit.edu>
 
 	* aclocal.m4 (AC_KRB5_TCL): Fix up to work better with new program
