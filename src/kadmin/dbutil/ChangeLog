@@ -1,3 +1,8 @@
+Wed Jul 10 19:43:22 1996  Marc Horowitz  <marc@mit.edu>
+
+	* dumpv4.c (configure.in, Makefile.in): make autoconf work after
+ 	barry's carnage
+
 Sun May 12 00:27:44 1996  Marc Horowitz  <marc@mit.edu>
 
 	* loadv4.c (enter_in_v5_db, add_principal), kdb5_edit.c
