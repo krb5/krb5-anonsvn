@@ -25,6 +25,7 @@ Things-to-keep:
 
 .cvsignore
 ChangeLog
+	appdefault.c
 DNR.c
 Makefile.in
 an_to_ln.c
