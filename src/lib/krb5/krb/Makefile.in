@@ -2,7 +2,8 @@ CFLAGS = $(CCOPTS) $(DEFS)
 RUN_SETUP = @KRB5_RUN_ENV@
 
 ##DOSBUILDTOP = ..\..\..
-##DOSLIBNAME=..\krb5.lib
+##DOSMYNAME=krb
+##DOSOBJFILE=..\$(MYNAME).lst
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
@@ -156,7 +157,11 @@ SRCS=	$(srcdir)/addr_comp.c	\
 
 all-unix:: shared $(OBJS)
 all-mac:: shared $(OBJS)
-all-windows:: $(OBJS)
+all-windows:: $(OBJFILE)
+
+##DOS$(OBJFILE):: $(OBJS)
+##DOS	$(RM) $(OBJFILE)
+##DOS	$(LIBECHO) -p $(MYNAME)\ *.obj > $(OBJFILE)
 
 shared:
 	mkdir shared
@@ -221,3 +226,4 @@ clean-unix::
 clean-mac::
 	$(RM) shared/*
 clean-windows::
+	$(RM) $(OBJFILE)
