@@ -2035,6 +2035,11 @@ krb5_error_code krb5_auth_con_getremotesubkey
 /*
  * begin stuff from libos.h
  */
+	void krb5_appdefault_boolean
+KRB5_PROTOTYPE((krb5_context, const char *, const krb5_data *, const char *, int, int *));
+void krb5_appdefault_string
+KRB5_PROTOTYPE((krb5_context, const char *, const krb5_data *, const char *, const char *, char **));
+
 
 krb5_error_code krb5_read_password
 	KRB5_PROTOTYPE((krb5_context,

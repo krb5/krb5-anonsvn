@@ -1,3 +1,7 @@
+Sun Aug 25 16:07:58 1996  Sam Hartman  <hartmans@hartman.mit.edu>
+
+	* krb5.hin: Add prototype for krb5_appdefault_*.
+
 Thu Aug 15 16:31:20 1996  Theodore Ts'o  <tytso@rsts-11.mit.edu>
 
 	* k5-int.h: Since we are only supporting the db in the util/db2
