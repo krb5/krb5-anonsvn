@@ -12,47 +12,10 @@
    place here what is needed from that file. Later we may decide to do
    it differently.
 */
-#if defined(_MSDOS) || defined(_WIN32)
-#ifdef _MSDOS
-	/* Windows 16 specific */
-#ifndef KRB5_CALLCONV
-#define KRB5_CALLCONV __far __export __pascal 
-#define KRB5_CALLCONV_C __far __export __cdecl
-#define KRB5_DLLIMP
-#define INTERFACE   KRB5_CALLCONV
-#define INTERFACE_C KRB5_CALLCONV_C
+#if defined(_MSDOS) || defined(_WIN32) || defined(_MACINTOSH)
+#include <win-mac.h>
 #endif
 
-#ifndef FAR
-#define FAR __far
-#define NEAR __near
-#endif
-#else
-	/* Windows 32 specific */
-#ifdef KRB5_DLL_FILE
-#define KRB5_DECLSPEC dllexport
-#else
-#define KRB5_DECLSPEC dllimport
-#endif
-
-#define KRB5_DLLIMP __declspec(KRB5_DECLSPEC)
-#define KRB5_CALLCONV __stdcall
-#define KRB5_CALLCONV_C __cdecl
-#define INTERFACE   KRB5_DLLIMP KRB5_CALLCONV
-#define INTERFACE_C KRB5_DLLIMP KRB5_CALLCONV_C
-
-#ifndef FAR
-#define FAR
-#define NEAR
-#endif
-
-#endif /* Win16 vs Win32 */
-	
-#define sys_nerr              _sys_nerr
-#define sys_errlist           _sys_errlist
-int FAR KRB5_CALLCONV MessageBox (void FAR *, const char FAR*, const char FAR*, unsigned int);
-#define MB_ICONEXCLAMATION    0x0030
-#else
 #ifndef KRB5_CALLCONV
 #define KRB5_CALLCONV
 #define KRB5_CALLCONV_C

@@ -7,8 +7,20 @@ all::
 	$(CC) $(CFLAGS) /c $*.c
 !if defined(LIBNAME)
 !if "$(LIBCMD)"!="rem"
-##WIN16##	$(LIBCMD) $(PAGESIZE) /nologo $(LIBNAME) -+$@;
-##WIN32##	$(LIBCMD) /out:$(LIBNAME) /nologo $@
+all-windows:: $(LIBNAME)
+
+!if !defined(OBJFILELIST)
+##WIN32##OBJFILELIST=@$(OBJFILE)
+##WIN16##OBJFILELIST=-+@$(OBJFILE)
+!endif
+
+!if !defined(OBJFILEDEP)
+OBJFILEDEP=$(OBJFILE)
+!endif
+
+$(LIBNAME):	$(OBJFILEDEP)
+##WIN32##	$(LIBCMD) /out:$(LIBNAME) /nologo $(OBJFILELIST)
+##WIN16##	$(LIBCMD) $(PAGESIZE) /nologo $(LIBNAME) $(OBJFILELIST);
 !endif
 !endif
 
@@ -43,4 +55,13 @@ clean-unix::
 
 clean-windows::
 	$(RM) *.$(OBJEXT)
-	$(RM) msvc.pdb *.err
+	$(RM) msvc.pdb *.err *.exe
+
+!if defined(LIBNAME)
+clean-windows::
+	$(RM) $(LIBNAME)
+!endif
+!if defined(OBJFILE)
+clean-windows::
+	$(RM) $(OBJFILE)
+!endif
