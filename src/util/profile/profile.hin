@@ -9,7 +9,7 @@
 #include <win-mac.h>
 #endif
 
-#if TARGET_OS_MAC && TARGET_API_MAC_CARBON
+#if TARGET_OS_MAC && (TARGET_API_MAC_CARBON || TARGET_API_MAC_OS8)
 #include <Files.h>
 #endif
 
@@ -76,7 +76,7 @@ KRB5_DLLIMP long KRB5_CALLCONV profile_init_path
 	PROTOTYPE ((const_profile_filespec_list_t filelist, profile_t *ret_profile));
 
 /* On Mac Carbon, also provide FSSpec variants */
-#if TARGET_OS_MAC && TARGET_API_MAC_CARBON
+#if TARGET_OS_MAC && (TARGET_API_MAC_CARBON || TARGET_API_MAC_OS8)
 KRB5_DLLIMP long KRB5_CALLCONV FSp_profile_init
 	PROTOTYPE ((const FSSpec* files, profile_t *ret_profile));
 

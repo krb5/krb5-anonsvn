@@ -10,7 +10,7 @@
 #endif
 #include <errno.h>
 
-#if TARGET_OS_MAC && TARGET_API_MAC_CARBON
+#if TARGET_OS_MAC && TARGET_RT_MAC_MACHO
 #include <FullPOSIXPath.h>
 #endif
 
@@ -140,9 +140,25 @@ profile_init_path(filelist, ret_profile)
 {
 	return profile_init (filelist, ret_profile);
 }
+
+KRB5_DLLIMP errcode_t KRB5_CALLCONV
+FSp_profile_init(files, ret_profile)
+	const_profile_filespec_t* files;
+	profile_t *ret_profile;
+{
+	return profile_init (files, ret_profile);
+}
+
+KRB5_DLLIMP errcode_t KRB5_CALLCONV
+FSp_profile_init_path(filelist, ret_profile)
+	profile_filespec_list_t filelist;
+	profile_t *ret_profile;
+{
+	return profile_init_path (filelist, ret_profile);
+}
 #endif
 
-#if TARGET_OS_MAC && TARGET_API_MAC_CARBON
+#if TARGET_OS_MAC && TARGET_RT_MAC_MACHO
 KRB5_DLLIMP errcode_t KRB5_CALLCONV
 FSp_profile_init(files, ret_profile)
 	const FSSpec* files;
