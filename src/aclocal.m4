@@ -228,44 +228,41 @@ withval=yes
 if test $withval = no; then
 	AC_MSG_RESULT(no krb4 support)
 	KRB4_LIB=
-	DEPKRB4_LIB=
-	KRB4_CRYPTO_LIB=
-	DEPKRB4_CRYPTO_LIB=
+	KRB4_DEPLIB=
+	DES425_LIB=
+	DES425_DEPLIB=
 	KRB4_INCLUDES=
-	LDARGS=
+	KRB4_LIBPATH=
 	krb5_cv_build_krb4_libs=no
 	krb5_cv_krb4_libdir=
 else 
  ADD_DEF(-DKRB5_KRB4_COMPAT)
+ DES425_DEPLIB='$(TOPLIBD)/libdes425$(DEPLIBEXT)'
+ DES425_LIB=-ldes425
  if test $withval = yes; then
 	AC_MSG_RESULT(built in krb4 support)
-	KRB4_INCLUDE="-I$SRCTOP/include/kerberosIV"
-	KRB4_LIB='-lkrb4'
-	DEPKRB4_LIB='$(TOPLIBD)/libkrb4.a'
-	KRB4_CRYPTO_LIB='-ldes425'
-	DEPKRB4_CRYPTO_LIB='$(TOPLIBD)/libdes425.a'
-	KRB4_INCLUDES='-I$(SRCTOP)/include/kerberosIV'
-	LDARGS=
+	KRB4_DEPLIB='$(TOPLIBD)/libkrb4$(DEPLIBEXT)'
+	KRB4_LIB=-lkrb4
+	KRB4_INCLUDES="-I$SRCTOP/include/kerberosIV"
+	KRB4_LIBPATH=
 	krb5_cv_build_krb4_libs=yes
 	krb5_cv_krb4_libdir=
  else
 	AC_MSG_RESULT(preinstalled krb4 in $withval)
-	KRB4_INCLUDE="-I$withval/include"
 	KRB4_LIB="-lkrb"
-	DEPKRB4_LIB="$withval/lib/libkrb.a"
-	KRB4_CRYPTO_LIB='-ldes425'
-	DEPKRB4_CRYPTO_LIB='$(TOPLIBD)/libdes425.a'
+dnl	DEPKRB4_LIB="$withval/lib/libkrb.a"
 	KRB4_INCLUDES="-I$withval/include"
-	LDARGS="-L$withval/lib"
+	KRB4_LIBPATH="-L$withval/lib"
 	krb5_cv_build_krb4_libs=no
 	krb5_cv_krb4_libdir="$withval/lib"
  fi
 fi
 AC_SUBST(KRB4_INCLUDES)
+AC_SUBST(KRB4_LIBPATH)
 AC_SUBST(KRB4_LIB)
-AC_SUBST(KRB4_CRYPTO_LIB)
-AC_SUBST(DEPKRB4_LIB)
-AC_SUBST(DEPKRB4_CRYPTO_LIB)
+AC_SUBST(KRB4_DEPLIB)
+AC_SUBST(DES425_DEPLIB)
+AC_SUBST(DES425_LIB)
 ])dnl
 dnl
 dnl set $(CC) from --with-cc=value
@@ -1054,22 +1051,6 @@ dnl Set variables to build a program.
 
 AC_DEFUN(KRB5_BUILD_PROGRAM,
 [AC_REQUIRE([KRB5_LIB_AUX])
-AC_ARG_WITH([krb4],
-[  --with-krb4             build with krb4 libraries],
-
-[KRB4_DEPLIB='$(TOPLIBD)/libkrb4$(DEPLIBEXT)'
-DES425_DEPLIB='$(TOPLIBD)/libdes425$(DEPLIBEXT)'
-KRB4_LIB=-lkrb4
-DES425_LIB=-ldes425],
-
-[KRB4_DEPLIB=
-DES425_DEPLIB=
-KRB4_LIB=
-DES425_LIB=])
-AC_SUBST(KRB4_DEPLIB)
-AC_SUBST(DES425_DEPLIB)
-AC_SUBST(KRB4_LIB)
-AC_SUBST(DES425_DEPLIB)
 AC_SUBST(CC_LINK)
 AC_SUBST(DEPLIBEXT)])
 
@@ -1198,7 +1179,7 @@ alpha-dec-osf*)
 	SHLIBEXT=.so
 	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
-	CC_LINK='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
+	CC_LINK='$(PURE) $(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
 	;;
 *-*-sunos*)
 	PICFLAGS=-fpic
@@ -1212,7 +1193,7 @@ alpha-dec-osf*)
 	LDCOMBINE='LD_LIBRARY_PATH=`echo $(SHLIB_DIRS) | sed -e "s/-L//g" -e "s/ /:/g"` ld -dp -assert pure-text'
 	SHLIB_EXPFLAGS='-L$(SHLIB_RDIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
-	CC_LINK='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:g"` $(CC) -L$(PROG_RPATH)'
+	CC_LINK='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:g"` $(PURE) $(CC) -L$(PROG_RPATH)'
 	;;
 *-*-linux*)
 	PICFLAGS=-fPIC

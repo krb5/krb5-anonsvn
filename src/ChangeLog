@@ -1,3 +1,7 @@
+Fri Jan 31 21:48:08 1997  Tom Yu  <tlyu@mit.edu>
+
+	* aclocal.m4: Some WITH_KRB4 tweaks.
+
 Mon Jan 27 17:12:13 1997  Tom Yu  <tlyu@mit.edu>
 
 	* aclocal.m4: Add KRB5_BUILD_PROGRAM and
