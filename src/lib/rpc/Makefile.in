@@ -130,6 +130,10 @@ clean-unix::
 clean-mac::
 clean-windows::
 
+DONE: $(OBJS)
+	$(RM) DONE
+	echo $(OBJS) > DONE
+
 libgssrpc.$(STEXT): $(OBJS)
 	$(RM) $@
 	$(ARADD) $@ $(OBJS)
@@ -140,5 +144,5 @@ install:: libgssrpc.a
 	$(RANLIB) $(DESTDIR)$(KRB5_LIBDIR)/libgssrpc.a
 
 clean::
-	$(RM) libgssrpc.$(LIBEXT) libgssrpc.bak
+	$(RM) libgssrpc.$(LIBEXT) libgssrpc.bak DONE
 
