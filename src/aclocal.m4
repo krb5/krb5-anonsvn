@@ -1253,7 +1253,7 @@ alpha-dec-osf*)
 	SHLIBEXT=.so
 	# Alpha OSF/1 doesn't need separate PIC objects
 	SHOBJEXT=.o
-	LDCOMBINE='ld -shared -expect_unresolved \*'
+	LDCOMBINE='ld -shared -expect_unresolved \* -update_registry $(BUILDTOP)/so_locations'
 	PROFFLAGS=-pg
 	;;
 *-*-netbsd*)

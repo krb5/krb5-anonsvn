@@ -1,3 +1,8 @@
+Mon Dec 30 12:58:37 1996  Ezra Peisach  <epeisach@mit.edu>
+
+	* aclocal.m4: For alpha*, update the local copy of the
+		so_locations registry.  
+
 Sun Dec 29 21:22:21 1996  Tom Yu  <tlyu@mit.edu>
 
 	* aclocal.m4: Add support for installing libraries.
