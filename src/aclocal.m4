@@ -1270,10 +1270,19 @@ alpha-dec-osf*)
 	else
 		PICFLAGS=-Kpic
 		# Solaris cc doesn't default to stuffing the SONAME field...
-		LDCOMBINE='$(CC) -dy -G -z text -h lib$(LIBNAME).$(LIBMINOR).$(LIBMAJOR)'
+		LDCOMBINE='$(CC) -dy -G -z text -h lib$(LIB)$(SHLIBEXT).$(LIBMAJOR).$(LIBMINOR)'
 	fi
 	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
 	SHLIBEXT=.so
+	PROFFLAGS=-pg
+	;;
+*-*-linux*)
+	PICFLAGS=-fPIC
+	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
+	SHLIBEXT=.so
+	# Linux ld doesn't default to stuffing the SONAME field...
+	# Use objdump -x to examine the fields of the library
+	LDCOMBINE='ld -shared -h lib$(LIB)$(SHLIBEXT).$(LIBMAJOR).$(LIBMINOR)'
 	PROFFLAGS=-pg
 	;;
 esac])

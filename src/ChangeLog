@@ -1,3 +1,8 @@
+Wed Jan  1 23:31:22 1997  Ezra Peisach  <epeisach@mit.edu>
+
+	* aclocal.m4 (KRB5_LIB_PARAMS): Add linux shared library
+		support. Fix Solaris cc soname naming.
+
 Mon Dec 30 12:58:37 1996  Ezra Peisach  <epeisach@mit.edu>
 
 	* aclocal.m4: For alpha*, update the local copy of the
