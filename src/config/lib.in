@@ -19,8 +19,8 @@
 #			since there are very few systems where -L is the
 #			wrong thing (notable exception of SunOS but we
 #			deal with it...)
-# SHLIB_RPATH	rpath directories to search; given in the
-#			form $(SHLIB_RFLAG)dir1:dir2 ...
+# SHLIB_RDIRS	rpath directories to search; given in the
+#			form dir1:dir2 ...
 # RELDIR	path to this directory relative to $(TOPLIBD)
 
 ## Parameters to be set by configure:
@@ -61,12 +61,8 @@ LDCOMBINE=@LDCOMBINE@
 # Misc args to tack on the tail of LDCOMBINE
 LDCOMBINE_TAIL=@LDCOMBINE_TAIL@
 
-# flag that preceds an rpath directory, usually "-R".
-SHLIB_RFLAG=@SHLIB_RFLAG@
-
 # flags for explicit libraries depending on this one,
-# e.g. "$(SHLIB_RPATH) $(SHLIB_SHLIB_DIRFLAGS)"
-# Note that $(SHLIB_EXPLIBS) is not included here.
+# e.g. "-R$(SHLIB_RPATH) $(SHLIB_SHLIB_DIRFLAGS) $(SHLIB_EXPLIBS)"
 SHLIB_EXPFLAGS=@SHLIB_EXPFLAGS@
 
 # STOBJLISTS=dir1/OBJS.ST dir2/OBJS.ST etc...
@@ -92,7 +88,6 @@ lib$(LIB)$(SHLIBVEXT): $(SHOBJLISTS) $(SHLIB_EXPDEPS)
 			sed -e "s%^%$$d/%" -e "s% % $$d/%g" \
 				$$d/OBJS.SH; done` \
 			$(SHLIB_EXPFLAGS) \
-			$(SHLIB_EXPLIBS) \
 			$(LDCOMBINE_TAIL)
 lib$(LIB)$(SHLIBEXT): lib$(LIB)$(SHLIBVEXT)
 	$(RM) $@
