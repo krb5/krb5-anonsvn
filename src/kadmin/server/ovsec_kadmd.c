@@ -32,19 +32,13 @@ void	request_pure_report(int);
 void	request_pure_clear(int);
 #endif /* PURIFY */
 
-volatile int	signal_request_exit = 0;
-volatile int	signal_request_hup = 0;
-void    setup_signal_handlers(void);
+int	signal_request_exit = 0;
+int	signal_request_reset = 0;
 void	request_exit(int);
-void	request_hup(int);
+void	request_reset_db(int);
 void	reset_db(void);
 void	sig_pipe(int);
 void	kadm_svc_run(void);
-
-#ifdef POSIX_SIGNALS
-static struct sigaction s_action;
-#endif /* POSIX_SIGNALS */
-
 
 #define	TIMEOUT	15
 
@@ -126,7 +120,7 @@ int main(int argc, char *argv[])
 
      names[0].name = names[1].name = names[2].name = names[3].name = NULL;
      names[0].type = names[1].type = names[2].type = names[3].type =
-	  (gss_OID) gss_nt_krb5_name;
+	  gss_nt_krb5_name;
 
 #ifdef PURIFY
      purify_start_batch();
@@ -303,7 +297,7 @@ int main(int argc, char *argv[])
 	       fprintf(stderr,
 "This probably means that another %s process is already\n"
 "running, or that another program is using the server port (number %d)\n"
-"after being assigned it by the RPC portmap daemon.  If another\n"
+"after being assigned it by the RPC portmap deamon.  If another\n"
 "%s is already running, you should kill it before\n"
 "restarting the server.  If, on the other hand, another program is\n"
 "using the server port, you should kill it before running\n"
@@ -410,12 +404,12 @@ int main(int argc, char *argv[])
      /* if set_names succeeded, this will too */
      in_buf.value = names[1].name;
      in_buf.length = strlen(names[1].name) + 1;
-     (void) gss_import_name(&OMret, &in_buf, (gss_OID) gss_nt_krb5_name,
+     (void) gss_import_name(&OMret, &in_buf, gss_nt_krb5_name,
 			    &gss_changepw_name);
      if (oldnames) {
 	  in_buf.value = names[3].name;
 	  in_buf.length = strlen(names[3].name) + 1;
-	  (void) gss_import_name(&OMret, &in_buf, (gss_OID) gss_nt_krb5_name,
+	  (void) gss_import_name(&OMret, &in_buf, gss_nt_krb5_name,
 				 &gss_oldchangepw_name);
      }
 
@@ -443,8 +437,17 @@ int main(int argc, char *argv[])
 	  exit(1);
      }
      
-     setup_signal_handlers();
+     signal(SIGINT, request_exit);
+     signal(SIGTERM, request_exit);
+     signal(SIGQUIT, request_exit);
+     signal(SIGHUP, request_reset_db);
+     signal(SIGPIPE, sig_pipe);
+#ifdef PURIFY
+     signal(SIGUSR1, request_pure_report);
+     signal(SIGUSR2, request_pure_clear);
+#endif /* PURIFY */
      krb5_klog_syslog(LOG_INFO, "starting");
+
      kadm_svc_run();
      krb5_klog_syslog(LOG_INFO, "finished, exiting");
 
@@ -470,43 +473,6 @@ int main(int argc, char *argv[])
 }
 
 /*
- * Function: setup_signal_handlers
- *
- * Purpose: Setup signal handling functions using POSIX's sigaction()
- * if possible, otherwise with System V's signal().
- */
-
-void setup_signal_handlers(void) {
-#ifdef POSIX_SIGNALS
-     (void) sigemptyset(&s_action.sa_mask);
-     s_action.sa_handler = request_exit;
-     (void) sigaction(SIGINT, &s_action, (struct sigaction *) NULL);
-     (void) sigaction(SIGTERM, &s_action, (struct sigaction *) NULL);
-     (void) sigaction(SIGQUIT, &s_action, (struct sigaction *) NULL);
-     s_action.sa_handler = request_hup;
-     (void) sigaction(SIGHUP, &s_action, (struct sigaction *) NULL);
-     s_action.sa_handler = sig_pipe;
-     (void) sigaction(SIGPIPE, &s_action, (struct sigaction *) NULL);
-#ifdef PURIFY
-     s_action.sa_handler = request_pure_report;
-     (void) sigaction(SIGUSR1, &s_action, (struct sigaction *) NULL);
-     s_action.sa_handler = request_pure_clear;
-     (void) sigaction(SIGUSR2, &s_action, (struct sigaction *) NULL);
-#endif /* PURIFY */
-#else /* POSIX_SIGNALS */
-     signal(SIGINT, request_exit);
-     signal(SIGTERM, request_exit);
-     signal(SIGQUIT, request_exit);
-     signal(SIGHUP, request_hup);
-     signal(SIGPIPE, sig_pipe);
-#ifdef PURIFY
-     signal(SIGUSR1, request_pure_report);
-     signal(SIGUSR2, request_pure_clear);
-#endif /* PURIFY */
-#endif /* POSIX_SIGNALS */
-}
-
-/*
  * Function: kadm_svc_run
  * 
  * Purpose: modified version of sunrpc svc_run.
@@ -525,11 +491,8 @@ void kadm_svc_run(void)
      struct	timeval	    timeout;
      
      while(signal_request_exit == 0) {
-	  if (signal_request_hup) {
-	      reset_db();
-	      krb5_klog_reopen();
-	      signal_request_hup = 0;
-	  }
+	  if (signal_request_reset)
+	    reset_db();
 #ifdef PURIFY
 	  if (signal_pure_report)	/* check to see if a report */
 					/* should be dumped... */
@@ -612,7 +575,7 @@ void request_pure_clear(int signum)
 #endif /* PURIFY */
 
 /*
- * Function: request_hup
+ * Function: request_reset_db
  * 
  * Purpose: sets flag saying the server got a signal and that it should
  *		reset the database files when convenient.
@@ -621,17 +584,18 @@ void request_pure_clear(int signum)
  * Requires:
  * Effects:
  * Modifies:
- *	sets signal_request_hup to one
+ *	sets signal_request_reset to one
  */
 
-void request_hup(int signum)
+void request_reset_db(int signum)
 {
-     signal_request_hup = 1;
+     krb5_klog_syslog(LOG_DEBUG, "Got signal to request resetting the databases");
+     signal_request_reset = 1;
      return;
 }
 
 /*
- * Function: reset_db
+ * Function: reset-db
  * 
  * Purpose: flushes the currently opened database files to disk.
  *
@@ -658,11 +622,12 @@ void reset_db(void)
      }
 #endif
 
+     signal_request_reset = 0;
      return;
 }
 
 /*
- * Function: request_exit
+ * Function: request-exit
  * 
  * Purpose: sets flags saying the server got a signal and that it
  *	    should exit when convient.
@@ -955,7 +920,7 @@ void do_schpw(int s1, kadm5_config_params *params)
     close(s2);
 
     if (repdata.length == 0) {
-	/* just return.  This means something really bad happened */
+	/* just qreturn.  This means something really bad happened */
         goto cleanup;
     }
 
@@ -977,11 +942,3 @@ cleanup:
 
     return;
 }
-
-
-
-
-
-
-
-
