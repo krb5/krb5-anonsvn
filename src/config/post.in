@@ -38,9 +38,9 @@ clean-windows::
 
 Makefiles: Makefile Makefiles-recurse
 
-Makefile: $(srcdir)/Makefile.in $(thisconfigdir)/config.status \
+Makefile: $(srcdir)/Makefile.in config.status \
 		$(SRCTOP)/config/pre.in $(SRCTOP)/config/post.in
-	cd $(thisconfigdir) && $(SHELL) config.status
+	cd . && $(SHELL) config.status
 $(top_srcdir)/config.status: $(top_srcdir)/configure
 	cd $(top_srcdir) && $(SHELL) config.status --recheck
 #$(srcdir)/$(thisconfigdir)/configure: $(srcdir)/$(thisconfigdir)/configure.in \

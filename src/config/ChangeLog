@@ -1,3 +1,8 @@
+Tue Jun 18 21:12:59 1996  Tom Yu  <tlyu@mit.edu>
+
+	* pre.in, post.in: fix up top_srcdir stuff; Makefile remaking
+		hackery
+
 Tue Jun 18 20:47:30 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 	* post.in: more fixup
 
