@@ -1,3 +1,10 @@
+Wed Jan 29 20:59:20 EST 1997	Richard Basch	<basch@lehman.com>
+
+	* Makefile.in:
+		Link against MSVCRT.LIB to force the use of the
+		runtime C library instead of a possibly incompatible
+		static C library (for Borland C++)
+
 Fri Jul 12 20:32:29 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* win_glue.c: Added TIMEBOMB_INFO string which tells the user the
