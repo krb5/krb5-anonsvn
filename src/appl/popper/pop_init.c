@@ -20,6 +20,7 @@ static char SccsId[] = "@(#)pop_init.c  1.12    8/16/90";
 #include <netinet/in.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include "popper.h"
 
 #ifdef KERBEROS
@@ -29,7 +30,8 @@ AUTH_DAT kdata;
 #endif /* KERBEROS */
 
 extern int      errno;
-
+int             sp = 0;             /*  Socket pointer */
+                                    /*  we use this later */
 /* 
  *  init:   Start a Post Office Protocol session
  */
@@ -47,7 +49,6 @@ char    **      argmessage;
     int                     len;
     extern char         *   optarg;
     int                     options = 0;
-    int                     sp = 0;             /*  Socket pointer */
     char                *   trace_file_name;
 
     /*  Initialize the POP parameter block */
@@ -126,9 +127,13 @@ char    **      argmessage;
         the POP parameter block */
     else {
 
-#ifndef BIND43
+#ifndef BIND43HACK
         p->client = ch->h_name;
 #else
+	/*
+	 * There's no reason for this. In any case, reset res options.
+	 */
+
 #       include <arpa/nameser.h>
 #       include <resolv.h>
 
@@ -165,8 +170,13 @@ char    **      argmessage;
                 p->client = p->ipaddr;
             }
         }
-#endif BIND43
+	/*  restore bind state */
+        _res.options |= RES_DEFNAMES;
+
+#endif BIND43HACK
     }
+
+    fcntl(sp, F_SETFL, SO_KEEPALIVE);
 
     /*  Create input file stream for TCP/IP communication */
     if ((p->input = fdopen(sp,"r")) == NULL){
@@ -200,10 +210,12 @@ char    **      argmessage;
 }
 
 
+
 authenticate(p, addr)
      POP     *p;
      struct sockaddr_in *addr;
 {
+
 #ifdef KERBEROS
     Key_schedule schedule;
     KTEXT_ST ticket;
@@ -228,6 +240,8 @@ authenticate(p, addr)
     pop_log(p, POP_DEBUG, "%s.%s@%s (%s): ok", kdata.pname, 
 	    kdata.pinst, kdata.prealm, inet_ntoa(addr->sin_addr));
 #endif /* DEBUG */
+
+    strcpy(p->user, kdata.pname);
 
 #endif /* KERBEROS */
 
