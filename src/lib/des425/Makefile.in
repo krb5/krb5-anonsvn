@@ -87,12 +87,11 @@ check-windows::
 clean:: 
 	$(RM) verify$(EXEEXT) verify.$(OBJEXT)
 
-clean-unix::
-	$(RM) shared/*
-
+clean-unix:: clean-liblinks clean-libs clean-libobjs
 clean-mac::
 clean-windows::
 
 clean::
 	$(RM) libdes425.$(LIBEXT) libdes425.bak
 
+install-unix:: install-libs
