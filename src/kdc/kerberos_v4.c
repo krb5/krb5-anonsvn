@@ -68,7 +68,7 @@ extern int errno;
 static int compat_decrypt_key PROTOTYPE((krb5_key_data *, C_Block,
 					 krb5_keyblock *, int));
 static int kerb_get_principal PROTOTYPE((char *, char *, Principal *, int,
-				  int *, krb5_keyblock *, int));
+				  int *, krb5_keyblock *, krb5_kvno, int));
 static int check_princ PROTOTYPE((char *, char *, unsigned, Principal *,
 			   krb5_keyblock *, int));
 
@@ -146,8 +146,8 @@ static krb5_data *response;
 
 void kerberos_v4 PROTOTYPE((struct sockaddr_in *, KTEXT));
 void kerb_err_reply PROTOTYPE((struct sockaddr_in *, KTEXT, long, char *));
-int set_tgtkey PROTOTYPE((char *));
- 
+static int set_tgtkey PROTOTYPE((char *, krb5_kvno));
+
 /* Attributes converted from V5 to V4 - internal representation */
 #define V4_KDB_REQUIRES_PREAUTH  0x1
 #define V4_KDB_DISALLOW_ALL_TIX  0x2
@@ -397,13 +397,14 @@ compat_decrypt_key (in5, out4, out5, issrv)
 #define HR21 255
 
 static int
-kerb_get_principal(name, inst, principal, maxn, more, k5key, issrv)
+kerb_get_principal(name, inst, principal, maxn, more, k5key, kvno, issrv)
     char   *name;               /* could have wild card */
     char   *inst;               /* could have wild card */
     Principal *principal;
     int maxn;          /* max number of name structs to return */
     int    *more;               /* more tuples than room for */
     krb5_keyblock *k5key;
+    krb5_kvno kvno;
     int issrv;			/* true if retrieving a service key */
 {
     /* Note that this structure should not be passed to the
@@ -461,13 +462,13 @@ kerb_get_principal(name, inst, principal, maxn, more, k5key, issrv)
 				  &entries,
 				  ENCTYPE_DES_CBC_CRC,
 				  KRB5_KDB_SALTTYPE_V4,
-				  -1,
+				  kvno,
 				  &pkey) &&
 	    krb5_dbe_find_enctype(kdc_context,
 				  &entries,
 				  ENCTYPE_DES_CBC_CRC,
 				  -1,
-				  -1,
+				  kvno,
 				  &pkey)) {
 	    lt = klog(L_KRB_PERR,
 		      "KDC V4: principal %s.%s isn't V4 compatible",
@@ -479,16 +480,16 @@ kerb_get_principal(name, inst, principal, maxn, more, k5key, issrv)
 	/* XXX yes I know this is a hardcoded search order */
 	if (krb5_dbe_find_enctype(kdc_context, &entries,
 				  ENCTYPE_DES3_CBC_RAW,
-				  -1, -1, &pkey) &&
+				  -1, kvno, &pkey) &&
 	    krb5_dbe_find_enctype(kdc_context, &entries,
 				  ENCTYPE_DES3_HMAC_SHA1,
-				  -1, -1, &pkey) &&
+				  -1, kvno, &pkey) &&
 	    krb5_dbe_find_enctype(kdc_context, &entries,
 				  ENCTYPE_DES_CBC_CRC,
-				  KRB5_KDB_SALTTYPE_V4, -1, &pkey) &&
+				  KRB5_KDB_SALTTYPE_V4, kvno, &pkey) &&
 	    krb5_dbe_find_enctype(kdc_context, &entries,
 				  ENCTYPE_DES_CBC_CRC,
-				  -1, -1, &pkey)) {
+				  -1, kvno, &pkey)) {
 	    lt = klog(L_KRB_PERR,
 		      "KDC V4: failed to find key for %s.%s",
 		      name, inst);
@@ -599,6 +600,7 @@ kerberos_v4(client, pkt)
     char   *ptr;
 
     krb5_keyblock k5key;
+    krb5_kvno kvno;
 
 
     k5key.contents = NULL;	/* in case we have to free it */
@@ -804,10 +806,11 @@ kerberos_v4(client, pkt)
 	    memcpy(auth->dat, pkt->dat, auth->length);
 
 	    strncpy(tktrlm, (char *)auth->dat + 3, REALM_SZ);
-	    if (set_tgtkey(tktrlm)) {
+	    kvno = (krb5_kvno)auth->dat[2];
+	    if (set_tgtkey(tktrlm, kvno)) {
 		lt = klog(L_ERR_UNK,
-		    "FAILED realm %s unknown. Host: %s ",
-			  tktrlm, inet_ntoa(client_host));
+			  "FAILED set_tgtkey realm %s, kvno %d. Host: %s ",
+			  tktrlm, kvno, inet_ntoa(client_host));
 		kerb_err_reply(client, pkt, kerno, lt);
 		return;
 	    }
@@ -993,7 +996,7 @@ check_princ(p_name, instance, lifetime, p, k5key, issrv)
     static int more;
  /* long trans; */
 
-    n = kerb_get_principal(p_name, instance, p, 1, &more, k5key, issrv);
+    n = kerb_get_principal(p_name, instance, p, 1, &more, k5key, 0, issrv);
     klog(L_ALL_REQ,
 	 "Principal: \"%s\", Instance: \"%s\" Lifetime = %d n = %d",
 	 p_name, instance, lifetime, n, 0);
@@ -1081,28 +1084,33 @@ check_princ(p_name, instance, lifetime, p, k5key, issrv)
 
 
 /* Set the key for krb_rd_req so we can check tgt */
-int set_tgtkey(r)
+static int
+set_tgtkey(r, kvno)
     char   *r;			/* Realm for desired key */
+    krb5_kvno kvno;
 {
     int     n;
     static char lastrealm[REALM_SZ] = "";
+    static int last_kvno = 0;
     Principal p_st;
     Principal *p = &p_st;
     C_Block key;
     krb5_keyblock k5key;
 
     k5key.contents = NULL;
-    if (!strcmp(lastrealm, r))
+    if (!strcmp(lastrealm, r) && last_kvno == kvno)
 	return (KSUCCESS);
 
 /*  log("Getting key for %s", r); */
 
-    n = kerb_get_principal("krbtgt", r, p, 1, &more, &k5key, 1);
+    n = kerb_get_principal("krbtgt", r, p, 1, &more, &k5key, kvno, 1);
     if (n == 0)
 	return (KFAILURE);
 
     if (!K4KDC_ENCTYPE_OK(k5key.enctype)) {
 	krb_set_key_krb5(kdc_context, &k5key);
+	strcpy(lastrealm, r);
+	last_kvno = kvno;
     } else {
 	/* unseal tgt key from master key */
 	memcpy(key,                &p->key_low,  4);
@@ -1111,6 +1119,7 @@ int set_tgtkey(r)
 			master_key_schedule, DECRYPT);
 	krb_set_key((char *) key, 0);
 	strcpy(lastrealm, r);
+	last_kvno = kvno;
     }
     krb5_free_keyblock_contents(kdc_context, &k5key);
     return (KSUCCESS);
