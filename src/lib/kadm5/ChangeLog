@@ -1,3 +1,8 @@
+Mon Jul 15 16:52:44 1996  Barry Jaspan  <bjaspan@mit.edu>
+
+	* client_init.c (_kadm5_init_any): use krb5_get_in_tkt_keytab
+ 	instead of changing krb5_defkeyname
+
 Mon Jul 15 16:36:02 1996  Marc Horowitz  <marc@mit.edu>
 
 	* Makefile.in (CLNTOBJS), AC_REPLACE_FUNCS: check for setenv, and
