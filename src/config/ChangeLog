@@ -1,4 +1,5 @@
 Tue Jun 18 20:47:30 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+	* post.in: more fixup
 
 	* post.in: fix up subdir recursion and makefile remaking somewhat;
 		still needs work
