@@ -1,3 +1,8 @@
+Wed Jan 29 20:59:20 EST 1997	Richard Basch	<basch@lehman.com>
+
+	* Makefile.in:
+		Win32 GSS client did not link in the resource file.
+
 Tue Oct 29 10:17:25 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* gss-client.c (client_establish_context): Fix typo; service_name

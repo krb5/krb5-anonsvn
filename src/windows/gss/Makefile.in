@@ -2,6 +2,7 @@
 # Works for both k4 and k5 releases.
 #
 OBJS 	 = gss.obj gss-client.obj gss-misc.obj
+##WIN32##XOBJS	= resource.obj
 
 ##### Options
 DEBUG 	 = 1
@@ -37,7 +38,7 @@ LIBS 	 = $(GLIB) $(WLIB)
 
 all:: makefile gss.exe
 
-gss.exe: $*.def $*.res $(OBJS) $(LIBS)
+gss.exe: $*.def $*.res $(OBJS) $(XOBJS) $(LIBS)
 ##WIN16##	$(LINK) $(LFLAGS) $(OBJS), $@, $*.map, \
 ##WIN16##	  $(LIBS) $(SYSLIBS), $*.def
 ##WIN16##	$(RC) $(RFLAGS) /k $*.res $@
@@ -48,7 +49,7 @@ gss.exe: $*.def $*.res $(OBJS) $(LIBS)
 ##WIN32##	$(RC) $(RFLAGS) /r $*.rc
 
 ##WIN32##resource.obj: gss.res
-##WIN32##	$(CVTRES) /nologo /out:resource.obj gss.res
+##WIN32##	$(CVTRES) /nologo /out:$@ gss.res
 
 $(OBJS) gss.res: gss.h
 
