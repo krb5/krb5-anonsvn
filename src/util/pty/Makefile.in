@@ -4,6 +4,7 @@ prefix=	@prefix@
 LIBDIR=	@libdir@
 INCDIR=	@includedir@
 ARCHIVE=@ARCHIVE@
+RANLIB=	@RANLIB@
 AWK=	@AWK@
 ETDIR=	$(srcdir)/../et
 ET_INC=	$(ETDIR)

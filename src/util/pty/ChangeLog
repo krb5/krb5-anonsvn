@@ -1,3 +1,7 @@
+Tue Jun 18 21:15:03 1996  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in: add explicit setting of $(RANLIB)
+
 Tue Jun 18 02:29:43 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* Makefile.in, configure.in: lotsa frobbing to allow for
