@@ -82,6 +82,7 @@ char *krb5_rc_default_type(void)
    return "dfl";
 }
 
+#ifdef notdef
 char *krb5_rc_default_name(void)
 {
  char *s;
@@ -90,3 +91,4 @@ char *krb5_rc_default_name(void)
  else
    return (char *) 0;
 }
+#endif
