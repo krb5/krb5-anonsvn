@@ -1,7 +1,5 @@
 ##DOSBUILDTOP=..
 
-##DOSBUILDTOP=..
-
 #
 # Makefile that recurses into cns subdirectory.
 #
