@@ -1,3 +1,8 @@
+Fri Jul 12 21:38:15 1996  Marc Horowitz  <marc@mit.edu>
+
+	* ktdefname.c (krb5_kt_default_name): allow the default keytab name
+	to be specified in the config file.
+
 Thu Apr 11 22:15:44 1996  Theodore Y. Ts'o  <tytso@dcl>
 
 	* ustime.c (krb5_us_timeofday): When doing the time offset
