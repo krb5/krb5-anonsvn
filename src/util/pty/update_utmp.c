@@ -132,16 +132,19 @@ if (host)
     else {
 	int lc;
 	tty = -1;
+	if ((fd = open(UTMP_FILE, O_RDWR)) < 0)
+	    return errno;
 	for (lc = 0;
-	     lseek(fd, (off_t)(lc * sizeof(struct utmp)), SEEK_SET) == 0;
+	     lseek(fd, (off_t)(lc * sizeof(struct utmp)), SEEK_SET) != -1;
 	     lc++) {
 	    if (read(fd, (char *) &ut, sizeof(struct utmp)) != sizeof(struct utmp))
 		break;
-	    if (strncmp(ut.line, ent.line, sizeof(ut.line)) == 0) {
+	    if (strncmp(ut.ut_line, ent.ut_line, sizeof(ut.ut_line)) == 0) {
 		tty = lc;
 		break;
 	    }
 	}
+close(fd);
     }
     
 	     if (tty > 0 && (fd = open(UTMP_FILE, O_WRONLY, 0)) >= 0) {

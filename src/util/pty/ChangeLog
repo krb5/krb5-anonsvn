@@ -1,3 +1,9 @@
+Mon Jan 15 15:48:37 1996  Sam Hartman  (hartmans@justforfun)
+
+	* cleanup.c: Change to indiciate utmp user name is valid.
+
+	* 
+
 Mon Jan 15 15:21:16 1996  Sam Hartman  <hartmans@tertius.mit.edu>
 
 	* update_utmp.c (pty_update_utmp): Add flags field; use ttyslot
