@@ -47,6 +47,14 @@ _rpc_dtablesize()
 #else	    
 	    size = getdtablesize();
 #endif	    
+
+/* sysconf() can return a number larger than what will fit in an
+   fd_set.  we can't use fd's larger than this, anyway. */
+
+#ifdef FD_SETSIZE
+	    if (size >= FD_SETSIZE)
+		size = FD_SETSIZE-1;
+#endif
 	}
 	return (size);
 }
