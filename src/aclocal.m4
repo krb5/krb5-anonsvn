@@ -999,6 +999,15 @@ AC_SUBST(PFLIBEXT)
 AC_SUBST(LIBINSTLIST)])
 
 dnl
+dnl KRB5_BUILD_LIBRARY_STATIC
+dnl
+dnl Force static library build.
+
+AC_DEFUN(KRB5_BUILD_LIBRARY_STATIC,
+[krb5_force_static=yes
+KRB5_BUILD_LIBRARY])
+
+dnl
 dnl KRB5_BUILD_LIBRARY_WITH_DEPS
 dnl
 dnl Like KRB5_BUILD_LIBRARY, but adds in explicit dependencies in the
@@ -1039,6 +1048,32 @@ AC_SUBST(PICFLAGS)
 AC_SUBST(PROFFLAGS)])
 
 dnl
+dnl KRB5_BUILD_PROGRAM
+dnl
+dnl Set variables to build a program.
+
+AC_DEFUN(KRB5_BUILD_PROGRAM,
+[AC_REQUIRE([KRB5_LIB_AUX])
+AC_ARG_WITH([krb4],
+[  --with-krb4             build with krb4 libraries],
+
+[KRB4_DEPLIB='$(TOPLIBD)/libkrb4$(DEPLIBEXT)'
+DES425_DEPLIB='$(TOPLIBD)/libdes425$(DEPLIBEXT)'
+KRB4_LIB=-lkrb4
+DES425_LIB=-ldes425],
+
+[KRB4_DEPLIB=
+DES425_DEPLIB=
+KRB4_LIB=
+DES425_LIB=])
+AC_SUBST(KRB4_DEPLIB)
+AC_SUBST(DES425_DEPLIB)
+AC_SUBST(KRB4_LIB)
+AC_SUBST(DES425_DEPLIB)
+AC_SUBST(CC_LINK)
+AC_SUBST(DEPLIBEXT)])
+
+dnl
 dnl KRB5_LIB_AUX
 dnl
 dnl Parse configure options related to library building.
@@ -1050,7 +1085,7 @@ AC_ARG_ENABLE([static],
 [  --disable-static        don't build static libraries], ,
 [enableval=yes])
 
-if test "$enableval" = no; then
+if test "$enableval" = no && test "$krb5_force_static" != yes; then
 	AC_MSG_RESULT([Disabling static libraries.])
 	LIBLINKS=
 	LIBLIST=
@@ -1060,13 +1095,13 @@ else
 	LIBLINKS='$(TOPLIBD)/lib$(LIB)$(STLIBEXT)'
 	OBJLISTS=OBJS.ST
 	LIBINSTLIST=install-static
-	DEPLIBEXT='$(STLIBEXT)'
+	DEPLIBEXT=$STLIBEXT
 fi
 
 # Check whether to build shared libraries.
 AC_ARG_ENABLE([shared],
 [  --enable-shared         build shared libraries],
-[if test "$enableval" = yes; then
+[if test "$enableval" = yes && test "$krb5_force_static" != yes; then
 	case "$SHLIBEXT" in
 	.so-nobuild)
 		AC_MSG_WARN([shared libraries not supported on this architecture])
@@ -1077,7 +1112,7 @@ AC_ARG_ENABLE([shared],
 		LIBLINKS="$LIBLINKS "'$(TOPLIBD)/lib$(LIB)$(SHLIBEXT) $(TOPLIBD)/lib$(LIB)$(SHLIBVEXT)'
 		OBJLISTS="$OBJLISTS OBJS.SH"
 		LIBINSTLIST="$LIBINSTLIST install-shared"
-		DEPLIBEXT='$(SHLIBEXT)'
+		DEPLIBEXT=$SHLIBEXT
 		;;
 	esac
 fi])dnl
@@ -1139,6 +1174,7 @@ alpha-dec-osf*)
 	LDCOMBINE='ld -shared -expect_unresolved \* -update_registry $(BUILDTOP)/so_locations'
 	SHLIB_EXPFLAGS='-rpath $(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
+	CC_LINK='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
 	;;
 *-*-netbsd*)
 	PICFLAGS=-fpic
@@ -1146,6 +1182,7 @@ alpha-dec-osf*)
 	SHLIBEXT=.so
 	LDCOMBINE='ld -Bshareable'
 	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS)'
+	CC_LINK='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
 	PROFFLAGS=-pg
 	;;
 *-*-solaris*)
@@ -1161,9 +1198,12 @@ alpha-dec-osf*)
 	SHLIBEXT=.so
 	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
+	CC_LINK='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
 	;;
 *-*-sunos*)
 	PICFLAGS=-fpic
+	SHLIBVEXT='.so.$(LIBMAJOR).$(LIBMINOR)'
+	SHLIBEXT=.so
 	# The following grossness is to prevent relative paths from
 	# creeping into the RPATH of an executable or library built
 	# under SunOS; the explicit setting of LD_LIBRARY_PATH does
@@ -1171,6 +1211,8 @@ alpha-dec-osf*)
 	# passed by "-Ldirname" do.
 	LDCOMBINE='LD_LIBRARY_PATH=`echo $(SHLIB_DIRS) | sed -e "s/-L//g" -e "s/ /:/g"` ld -dp -assert pure-text'
 	SHLIB_EXPFLAGS='-L$(SHLIB_RDIRS) $(SHLIB_EXPLIBS)'
+	PROFFLAGS=-pg
+	CC_LINK='LD_LIBRARY_PATH=`echo $(PROG_LIBPATH) | sed -e "s/-L//g" -e "s/ /:g"` $(CC) -L$(PROG_RPATH)'
 	;;
 *-*-linux*)
 	PICFLAGS=-fPIC
@@ -1181,5 +1223,6 @@ alpha-dec-osf*)
 	LDCOMBINE='ld -shared -h lib$(LIB)$(SHLIBEXT).$(LIBMAJOR).$(LIBMINOR)'
 	SHLIB_EXPFLAGS='-R$(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
+	CC_LINK='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
 	;;
 esac])
