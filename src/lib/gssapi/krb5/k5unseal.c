@@ -89,7 +89,7 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
 
    ptr = (unsigned char *) input_token_buffer->value;
 
-   if (err = g_verify_token_header((gss_OID) gss_mech_krb5, &bodysize,
+   if (err = g_verify_token_header((gss_OID) ctx->mech_used, &bodysize,
 				   &ptr, toktype,
 				   input_token_buffer->length)) {
       *minor_status = err;
@@ -285,7 +285,9 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
 
       xfree(cksum.contents);
 #else
-      if (code = kg_encrypt(context, &ctx->seq, NULL,
+      if (code = kg_encrypt(context, &ctx->seq,
+			    (ctx->mech_used == gss_mech_krb5 ?
+			     NULL : ctx->seq.key->contents),
 			    md5cksum.contents, md5cksum.contents, 16)) {
 	 xfree(md5cksum.contents);
 	 if (toktype == KG_TOK_SEAL_MSG)

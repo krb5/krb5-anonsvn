@@ -49,8 +49,8 @@
 /*
  * Encoding rules: The first two values are encoded in one byte as 40
  * * value1 + value2.  Subsequent values are encoded base 128, most
- * significant digit first, with the high bit set on all octets except
- * the last in each value's encoding.
+ * significant digit first, with the high bit (\200) set on all octets
+ * except the last in each value's encoding.
  */
 
 static const gss_OID_desc oids[] = {
@@ -61,10 +61,10 @@ static const gss_OID_desc oids[] = {
    {9, "\052\206\110\206\367\022\001\002\002"},
 };
 
-const gss_OID_desc * const gss_mech_krb5 = oids+0;
+const gss_OID_desc * const gss_mech_krb5_old = oids+0;
 const gss_OID_desc * const gss_nt_krb5_name = oids+1;
 const gss_OID_desc * const gss_nt_krb5_principal = oids+2;
-const gss_OID_desc * const gss_new_mech_krb5 = oids+3;
+const gss_OID_desc * const gss_mech_krb5 = oids+3;
 
 static const gss_OID_set_desc oidsets[] = {
    {1, (gss_OID) oids},

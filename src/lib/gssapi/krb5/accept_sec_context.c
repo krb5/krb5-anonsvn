@@ -86,68 +86,6 @@ cleanup:
     return retval;
 }
 
-#if 0
-
-static krb5_error_code
-make_ap_rep(krb5_tkt_authent *authdat,
-	    krb5_keyblock *session_key,
-	    krb5_int32 *seq_send,
-	    gss_buffer_t token)
-{
-   krb5_error_code code;
-   krb5_ap_rep_enc_part ap_rep_data;
-   krb5_data ap_rep;
-   int tlen;
-   unsigned char *t, *ptr;
-
-   /* make the ap_rep */
-
-   ap_rep_data.ctime = authdat->authenticator->ctime;
-   ap_rep_data.cusec = authdat->authenticator->cusec;
-   ap_rep_data.subkey = authdat->authenticator->subkey;
-
-   if (code = krb5_generate_seq_number(authdat->ticket->enc_part2->session,
-				       &ap_rep_data.seq_number))
-      return(code);
-
-   if (code = krb5_mk_rep(&ap_rep_data, session_key, &ap_rep))
-      return(code);
-
-   /* build up the token */
-
-   /* allocate space for the token */
-   tlen = g_token_size(gss_mech_krb5, ap_rep.length);
-
-   if ((t = (unsigned char *) xmalloc(tlen)) == NULL) {
-      xfree(ap_rep.data);
-      return(ENOMEM);
-   }
-
-   /* fill in the buffer */
-
-   ptr = t;
-
-   g_make_token_header(gss_mech_krb5, ap_rep.length,
-		       &ptr, KG_TOK_CTX_AP_REP);
-
-   TWRITE_STR(ptr, ap_rep.data, ap_rep.length);
-
-   /* free the ap_rep */
-
-   xfree(ap_rep.data);
-
-   /* pass everything back */
-
-   *seq_send = ap_rep_data.seq_number;
-
-   token->length = tlen;
-   token->value = (void *) t;
-
-   return(0);
-}
-
-#endif
-
 OM_uint32
 krb5_gss_accept_sec_context(minor_status, context_handle, 
 			    verifier_cred_handle, input_token,
@@ -190,6 +128,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
    int option_id;
    krb5_data option;
    krb5_auth_context auth_context_cred = NULL;
+   const gss_OID_desc *mech_used = NULL;
 
 
    if (GSS_ERROR(kg_get_context(minor_status, &context)))
@@ -245,9 +184,24 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
    if (err = g_verify_token_header((gss_OID) gss_mech_krb5, &(ap_req.length),
 				   &ptr, KG_TOK_CTX_AP_REQ,
 				   input_token->length)) {
-      *minor_status = err;
-      return(GSS_S_DEFECTIVE_TOKEN);
-   }
+	/*
+	 * Previous versions of this library used the old mech_id
+	 * and some broken behavior (wrong IV on checksum
+	 * encryption).  We support the old mech_id for
+	 * compatibility, and use it to decide when to use the
+	 * old behavior.
+	 */
+	if (err != G_WRONG_MECH ||
+	    (err = g_verify_token_header((gss_OID) gss_mech_krb5_old,
+					 &(ap_req.length), 
+					 &ptr, KG_TOK_CTX_AP_REQ,
+					 input_token->length))) {
+	     *minor_status = err;
+	     return(GSS_S_DEFECTIVE_TOKEN);
+	} else
+	     mech_used = gss_mech_krb5_old;
+   } else
+	mech_used = gss_mech_krb5;
 
    sptr = (char *) ptr;
    TREAD_STR(sptr, ap_req.data, ap_req.length);
@@ -414,6 +368,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
    }
 
    memset(ctx, 0, sizeof(krb5_gss_ctx_id_rec));
+   ctx->mech_used = mech_used;
    ctx->auth_context = auth_context;
    ctx->initiate = 0;
    ctx->mutual = gss_flags & GSS_C_MUTUAL_FLAG;
@@ -505,7 +460,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
 	 return(GSS_S_FAILURE);
       }
       krb5_auth_con_getlocalseqnumber(context, auth_context, &ctx->seq_send);
-      token.length = g_token_size((gss_OID) gss_mech_krb5, ap_rep.length);
+      token.length = g_token_size((gss_OID) mech_used, ap_rep.length);
 
       if ((token.value = (unsigned char *) xmalloc(token.length)) == NULL) {
 	 (void)krb5_gss_delete_sec_context(minor_status, 
@@ -514,7 +469,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
 	 return(GSS_S_FAILURE);
       }
       ptr = token.value;
-      g_make_token_header((gss_OID) gss_mech_krb5, ap_rep.length,
+      g_make_token_header((gss_OID) mech_used, ap_rep.length,
 			  &ptr, KG_TOK_CTX_AP_REP);
 
       TWRITE_STR(ptr, ap_rep.data, ap_rep.length);
@@ -542,7 +497,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
    }
 
    if (mech_type)
-      *mech_type = (gss_OID) gss_mech_krb5;
+      *mech_type = (gss_OID) mech_used;
 
    if (time_rec) {
       if ((code = krb5_timeofday(context, &now))) {

@@ -24,7 +24,8 @@
 
 static krb5_error_code
 make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
-		signalg, cksum_size, sealalg, encrypt, toktype, bigend)
+		signalg, cksum_size, sealalg, encrypt, toktype,
+		bigend, oid)
      krb5_context context;
      krb5_gss_enc_desc *enc_ed;
      krb5_gss_enc_desc *seq_ed;
@@ -38,6 +39,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
      int encrypt;
      int toktype;
      int bigend;
+     gss_OID oid;
 {
    krb5_error_code code;
    char *data_ptr;
@@ -60,7 +62,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
       tmsglen = 0;
    }
 
-   tlen = g_token_size((gss_OID) gss_mech_krb5, 14+cksum_size+tmsglen);
+   tlen = g_token_size((gss_OID) oid, 14+cksum_size+tmsglen);
 
    if ((t = (unsigned char *) xmalloc(tlen)) == NULL)
       return(ENOMEM);
@@ -69,8 +71,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
    ptr = t;
 
-   g_make_token_header((gss_OID) gss_mech_krb5,
-		       14+cksum_size+tmsglen, &ptr, toktype);
+   g_make_token_header((gss_OID) oid, 14+cksum_size+tmsglen, &ptr, toktype);
 
    /* 0..1 SIGN_ALG */
 
@@ -233,7 +234,9 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
        xfree(cksum.contents);
 #else
-       if (code = kg_encrypt(context, seq_ed, NULL,
+       if (code = kg_encrypt(context, seq_ed,
+			     (oid == gss_mech_krb5_old ?
+			      seq_ed->key->contents : NULL),
 			     md5cksum.contents, md5cksum.contents, 16)) {
 	  xfree(md5cksum.contents);
 	  xfree(t);
@@ -320,7 +323,8 @@ kg_seal(context, minor_status, context_handle, conf_req_flag, qop_req,
 			      &ctx->seq_send, ctx->initiate,
 			      input_message_buffer, output_message_buffer,
 			      ctx->signalg, ctx->cksum_size, ctx->sealalg,
-			      conf_req_flag, toktype, ctx->big_endian)) {
+			      conf_req_flag, toktype, ctx->big_endian,
+			      ctx->mech_used)) {
       *minor_status = code;
       return(GSS_S_FAILURE);
    }

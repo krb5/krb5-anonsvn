@@ -118,7 +118,7 @@ krb5_gss_inquire_context(minor_status, context_handle, initiator_name,
       *lifetime_rec = lifetime;
 
    if (mech_type)
-      *mech_type = (gss_OID) gss_mech_krb5;
+      *mech_type = (gss_OID) ctx->mech_used;
 
    if (ret_flags)
       *ret_flags = GSS_C_CONF_FLAG | GSS_C_INTEG_FLAG | ctx->mutual;

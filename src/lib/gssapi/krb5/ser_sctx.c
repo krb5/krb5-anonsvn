@@ -255,11 +255,14 @@ kg_ctx_size(kcontext, arg, sizep)
      *	krb5_int32	for established.
      *	krb5_int32	for big_endian.
      *	krb5_int32	for trailer.
+     *  OM_uint32	for length of mech_used
+     *  length(mech_used) for mech_used
      */
     kret = EINVAL;
     if ((ctx = (krb5_gss_ctx_id_rec *) arg)) {
-	required = 14*sizeof(krb5_int32);
+	required = 15*sizeof(krb5_int32);
 	required += sizeof(ctx->seed);
+	required += ctx->mech_used->length;
 
 	kret = 0;
 	if (!kret && ctx->here)
@@ -294,6 +297,40 @@ kg_ctx_size(kcontext, arg, sizep)
 	    *sizep += required;
     }
     return(kret);
+}
+
+static krb5_error_code kg_oid_externalize(kcontext, arg, buffer, lenremain)
+    krb5_context	kcontext;
+    krb5_pointer	arg;
+    krb5_octet		**buffer;
+    size_t		*lenremain;
+{
+     gss_OID oid = (gss_OID) arg;
+     
+     (void) krb5_ser_pack_int32((krb5_int32) oid->length,
+				buffer, lenremain);
+     (void) krb5_ser_pack_bytes((krb5_octet *) oid->elements,
+				oid->length, buffer, lenremain);
+}
+
+static krb5_error_code
+kg_oid_internalize(kcontext, argp, buffer, lenremain)
+    krb5_context	kcontext;
+    krb5_pointer	*argp;
+    krb5_octet		**buffer;
+    size_t		*lenremain;
+{
+     gss_OID oid;
+     krb5_int32 ibuf;
+
+     oid = (gss_OID) malloc(sizeof(gss_OID_desc));
+     if (oid == NULL)
+	  return ENOMEM;
+     (void) krb5_ser_unpack_int32(&ibuf, buffer, lenremain);
+     oid->length = ibuf;
+     (void) krb5_ser_unpack_bytes((krb5_octet *) oid->elements,
+				  oid->length, buffer, lenremain);
+     return 0;
 }
 
 /*
@@ -355,6 +392,10 @@ kg_ctx_externalize(kcontext, arg, buffer, lenremain)
 	    /* Now dynamic data */
 	    kret = 0;
 
+	    if (!kret && ctx->mech_used)
+		 kret = kg_oid_externalize(kcontext, ctx->mech_used,
+					   &bp, &remain); 
+	    
 	    if (!kret && ctx->here)
 		kret = krb5_externalize_opaque(kcontext,
 					       KV5M_PRINCIPAL,
@@ -452,6 +493,11 @@ kg_ctx_internalize(kcontext, argp, buffer, lenremain)
 	    (void) krb5_ser_unpack_int32(&ibuf, &bp, &remain);
 	    ctx->big_endian = (int) ibuf;
 
+	    if ((kret = kg_oid_internalize(kcontext, &ctx->mech_used, &bp,
+					   &remain))) {
+		 if (kret == EINVAL)
+		      kret = 0;
+	    }
 	    /* Now get substructure data */
 	    if ((kret = krb5_internalize_opaque(kcontext,
 						KV5M_PRINCIPAL,

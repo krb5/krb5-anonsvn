@@ -302,6 +302,7 @@ krb5_gss_init_sec_context(minor_status, claimant_cred_handle,
 
       /* fill in the ctx */
       memset(ctx, 0, sizeof(krb5_gss_ctx_id_rec));
+      ctx->mech_used = gss_mech_krb5;
       ctx->auth_context = NULL;
       ctx->initiate = 1;
       ctx->mutual = req_flags & GSS_C_MUTUAL_FLAG;
