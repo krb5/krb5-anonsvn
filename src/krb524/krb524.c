@@ -20,4 +20,26 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-int krb524_debug = 0;
+#ifdef _WIN32
+#include "krb5.h"
+
+#ifdef krb524_convert_creds_kdc
+#undef krb524_convert_creds_kdc
+#endif
+#ifdef krb524_init_ets
+#undef krb524_init_ets
+#endif
+
+int KRB5_CALLCONV 
+krb524_convert_creds_kdc(krb5_context context, krb5_creds *v5creds, struct credentials *v4creds)
+{
+	return(krb5_524_convert_creds(context,v5creds,v4creds));
+}
+
+void KRB5_CALLCONV
+krb524_init_ets(void) 
+{
+	/* no-op */
+}
+#endif /* _WIN32 */
+
