@@ -46,6 +46,9 @@ endif
 ifeq "$(strip $(filter IRIX, $(__UNAME_A)))" "IRIX"
 	export ARCH_OS := irix5.2
 endif
+ifeq "$(strip $(filter NetBSD, $(__UNAME_A)))" "NetBSD NetBSD"
+	export ARCH_OS := netbsd1
+endif
 
 ifndef ARCH_OS
 	d:=$(shell echo "*** WARNING! Unknown architecture: $(__UNAME_A)" 1>&2)
