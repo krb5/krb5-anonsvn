@@ -17,7 +17,8 @@ STLIBOBJS = \
 	prof_get.o \
 	prof_set.o \
 	prof_err.o \
-	prof_init.o
+	prof_init.o \
+	prof_threads.o
 
 OBJS = $(OUTPRE)prof_tree.$(OBJEXT) \
 	$(OUTPRE)prof_file.$(OBJEXT) \
@@ -25,7 +26,8 @@ OBJS = $(OUTPRE)prof_tree.$(OBJEXT) \
 	$(OUTPRE)prof_get.$(OBJEXT) \
 	$(OUTPRE)prof_set.$(OBJEXT) \
 	$(OUTPRE)prof_err.$(OBJEXT) \
-	$(OUTPRE)prof_init.$(OBJEXT)
+	$(OUTPRE)prof_init.$(OBJEXT) \
+	$(OUTPRE)prof_threads.$(OBJEXT)
 
 SRCS = $(srcdir)/prof_tree.c \
 	$(srcdir)/prof_file.c \
@@ -33,7 +35,8 @@ SRCS = $(srcdir)/prof_tree.c \
 	$(srcdir)/prof_get.c \
 	$(srcdir)/prof_set.c \
 	prof_err.c \
-	$(srcdir)/prof_init.c
+	$(srcdir)/prof_init.c \
+	$(srcdir)/prof_threads.c
 
 DEPLIBS = $(COM_ERR_DEPLIB)
 MLIBS = -lcom_err $(GEN_LIB)
