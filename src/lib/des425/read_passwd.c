@@ -27,6 +27,8 @@
  * echoing.
  */
 
+#ifndef _WIN32
+
 #include "des.h"
 #include <stdio.h>
 #include <errno.h>
@@ -178,3 +180,8 @@ des_read_password/*_v4_compat_crock*/(k,prompt,verify)
     return ok;
 }
 
+#else /* _WIN32 */
+/*
+ * These are all just dummy functions to make the rest of the library happy...
+ */
+#endif /* _WIN32 */
