@@ -10,6 +10,10 @@
 #endif
 #include <errno.h>
 
+#if TARGET_OS_MAC && TARGET_API_MAC_CARBON
+#include <FullPOSIXPath.h>
+#endif
+
 #include "prof_int.h"
 
 /* Find a 4-byte integer type */
@@ -44,6 +48,7 @@ profile_init(files, ret_profile)
         /* if the filenames list is not specified return an empty profile */
         if ( files ) {
 	    for (fs = files; !PROFILE_LAST_FILESPEC(*fs); fs++) {
+/*                printf ("profile_init (%s)\n", *fs); */
 		retval = profile_open_file(*fs, &new_file);
 		/* if this file is missing, skip to the next */
 		if (retval == ENOENT) {
@@ -73,9 +78,9 @@ profile_init(files, ret_profile)
         return 0;
 }
 
-#ifndef macintosh
+#if !TARGET_OS_MAC || TARGET_RT_MAC_MACHO
 /* 
- * On MacOS, profile_init_path is the same as profile_init
+ * On CFM MacOS, profile_init_path is the same as profile_init
  */
 KRB5_DLLIMP errcode_t KRB5_CALLCONV
 profile_init_path(filepath, ret_profile)
@@ -134,6 +139,72 @@ profile_init_path(filelist, ret_profile)
 	profile_t *ret_profile;
 {
 	return profile_init (filelist, ret_profile);
+}
+#endif
+
+#if TARGET_OS_MAC && TARGET_API_MAC_CARBON
+KRB5_DLLIMP errcode_t KRB5_CALLCONV
+FSp_profile_init(files, ret_profile)
+	const FSSpec* files;
+	profile_t *ret_profile;
+{
+    UInt32		fileCount = 0;
+    const FSSpec*	nextSpec;
+    char**		pathArray = NULL;
+    UInt32		i;
+    errcode_t		retval = 0;
+
+    for (nextSpec = files; ; nextSpec++) {
+        if ((nextSpec -> vRefNum == 0) &&
+            (nextSpec -> parID == 0) &&
+            (StrLength (nextSpec -> name) == 0))
+            break;
+        fileCount++;
+    }
+    
+    pathArray = malloc ((fileCount + 1) * sizeof (char*));
+    if (pathArray == NULL) {
+        retval = ENOMEM;
+    }
+    
+    if (retval == 0) {
+        for (i = 0; i < fileCount + 1; i++) {
+            pathArray [i] = NULL;
+        }
+        
+        for (i = 0; i < fileCount; i++) {
+            OSErr err = FSpGetFullPOSIXPath (&files [i], &pathArray [i]);
+            if (err == memFullErr) {
+                retval = ENOMEM;
+                break;
+            } else if (err != noErr) {
+                retval = ENOENT;
+                break;
+            }
+        }
+    }
+    
+    if (retval == 0) {
+        retval = profile_init (pathArray, ret_profile);
+    }
+    
+    if (pathArray != NULL) {
+        for (i = 0; i < fileCount; i++) {
+            if (pathArray [i] != 0)
+                free (pathArray [i]);
+        }
+        free (pathArray);
+    }
+    
+    return retval;
+}
+
+KRB5_DLLIMP errcode_t KRB5_CALLCONV
+FSp_profile_init_path(files, ret_profile)
+	const FSSpec* files;
+	profile_t *ret_profile;
+{
+    return FSp_profile_init (files, ret_profile);
 }
 #endif
 

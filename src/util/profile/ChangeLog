@@ -1,3 +1,8 @@
+2000-10-16  Miro Jurisic <meeroh@mit.edu>
+
+        * profile.pbexp, prof_file.c, prof_init.c, profile.hin:
+        Support Mac FSSpecs and POSIX paths under Mac OS X
+
 2000-10-02  Alexandra Ellwood <lxs@mit.edu>
 
         * profile.pbexp: added a Mac OS X export file.  This

@@ -7,6 +7,8 @@ ___InitializeProfileLib
 
 _profile_init
 _profile_init_path
+_FSp_profile_init
+_FSp_profile_init_path
 _profile_flush
 _profile_abandon
 _profile_release

@@ -114,12 +114,13 @@ errcode_t profile_open_file(filespec, ret_prof)
 	char		*home_env = NULL;
 	int		len;
 	
+
 	prf = malloc(sizeof(struct _prf_file_t));
 	if (prf == NULL) {
 		retval = ENOMEM;
 		goto end;
 	}
-
+        
 	memset(prf, 0, sizeof(struct _prf_file_t));
 		
 #ifdef SHARE_TREE_DATA
@@ -212,7 +213,7 @@ errcode_t profile_open_file(filespec, ret_prof)
 
 	retval = profile_update_file_data(data);
 	if (retval) {
-		profile_close_file(prf);
+        profile_close_file(prf);
 		prf = NULL;
 		data = NULL;
 		goto end;
@@ -353,6 +354,10 @@ errcode_t profile_flush_file_data(data)
 	profile_filespec_t old_file;
 	errcode_t	retval = 0;
 	
+#ifdef PROFILE_USES_PATHS
+	new_file = old_file = 0;
+#endif
+
 #ifdef SHARE_TREE_DATA
 	int havelock = 1;
 	
@@ -377,7 +382,6 @@ errcode_t profile_flush_file_data(data)
 	retval = ENOMEM;
 	
 #ifdef PROFILE_USES_PATHS
-	new_file = old_file = 0;
 	new_file = malloc(strlen(data->filespec) + 5);
 	if (!new_file)
 		goto end;
