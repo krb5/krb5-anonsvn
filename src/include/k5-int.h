@@ -515,6 +515,75 @@ krb5_error_code krb5_find_config_files
  * in here to deal with stuff from lib/crypto/os
  */
 
+typedef struct _krb5_cryptosystem_entry {
+    krb5_magic magic;
+    krb5_error_code (*encrypt_func) KRB5_NPROTOTYPE(( krb5_const_pointer /* in */,
+					       krb5_pointer /* out */,
+					       krb5_const size_t,
+					       krb5_encrypt_block FAR *,
+					       krb5_pointer));
+    krb5_error_code (*decrypt_func) KRB5_NPROTOTYPE(( krb5_const_pointer /* in */,
+					       krb5_pointer /* out */,
+					       krb5_const size_t,
+					       krb5_encrypt_block FAR *,
+					       krb5_pointer));
+    krb5_error_code (*process_key) KRB5_NPROTOTYPE(( krb5_encrypt_block FAR *,
+					      krb5_const krb5_keyblock FAR *));
+    krb5_error_code (*finish_key) KRB5_NPROTOTYPE(( krb5_encrypt_block FAR *));
+    krb5_error_code (*string_to_key) KRB5_NPROTOTYPE((krb5_const krb5_encrypt_block FAR *,
+						krb5_keyblock FAR *,
+						krb5_const krb5_data FAR *,
+						krb5_const krb5_data FAR *));
+    krb5_error_code (*init_random_key) KRB5_NPROTOTYPE(( krb5_const krb5_encrypt_block FAR *,
+						krb5_const krb5_keyblock FAR *,
+						krb5_pointer FAR *));
+    krb5_error_code (*finish_random_key) KRB5_NPROTOTYPE(( krb5_const krb5_encrypt_block FAR *,
+						krb5_pointer FAR *));
+    krb5_error_code (*random_key) KRB5_NPROTOTYPE(( krb5_const krb5_encrypt_block FAR *,
+					      krb5_pointer,
+					      krb5_keyblock FAR * FAR *));
+    int block_length;
+    int pad_minimum;			/* needed for cksum size computation */
+    int keysize;
+    krb5_enctype proto_enctype;		/* key type,
+					   (assigned protocol number AND
+					    table index) */
+} krb5_cryptosystem_entry;
+
+typedef struct _krb5_cs_table_entry {
+    krb5_magic magic;
+    krb5_cryptosystem_entry FAR * system;
+    krb5_pointer random_sequence;	/* from init_random_key() */
+} krb5_cs_table_entry;
+
+
+/* could be used in a table to find a sumtype */
+typedef krb5_error_code
+	(*SUM_FUNC) KRB5_NPROTOTYPE ((
+		krb5_const krb5_pointer /* in */,
+		krb5_const size_t /* in_length */,
+		krb5_const krb5_pointer /* key/seed */,
+		krb5_const size_t /* key/seed size */,
+		krb5_checksum FAR * /* out_cksum */));
+
+typedef krb5_error_code
+	(*SUM_VERF_FUNC) KRB5_NPROTOTYPE ((
+		krb5_const krb5_checksum FAR * /* out_cksum */,
+		krb5_const krb5_pointer /* in */,
+		krb5_const size_t /* in_length */,
+		krb5_const krb5_pointer /* key/seed */,
+		krb5_const size_t /* key/seed size */));
+
+typedef struct _krb5_checksum_entry {
+    krb5_magic magic;
+    SUM_FUNC sum_func;			/* Checksum generator */
+    SUM_VERF_FUNC sum_verf_func;	/* Verifier of checksum */
+    int checksum_length;	   	/* length returned by sum_func */
+    unsigned int is_collision_proof:1;
+    unsigned int uses_key:1;
+} krb5_checksum_entry;
+
+
 /* This array is indexed by encryption type */
 extern krb5_cs_table_entry * NEAR krb5_csarray[];
 extern int krb5_max_cryptosystem;
@@ -737,6 +806,9 @@ struct _krb5_context {
 	int		fcc_default_format;
 	int		scc_default_format;
 };
+
+/* could be used in a table to find an etype and initialize a block */
+
 
 #define KRB5_LIBOPT_SYNC_KDCTIME	0x0001
 

@@ -270,6 +270,8 @@ typedef struct _krb5_context FAR * krb5_context;
 struct _krb5_auth_context;
 typedef struct _krb5_auth_context FAR * krb5_auth_context;
 
+struct _krb5_cryptosystem_entry;
+
 /*
  * begin "encryption.h"
  */
@@ -290,7 +292,7 @@ typedef struct _krb5_checksum {
 
 typedef struct _krb5_encrypt_block {
     krb5_magic magic;
-    struct _krb5_cryptosystem_entry FAR *crypto_entry;
+    struct _krb5_cryptosystem_entry FAR * crypto_entry;
     krb5_keyblock FAR *key;
     krb5_pointer priv;			/* for private use, e.g. DES
 					   key schedules */
@@ -303,73 +305,6 @@ typedef struct _krb5_enc_data {
     krb5_kvno kvno;
     krb5_data ciphertext;
 } krb5_enc_data;
-
-/* could be used in a table to find an etype and initialize a block */
-typedef struct _krb5_cryptosystem_entry {
-    krb5_magic magic;
-    krb5_error_code (*encrypt_func) KRB5_NPROTOTYPE(( krb5_const_pointer /* in */,
-					       krb5_pointer /* out */,
-					       krb5_const size_t,
-					       krb5_encrypt_block FAR *,
-					       krb5_pointer));
-    krb5_error_code (*decrypt_func) KRB5_NPROTOTYPE(( krb5_const_pointer /* in */,
-					       krb5_pointer /* out */,
-					       krb5_const size_t,
-					       krb5_encrypt_block FAR *,
-					       krb5_pointer));
-    krb5_error_code (*process_key) KRB5_NPROTOTYPE(( krb5_encrypt_block FAR *,
-					      krb5_const krb5_keyblock FAR *));
-    krb5_error_code (*finish_key) KRB5_NPROTOTYPE(( krb5_encrypt_block FAR *));
-    krb5_error_code (*string_to_key) KRB5_NPROTOTYPE((krb5_const krb5_encrypt_block FAR *,
-						krb5_keyblock FAR *,
-						krb5_const krb5_data FAR *,
-						krb5_const krb5_data FAR *));
-    krb5_error_code (*init_random_key) KRB5_NPROTOTYPE(( krb5_const krb5_encrypt_block FAR *,
-						krb5_const krb5_keyblock FAR *,
-						krb5_pointer FAR *));
-    krb5_error_code (*finish_random_key) KRB5_NPROTOTYPE(( krb5_const krb5_encrypt_block FAR *,
-						krb5_pointer FAR *));
-    krb5_error_code (*random_key) KRB5_NPROTOTYPE(( krb5_const krb5_encrypt_block FAR *,
-					      krb5_pointer,
-					      krb5_keyblock FAR * FAR *));
-    int block_length;
-    int pad_minimum;			/* needed for cksum size computation */
-    int keysize;
-    krb5_enctype proto_enctype;		/* key type,
-					   (assigned protocol number AND
-					    table index) */
-} krb5_cryptosystem_entry;
-
-typedef struct _krb5_cs_table_entry {
-    krb5_magic magic;
-    krb5_cryptosystem_entry FAR *system;
-    krb5_pointer random_sequence;	/* from init_random_key() */
-} krb5_cs_table_entry;
-
-/* could be used in a table to find a sumtype */
-typedef krb5_error_code	 (*SUM_FUNC) KRB5_NPROTOTYPE (
-			(krb5_pointer /* in */,
-			size_t /* in_length */,
-			krb5_pointer /* key/seed */,
-			size_t /* key/seed size */,
-			krb5_checksum FAR * /* out_cksum */));
-
-typedef krb5_error_code	 (*SUM_VERF_FUNC) KRB5_NPROTOTYPE (
-			(krb5_checksum FAR * /* out_cksum */,
-			krb5_pointer /* in */,
-			size_t /* in_length */,
-			krb5_pointer /* key/seed */,
-			size_t /* key/seed size */));
-
-typedef struct _krb5_checksum_entry {
-    krb5_magic magic;
-    SUM_FUNC sum_func;			/* Checksum generator */
-    SUM_VERF_FUNC sum_verf_func;	/* Verifier of checksum */
-    int checksum_length;		/* length of stuff returned by
-					   sum_func */
-    unsigned int is_collision_proof:1;
-    unsigned int uses_key:1;
-} krb5_checksum_entry;
 
 /* per Kerberos v5 protocol spec */
 #define	ENCTYPE_NULL		0x0000
@@ -407,54 +342,87 @@ typedef struct _krb5_checksum_entry {
 #define krb5_xc(ptr,args) ((*(ptr)) args)
 #endif
 
-#define krb5_encrypt(context, inptr, outptr, size, eblock, ivec) krb5_x((eblock)->crypto_entry->encrypt_func,(inptr, outptr, size, eblock, ivec))
-#define krb5_decrypt(context, inptr, outptr, size, eblock, ivec) krb5_x((eblock)->crypto_entry->decrypt_func,(inptr, outptr, size, eblock, ivec))
-#define krb5_process_key(context, eblock, key) krb5_x((eblock)->crypto_entry->process_key,(eblock, key))
-#define krb5_finish_key(context, eblock) krb5_x((eblock)->crypto_entry->finish_key,(eblock))
-#define krb5_string_to_key(context, eblock, keyblock, data, princ) krb5_x((eblock)->crypto_entry->string_to_key,(eblock, keyblock, data, princ))
-#define krb5_init_random_key(context, eblock, keyblock, ptr) krb5_x((eblock)->crypto_entry->init_random_key,(eblock, keyblock, ptr))
-#define krb5_finish_random_key(context, eblock, ptr) krb5_x((eblock)->crypto_entry->finish_random_key,(eblock, ptr))
-#define krb5_random_key(context, eblock, ptr, keyblock) krb5_x((eblock)->crypto_entry->random_key,(eblock, ptr, keyblock))
-
-#define krb5_eblock_enctype(context, eblockp) ((eblockp)->crypto_entry->proto_enctype)
-
 /*
  * cryptosystem routine prototypes
  */
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_encrypt
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_const krb5_pointer inptr,
+		krb5_pointer outptr,
+		krb5_const size_t size,
+		krb5_encrypt_block FAR * eblock,
+		krb5_pointer ivec));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_decrypt
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_const krb5_pointer inptr,
+		krb5_pointer outptr,
+		krb5_const size_t size,
+		krb5_encrypt_block FAR * eblock,
+		krb5_pointer ivec));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_process_key
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_encrypt_block FAR * eblock,
+		krb5_const krb5_keyblock FAR * key));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_finish_key
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_encrypt_block FAR * eblock));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_string_to_key
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_const krb5_encrypt_block FAR * eblock,
+		krb5_keyblock FAR * keyblock,
+		krb5_const krb5_data FAR * data,
+		krb5_const krb5_data FAR * salt));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_init_random_key
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_const krb5_encrypt_block FAR * eblock,
+		krb5_const krb5_keyblock FAR * keyblock,
+		krb5_pointer FAR * ptr));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_finish_random_key
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_const krb5_encrypt_block FAR * eblock,
+		krb5_pointer FAR * ptr));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_random_key
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_const krb5_encrypt_block FAR * eblock,
+		krb5_pointer ptr,
+		krb5_keyblock FAR * FAR * keyblock));
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_eblock_enctype
+	KRB5_PROTOTYPE((krb5_context context,
+		krb5_const krb5_encrypt_block FAR * eblock));
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_use_enctype
 	KRB5_PROTOTYPE((krb5_context context,
-		krb5_encrypt_block FAR * eblockp,
-		krb5_enctype enctype));
+		krb5_encrypt_block FAR * eblock,
+		krb5_const krb5_enctype enctype));
 KRB5_DLLIMP size_t KRB5_CALLCONV krb5_encrypt_size
-	KRB5_PROTOTYPE((size_t length,
-		krb5_cryptosystem_entry FAR * crypto));
+	KRB5_PROTOTYPE((krb5_const size_t length,
+		krb5_const struct _krb5_cryptosystem_entry FAR * crypto));
 KRB5_DLLIMP size_t KRB5_CALLCONV krb5_checksum_size
 	KRB5_PROTOTYPE((krb5_context context,
-		krb5_cksumtype ctype));
+		krb5_const krb5_cksumtype ctype));
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_calculate_checksum
 	KRB5_PROTOTYPE((krb5_context context,
-		krb5_cksumtype ctype,
-		krb5_pointer in, size_t in_length,
-		krb5_pointer seed, size_t seed_length,
+		krb5_const krb5_cksumtype ctype,
+		krb5_const krb5_pointer in, krb5_const size_t in_length,
+		krb5_const krb5_pointer seed, krb5_const size_t seed_length,
 		krb5_checksum FAR * outcksum));
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_verify_checksum
 	KRB5_PROTOTYPE((krb5_context context,
-		krb5_cksumtype ctype,
-		krb5_checksum FAR * cksum,
-		krb5_pointer in, size_t in_length,
-		krb5_pointer seed, size_t seed_length));
+		krb5_const krb5_cksumtype ctype,
+		krb5_const krb5_checksum FAR * cksum,
+		krb5_const krb5_pointer in, krb5_const size_t in_length,
+		krb5_const krb5_pointer seed, krb5_const size_t seed_length));
 
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_random_confounder
 	KRB5_PROTOTYPE((size_t, krb5_pointer));
 
 krb5_boolean KRB5_CALLCONV valid_enctype
-	KRB5_PROTOTYPE((krb5_enctype ktype));
+	KRB5_PROTOTYPE((krb5_const krb5_enctype ktype));
 krb5_boolean KRB5_CALLCONV valid_cksumtype
-	KRB5_PROTOTYPE((krb5_cksumtype ctype));
+	KRB5_PROTOTYPE((krb5_const krb5_cksumtype ctype));
 krb5_boolean KRB5_CALLCONV is_coll_proof_cksum
-	KRB5_PROTOTYPE((krb5_cksumtype ctype));
+	KRB5_PROTOTYPE((krb5_const krb5_cksumtype ctype));
 krb5_boolean KRB5_CALLCONV is_keyed_cksum
-	KRB5_PROTOTYPE((krb5_cksumtype ctype));
+	KRB5_PROTOTYPE((krb5_const krb5_cksumtype ctype));
 
 krb5_error_code krb5_encrypt_data
 	KRB5_PROTOTYPE((krb5_context context, krb5_keyblock *key, 
