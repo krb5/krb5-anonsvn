@@ -8,6 +8,16 @@
 static char *rcsid = "$Header$";
 #endif
 
+#if defined(HAVE_COMPILE) && defined(HAVE_STEP)
+#define SOLARIS_REGEXPS
+#elif defined(HAVE_REGCOMP) && defined(HAVE_REGEXEC)
+#define POSIX_REGEXPS
+#elif defined(HAVE_RE_COMP) && defined(HAVE_RE_EXEC)
+#define BSD_REGEXPS
+#else
+#error I cannot find any regexp functions
+#endif
+
 #include	<sys/types.h>
 #include	<string.h>
 #include	<kadm5/admin.h>
@@ -124,13 +134,13 @@ void get_either_iter(struct iter_data *data, char *name)
      if (
 #ifdef SOLARIS_REGEXPS
 	 (step(name, data->expbuf) != 0)
-#else
+#endif
 #ifdef POSIX_REGEXPS
 	 (regexec(&data->preg, name, 0, NULL, 0) == 0)
-#else
+#endif
+#ifdef BSD_REGEXPS
 	 (re_exec(name) != 0)
-#endif /* !SOLARIS_REGEXPS */
-#endif /* !POSIX_REGEXPS */
+#endif
 	 )
      {
 	  (void) DynAdd(data->matches, &name);
@@ -181,13 +191,13 @@ kadm5_ret_t kadm5_get_either(int princ,
      if (
 #ifdef SOLARIS_REGEXPS
 	 ((data.expbuf = compile(regexp, NULL, NULL)) == NULL)
-#else
+#endif
 #ifdef POSIX_REGEXPS
 	 ((regcomp(&data.preg, regexp, REG_NOSUB)) != 0)
-#else
+#endif
+#ifdef BSD_REGEXPS
 	 ((msg = (char *) re_comp(regexp)) != NULL)
-#endif /* !POSIX_REGEXPS */
-#endif /* !SOLARIS_REGEXPS */
+#endif
 	 )
      {
 	  /* XXX syslog msg or regerr(regerrno) */
