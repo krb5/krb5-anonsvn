@@ -12,7 +12,7 @@ static char *rcsid = "$Header$";
 #include    <string.h>
 #include    <unistd.h>
 
-#include    <ovsec_admin/adb.h>
+#include    <kadm5/adb.h>
 #include    "import_err.h"
 #include    "import.h"
 
