@@ -1189,7 +1189,7 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_externalize_opaque
 	KRB5_PROTOTYPE((krb5_context,
 		krb5_magic,
 		krb5_pointer,
-		krb5_octet **,
+		krb5_octet FAR * FAR *,
 		size_t FAR *));
 
 /* Deserialize the structure from a buffer */
@@ -1234,11 +1234,11 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_ser_rcache_init
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_ser_pack_int32
 	KRB5_PROTOTYPE((krb5_int32,
 		krb5_octet FAR * FAR *,
-		size_t *));
+		size_t FAR *));
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_ser_unpack_int32
 	KRB5_PROTOTYPE((krb5_int32 *,
 		krb5_octet FAR * FAR *,
-		size_t *));
+		size_t FAR *));
 /* [De]serialize byte string */
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_ser_pack_bytes
 	KRB5_PROTOTYPE((krb5_octet FAR *,
