@@ -1,3 +1,9 @@
+Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
+
+        * Makefile.in: win32 build
+
+	* init_ets.c: dll export krb5_init_ets()
+
 Wed Nov  6 11:15:32 1996  Theodore Ts'o  <tytso@rsts-11.mit.edu>
 
 	* krb5_err.et: Make the KRB5_CONFIG_CANTOPEN and
