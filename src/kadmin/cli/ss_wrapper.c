@@ -50,7 +50,7 @@ int main(argc, argv)
 	exit(1);
     }
     if (request) {
-	    (void) ss_execute_line(sci_idx, request, &code);
+	    code = ss_execute_line(sci_idx, request);
 	    if (code != 0) {
 		    ss_perror(sci_idx, code, request);
 		    exit_status++;
