@@ -45,7 +45,7 @@ SHLIB_EXPDEPS = \
 	$(TOPLIBD)/libcom_err$(SHLIBEXT)
 SHLIB_EXPLIBS=-lcrypto -lcom_err @SHLIB_GEN@
 SHLIB_DIRS=-L$(TOPLIBD)
-SHLIB_RPATH=$(SHLIB_RFLAG)$(KRB5_LIBDIR)
+SHLIB_RDIRS=$(KRB5_LIBDIR)
 
 all-unix:: all-liblinks
 
