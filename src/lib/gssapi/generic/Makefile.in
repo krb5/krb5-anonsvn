@@ -20,8 +20,7 @@ ETHDRS= gssapi_err_generic.h
 
 EHDRDIR= $(BUILDTOP)$(S)include$(S)gssapi
 
-HDRS=	gssapi.h \
-	$(EHDRDIR)$(S)gssapi.h \
+HDRS=	$(EHDRDIR)$(S)gssapi.h \
 	$(EHDRDIR)$(S)gssapi_generic.h
 
 $(EHDRDIR)$(S)gssapi.h: gssapi.h
@@ -44,6 +43,7 @@ gssapi.h: gssapi.hin
 	echo "/* It contains some choice pieces of autoconf.h */" >> $@
 	grep SIZEOF $(BUILDTOP)/include/krb5/autoconf.h >> $@
 	grep 'HAVE_.*_H' $(BUILDTOP)/include/krb5/autoconf.h >> $@
+	grep 'USE_.*_H' $(BUILDTOP)/include/krb5/autoconf.h >> $@
 	echo "/* End of gssapi.h prologue. */"
 	cat $(srcdir)/gssapi.hin >> $@
 
@@ -89,7 +89,8 @@ OBJS = \
 	util_validate.$(OBJEXT) \
 	gssapi_err_generic.$(OBJEXT)
 
-EXPORTED_HEADERS= gssapi.h gssapi_generic.h
+EXPORTED_HEADERS= gssapi_generic.h
+EXPORTED_BUILT_HEADERS= gssapi.h
 
 $(OBJS): $(EXPORTED_HEADERS) $(ETHDRS)
 
@@ -121,6 +122,10 @@ clean-windows::
 install::
 	@set -x; for f in $(EXPORTED_HEADERS) ; \
 	do $(INSTALL_DATA) $(srcdir)/$$f	\
+		$(DESTDIR)$(KRB5_INCDIR)/gssapi/$$f ; \
+	done
+	@set -x; for f in $(EXPORTED_BUILT_HEADERS) ; \
+	do $(INSTALL_DATA) $$f	\
 		$(DESTDIR)$(KRB5_INCDIR)/gssapi/$$f ; \
 	done
 
