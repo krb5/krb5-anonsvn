@@ -10,8 +10,8 @@
 #endif
 #include <errno.h>
 
-#if TARGET_OS_MAC && TARGET_RT_MAC_MACHO
-#include <FullPOSIXPath.h>
+#if TARGET_OS_MAC
+#include <KerberosSupport/FullPOSIXPath.h>
 #endif
 
 #include "prof_int.h"

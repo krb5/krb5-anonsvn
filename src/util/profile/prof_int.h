@@ -6,7 +6,14 @@
  */
 
 #include <time.h>
+
+#if defined(macintosh) || (defined(__MACH__) && defined(__APPLE__))
+#include <KerberosSupport/KerberosConditionalMacros.h>
+#include <KerberosComErr/KerberosComErr.h>
+#else
 #include "com_err.h"
+#endif
+
 #include "prof_err.h"
 #include "profile.h"
 
@@ -27,10 +34,6 @@
 #define SIZEOF_INT      4
 #define SIZEOF_SHORT    2
 #define SIZEOF_LONG     4
-#endif
-
-#if defined(macintosh) || defined (__MACH__)
-#include <KerberosConditionalMacros.h>
 #endif
 
 #if TARGET_RT_MAC_CFM
