@@ -1,3 +1,8 @@
+Wed Apr 17 19:25:01 1996  Marc Horowitz  <marc@mit.edu>
+
+	* cbc_cksum.c (mit_des_cbc_checksum): don't allocate the checksum
+	contents.  The caller is supposed to do this.
+
 Sat Mar 30 22:56:48 1996  Theodore Y. Ts'o  <tytso@dcl>
 
 	* Makefile.in (SRCS): Took the list of sources and object files in
