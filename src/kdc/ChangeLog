@@ -1,3 +1,8 @@
+Fri Jan 31 19:45:13 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in:
+	* configure.in: Update to new program build procedure.
+
 Sat Nov 23 17:26:22 1996  Mark Eichin  <eichin@kitten.gen.ma.us>
 
 	* [krb5-libs/149] only generate requests that you can actually
