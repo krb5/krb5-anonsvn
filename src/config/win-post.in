@@ -6,22 +6,19 @@ all::
 .c.obj:
 	$(CC) $(CFLAGS) /c $*.c
 !if defined(LIBNAME)
-!if "$(LIBCMD)"!="rem"
-all-windows:: $(LIBNAME)
+##WIN16##	$(LIBCMD) $(PAGESIZE) /nologo $(LIBNAME) -+$@;
 
-!if !defined(OBJFILELIST)
+##WIN32##!if !defined(OBJFILELIST)
 ##WIN32##OBJFILELIST=@$(OBJFILE)
-##WIN16##OBJFILELIST=-+@$(OBJFILE)
-!endif
+##WIN32##!endif
+##WIN32##!if !defined(OBJFILEDEP)
+##WIN32##OBJFILEDEP=$(OBJFILE)
+##WIN32##!endif
 
-!if !defined(OBJFILEDEP)
-OBJFILEDEP=$(OBJFILE)
-!endif
-
-$(LIBNAME):	$(OBJFILEDEP)
+##WIN32##all-windows:: $(LIBNAME)
+##WIN32##$(LIBNAME): $(OBJFILEDEP)
 ##WIN32##	$(LIBCMD) /out:$(LIBNAME) /nologo $(OBJFILELIST)
-##WIN16##	$(LIBCMD) $(PAGESIZE) /nologo $(LIBNAME) $(OBJFILELIST);
-!endif
+
 !endif
 
 check::
