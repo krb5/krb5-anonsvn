@@ -1,3 +1,9 @@
+Thu Jan 16 18:47:12 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in: Cause "clean" to dtrt.
+	
+	* configure.in: Punt spurious call to KRB5_LIB_PARAMS.
+
 Sun Dec 29 21:32:41 1996  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in: Update to set STLIBOBJS instead of LIBSRCS; also
