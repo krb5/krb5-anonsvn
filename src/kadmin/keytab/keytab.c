@@ -515,9 +515,11 @@ static char *etype_string(enctype)
     case ENCTYPE_DES_CBC_MD5:
 	return "DES-CBC-MD5";
 	break;
+#if 0
     case ENCTYPE_DES3_CBC_MD5:
 	return "DES3-CBC-MD5";
 	break;
+#endif
     default:
 	sprintf(buf, "etype %d", enctype);
 	return buf;
