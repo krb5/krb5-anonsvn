@@ -4,7 +4,7 @@
 #
 # The following variables must be set in Makefile.in:
 #
-# LIBSRCS	list of .c sources; this must not contain variable
+# STLIBOBJS	list of .o objects; this must not contain variable
 #		references.
 
 # Set to "OBJS.ST OBJS.SH OBJS.PF" or some subset thereof by
@@ -13,9 +13,8 @@ OBJLISTS=@OBJLISTS@
 
 # Note that $(LIBSRCS) *cannot* contain any variable references, or
 # the suffix substitution will break on some platforms!
-STLIBOBJS=$(LIBSRCS:.c=@STOBJEXT@)
-SHLIBOBJS=$(LIBSRCS:.c=@SHOBJEXT@)
-PFLIBOBJS=$(LIBSRCS:.c=@PFOBJEXT@)
+SHLIBOBJS=$(STLIBOBJS:.o=@SHOBJEXT@)
+PFLIBOBJS=$(STLIBOBJS:.o=@PFOBJEXT@)
 
 # "$(CC) -G", "$(LD) -Bshareable", etc.
 LDCOMBINE=@LDCOMBINE@
@@ -63,6 +62,8 @@ clean-libobjs:
 	$(RM) $(STLIBOBJS)
 	$(RM) $(SHLIBOBJS)
 	$(RM) $(PFLIBOBJS)
+
+Makefile: $(SRCTOP)/config/libobj.in
 
 # clean-unix:: clean-libobjs
 # all-unix:: all-libobjs

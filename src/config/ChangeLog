@@ -1,3 +1,13 @@
+Sun Dec 29 21:24:01 1996  Tom Yu  <tlyu@mit.edu>
+
+	* lib.in:
+	* libobj.in: random bugfixes
+
+Sat Dec 28 21:46:33 1996  Tom Yu  <tlyu@mit.edu>
+
+	* libobj.in: Cause Makefile to depend on config/libobj.in
+	* lib.in: Cause Makefile to depend on config/lib.in
+
 Fri Dec 27 17:06:41 1996  Tom Yu  <tlyu@mit.edu>
 
 	* lib.in: Fix up loops to deal with an OBJS.ST that is in the

@@ -12,7 +12,11 @@
 #			directory as that will cause some makes to lose.
 # RELDIR	path to this directory relative to $(TOPLIBD)
 
+## Parameters to be set by configure:
+##
+
 LN_S=@LN_S@
+AR=@AR@
 
 # Set to "lib$(LIB)$(STEXT) lib$(LIB)$(SHEXT) lib$(LIB)$(PFEXT)" or
 # some subset thereof by configure; determines which types of libs get
@@ -21,6 +25,9 @@ LIBLIST=@LIBLIST@
 
 # Set by configure; list of library symlinks to make to $(TOPLIBD)
 LIBLINKS=@LIBLINKS@
+
+# Set by configure; list of install targets
+LIBINSTLIST=@LIBINSTLIST@
 
 # Some of these should really move to pre.in, since programs will need
 # it too. (e.g. stuff that has dependencies on the libraries)
@@ -40,8 +47,8 @@ PFLIBEXT=@PFLIBEXT@
 # "cc -G", "ld -Bshareable", etc.
 LDCOMBINE=@LDCOMBINE@
 
-# "-h lib$(LIB).$(LIBMAJOR)", "-Wl,-h -Wl,lib$(LIB).$(LIBMAJOR)", etc.
-SONAMEFLAG=@SONAMEFLAG@
+# Misc args to tack on the tail of LDCOMBINE, e.g. "-lc"
+LDCOMBINE_TAIL=@LDCOMBINE_TAIL@
 
 # STOBJLISTS=dir1/OBJS.ST dir2/OBJS.ST etc...
 SHOBJLISTS=$(STOBJLISTS:.ST=.SH)
@@ -53,7 +60,8 @@ lib$(LIB)$(STLIBEXT): $(STOBJLISTS)
 	@dirs=`echo $(STOBJLISTS) | \
 		sed -e 's%/OBJS.ST%%g' -e 's%OBJS.ST%.%'`; \
 		$(AR) cq $@ `for d in $$dirs; do \
-			sed -e "s%^%$$d/%" $$d/OBJS.ST; done`
+			sed -e "s%^%$$d/%" -e "s% % $$d/%g" \
+				$$d/OBJS.ST; done`
 	$(RANLIB) $@
 
 lib$(LIB)$(SHLIBVEXT): $(SHOBJLISTS)
@@ -62,7 +70,9 @@ lib$(LIB)$(SHLIBVEXT): $(SHOBJLISTS)
 	@dirs=`echo $(SHOBJLISTS) | \
 		sed -e 's%/OBJS.SH%%g' -e 's%OBJS.SH%.%'`; \
 		$(LDCOMBINE) -o $@ `for d in $$dirs; do \
-			sed -e "s%^%$$d/%" $$d/OBJS.SH; done`
+			sed -e "s%^%$$d/%" -e "s% % $$d/%g" \
+				$$d/OBJS.SH; done` \
+			$(LDCOMBINE_TAIL)
 lib$(LIB)$(SHLIBEXT): lib$(LIB)$(SHLIBVEXT)
 	$(LN_S) lib$(LIB)$(SHLIBVEXT) $@
 
@@ -72,7 +82,8 @@ lib$(LIB)$(PFLIBEXT): $(PFOBJLISTS)
 	@dirs=`echo $(PFOBJLISTS) | \
 		sed -e 's%/OBJS.PF%%g' -e 's%OBJS.PF%.%'`; \
 		$(AR) cq $@ `for d in $$dirs; do \
-			sed -e "s%^%$$d/%" $$d/OBJS.PF; done`
+			sed -e "s%^%$$d/%" -e "s% % $$d%g" \
+				$$d/OBJS.PF; done`
 	$(RANLIB) $@
 
 $(TOPLIBD)/lib$(LIB)$(STLIBEXT): lib$(LIB)$(STLIBEXT)
@@ -95,7 +106,7 @@ clean-libs:
 	$(RM) lib$(LIB)$(STLIBEXT)
 	$(RM) lib$(LIB)$(SHLIBVEXT)
 	$(RM) lib$(LIB)$(SHLIBEXT)
-	$(RM) lib$(LIB)$(PFEXT)
+	$(RM) lib$(LIB)$(PFLIBEXT)
 
 clean-liblinks:
 	$(RM) $(TOPLIBD)/lib$(LIB)$(STLIBEXT)
@@ -103,12 +114,32 @@ clean-liblinks:
 	$(RM) $(TOPLIBD)/lib$(LIB)$(SHLIBEXT)
 	$(RM) $(TOPLIBD)/lib$(LIB)$(PFLIBEXT)
 
+install-libs: $(LIBINSTLIST)
+install-static:
+	$(RM) $(DESTDIR)$(KRB5_LIBDIR)/lib$(LIB)$(STLIBEXT)
+	$(INSTALL_DATA) lib$(LIB)$(STLIBEXT) $(DESTDIR)$(KRB5_LIBDIR)
+	$(RANLIB) $(DESTDIR)$(KRB5_LIBDIR)/lib$(LIB)$(STLIBEXT)
+install-shared:
+	$(RM) $(DESTDIR)$(KRB5_LIBDIR)/lib$(LIB)$(SHLIBVEXT)
+	$(RM) $(DESTDIR)$(KRB5_LIBDIR)/lib$(LIB)$(SHLIBEXT)
+	$(INSTALL_DATA) lib$(LIB)$(SHLIBVEXT) $(DESTDIR)$(KRB5_LIBDIR)
+	(cd $(DESTDIR)$(KRB5_LIBDIR) && $(LN_S) lib$(LIB)$(SHLIBVEXT) \
+		lib$(LIB)$(SHLIBEXT))
+install-profiled:
+	$(RM) $(DESTDIR)$(KRB5_LIBDIR)/lib$(LIB)$(PFLIBEXT)
+	$(INSTALL_DATA) lib$(LIB)$(PFLIBEXT) $(DESTDIR)$(KRB5_LIBDIR)
+	$(RANLIB) $(DESTDIR)$(KRB5_LIBDIR)/lib$(LIB)$(PFLIBEXT)
+
+Makefile: $(SRCTOP)/config/lib.in
+
 # Use the following if links need to be made to $(TOPLIBD):
 # all-unix:: all-liblinks
+# install-unix:: install-libs
 # clean-unix:: clean-liblinks clean-libs
 
 # Use the following if links need not be made:
 # all-unix:: all-libs
+# install-unix:: install-libs
 # clean-unix:: clean-libs
 
 ###
