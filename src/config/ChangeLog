@@ -1,3 +1,9 @@
+Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
+
+	* rm.bat: Do the work first; the comments are at the end so as
+		to improve the speed of the script significantly (20%)
+	* windows.in: corrected typo (all-windows) and added win32 support
+
 Mon Nov 11 20:53:01 1996  Tom Yu  <tlyu@mit.edu>
 
 	* pre.in (DEJAFLAGS): Change gmake-dependent $(shell uname foo) to

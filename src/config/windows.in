@@ -11,7 +11,7 @@ install:: install-$(WHAT)
 
 check:: check-$(WHAT)
 
-all-windiws::
+all-windows::
 clean-windows::
 install-windows::
 check-windows::
@@ -61,6 +61,7 @@ DBG_LIB=/nologo /Zp /ALw /GD /Gs /Os /G2 /Zi /Od
 DBG=/nologo /Zp /AL /Os /Mq /Zi /Od
 
 RM=$(BUILDTOP)\config\rm.bat
+LIBECHO=$(BUILDTOP)\util\windows\libecho
 CP=copy
 MV=ren
 LN=copy
