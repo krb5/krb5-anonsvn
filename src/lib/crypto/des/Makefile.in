@@ -9,9 +9,30 @@ KLIB = $(TOPLIBD)/libkrb5.$(LIBEXT) $(TOPLIBD)/libcrypto.$(LIBEXT) $(COMERRLIB)
 DEPKLIB = $(TOPLIBD)/libkrb5.$(LIBEXT) $(TOPLIBD)/libcrypto.$(LIBEXT) $(COMERRLIB)
 RUN_SETUP = @KRB5_RUN_ENV@
 
-.c.o:
-	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
+STLIBOBJS=\
+	afsstring2key.o \
+	cbc_cksum.o	\
+	finish_key.o	\
+	fin_rndkey.o	\
+	init_rkey.o	\
+	process_ky.o	\
+	random_key.o	\
+	string2key.o	\
+	key_sched.o	\
+	weak_key.o	\
+	f_cbc.o 	\
+	f_cksum.o 	\
+	f_sched.o 	\
+	f_ecb.o 	\
+	f_parity.o 	\
+	f_tables.o	\
+	d3_cbc.o 	\
+	d3_ecb.o	\
+	d3_kysched.o	\
+	d3_procky.o 	\
+	d3_str2ky.o	\
+	u_nfold.o	\
+	u_rn_key.o
 
 OBJS=	afsstring2key.$(OBJEXT) \
 	cbc_cksum.$(OBJEXT)	\
@@ -61,15 +82,8 @@ SRCS=	$(srcdir)/afsstring2key.c \
 	$(srcdir)/u_nfold.c \
 	$(srcdir)/u_rn_key.c
 
-
-all:: $(OBJS)
-
-all-unix:: shared
-all-mac:: shared
+all-unix:: all-libobjs
 all-windows::
-
-shared:
-	mkdir shared
 
 includes:: depend
 
@@ -90,8 +104,6 @@ destest$(EXEEXT): destest.$(OBJEXT) $(DEPKLIB)
 t_random$(EXEEXT): t_random.$(OBJEXT) $(DEPKLIB)
 	$(LD) -o $@ t_random.$(OBJEXT) $(KLIB) $(LIBS) $(CFLAGS) $(LDFLAGS) 
 
-check-mac: check-unix
-
 check-unix:: destest verify
 	$(RUN_SETUP) ./verify -z
 	$(RUN_SETUP) ./verify -m
@@ -104,8 +116,5 @@ clean::
 	$(RM) destest$(EXEEXT) verify$(EXEEXT) destest.$(OBJEXT) \
 	t_verify.$(OBJEXT) t_random.$(OBJEXT) t_random$(EXEEXT)
 
-clean-unix::
-	$(RM) shared/*
-clean-mac::
-	$(RM) shared/*
 clean-windows::
+clean-unix:: clean-libobjs

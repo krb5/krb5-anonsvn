@@ -3,39 +3,23 @@ CFLAGS = $(CCOPTS) $(DEFS)
 ##DOSBUILDTOP = ..\..\..
 ##DOSLIBNAME=..\crypto.lib
 
-LIBOBJS = @LIBOBJS@
-
-.c.o:
-	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
+STLIBOBJS = rnd_confoun.o c_localaddr.o c_ustime.o @LIBOBJS@
 
 COBJS=	rnd_confoun.$(OBJEXT) c_localaddr.$(OBJEXT) c_ustime.$(OBJEXT) 
 OBJS= $(COBJS) $(LIBOBJS)
 
 SRCS=	rnd_confoun.c c_localaddr.c c_ustime.c
 
-all-unix:: shared $(OBJS)
-
-all-mac:: $(OBJS)
-
+all-unix:: all-libobjs
 all-windows: $(COBJS)
 
-shared:
-	mkdir shared
-	
 memmove.c: $(SRCTOP)$(S)lib$(S)krb5$(S)posix$(S)memmove.c
 	-$(LN) $(SRCTOP)$(S)lib$(S)krb5$(S)posix$(S)memmove.c $@
 
 memmove.o: memmove.c
-	$(CC) $(CFLAGS) -c $*.c
-@SHARED_RULE_LOCAL@
-	
 
+clean-unix:: clean-libobjs
 clean:: 
 	$(RM) memmove.c
 
-clean-unix::
-	$(RM) shared/*
-clean-mac::
-	$(RM) shared/*
 clean-windows::

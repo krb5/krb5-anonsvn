@@ -3,9 +3,7 @@ CFLAGS = $(CCOPTS) $(DEFS) -I$(srcdir)/../des
 ##DOSBUILDTOP = ..\..\..
 ##DOSLIBNAME=..\crypto.lib
 
-.c.o:
-	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
+STLIBOBJS=shs.o hmac_sha.o sha_crypto.o sha_glue.o
 
 OBJS=	shs.$(OBJEXT)		\
 	hmac_sha.$(OBJEXT)	\
@@ -18,12 +16,8 @@ SRCS=	$(srcdir)/shs.c		\
 	$(srcdir)/sha_glue.c
 
 
-all-unix:: shared $(OBJS) 
-all-mac:: shared $(OBJS) 
+all-unix:: all-libobjs
 all-windows:: $(OBJS)
-
-shared:
-	mkdir shared
 
 t_shs: t_shs.o shs.o
 	$(CC) $(CFLAGS) $(LDFLAGS) -o t_shs t_shs.o shs.o
@@ -40,8 +34,5 @@ check-windows:: t_shs$(EXEEXT)
 clean:: 
 	$(RM) t_shs$(EXEEXT) t_shs.$(OBJEXT)
 
-clean-unix::
-	$(RM) shared/*
-clean-mac::
-	$(RM) shared/*
+clean-unix:: clean-libobjs
 clean-windows::
