@@ -1,7 +1,7 @@
 #include "krb5.h"
 	
-#if defined(macintosh)
-#include "CCache2.h"
+#if TARGET_OS_MAC
+#include <Kerberos/CredentialsCache2.h>
 #endif
 
 #if defined(_MSDOS) || defined(_WIN32)
@@ -32,6 +32,9 @@ KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_stdcc_destroy
 
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_stdcc_end_seq_get 
         KRB5_PROTOTYPE((krb5_context, krb5_ccache id , krb5_cc_cursor *cursor ));
+
+KRB5_DLLIMP void KRB5_CALLCONV krb5_stdcc_shutdown 
+        KRB5_PROTOTYPE((void));
 
 KRB5_DLLIMP krb5_error_code KRB5_CALLCONV krb5_stdcc_generate_new 
         KRB5_PROTOTYPE((krb5_context, krb5_ccache *id ));
