@@ -1977,6 +1977,10 @@ changequote([, ])dnl
     top_srcdir="$ac_dots$ac_given_srcdir" ;;
   esac
 
+  # top_dir is relative to the top of the build tree
+  if test -z "$ac_dots"; then top_dir=.
+  else top_dir=`echo $ac_dots|sed s%/$%%'`; fi
+
 ifdef([AC_PROVIDE_AC_PROG_INSTALL],
 [  case "$ac_given_INSTALL" in
 changequote(, )dnl
@@ -1995,8 +1999,11 @@ changequote([, ])dnl
     ac_files_in="$ac_files_in $ac_given_srcdir/$ac_file_name"
   done
   IFS="$ac_save_ifs"
-  configure_input=`echo $ac_files_in | sed 's%/./%/%g
-s%  *./%%g
+  configure_input=`echo $ac_files_in | sed '
+:LOOP
+s%/\./%/%
+tLOOP
+s%  *\./% %g
 s%  *%+%g
 s%^%Generated automatically from %
 s%$% by configure.%'`
@@ -2009,6 +2016,7 @@ s%$% by configure.%'`
 s%@configure_input@%$configure_input%g
 s%@srcdir@%$srcdir%g
 s%@top_srcdir@%$top_srcdir%g
+s%@top_dir@%$top_dir%g
 ifdef([AC_PROVIDE_AC_PROG_INSTALL], [s%@INSTALL@%$INSTALL%g
 ])dnl
 " -f conftest.subs $ac_files_in > $ac_file

@@ -1,3 +1,17 @@
+Sat Jun 22 11:48:33 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* acgeneral.m4 (CONFIG_FILES): add top_dir, which is a variable
+		similar to top_srcdir only in the build tree
+
+Tue Jun 18 20:36:20 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* acgeneral.m4 (AC_OUTPUT_FILES): more bugfix of configure_input
+
+Fri Jun 14 17:42:45 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* acgeneral.m4 (AC_OUTPUT_FILES): bugfix: clean up sed script to
+		remove /./'s
+
 Wed Jun 12 18:17:17 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* autoconf.texi (Output): document changes to AC_OUTPUT
