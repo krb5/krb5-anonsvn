@@ -67,14 +67,10 @@ void kadm5_create(kadm5_config_params *params)
 	  exit(1);
      }
 
-     f = fopen(params->admin_lockfile, "w+");
-     if (f == NULL) {
-	  extern int errno;
-	  com_err(whoami, errno, "while creating kadm5 lockfile %s",
-		  params->admin_lockfile);
+     if (retval = osa_adb_create_policy_db(params)) {
+	  com_err(whoami, retval, str_CREATING_POLICY_DB);
 	  exit(1);
      }
-     (void) fclose(f);
 
      if ((retval = kadm5_init(whoami, NULL, NULL, params,
 			      KADM5_STRUCT_VERSION,
