@@ -184,7 +184,7 @@ krb5_keytab_internalize(kcontext, argp, buffer, lenremain)
     return(kret);
 }
 
-krb5_error_code
+KRB5_DLLIMP krb5_error_code KRB5_CALLCONV
 krb5_ser_keytab_init(kcontext)
     krb5_context	kcontext;
 {

@@ -3,6 +3,7 @@ CFLAGS = $(CCOPTS) $(DEFS) -I$(srcdir)/../des
 ##DOSBUILDTOP = ..\..\..
 ##DOSMYDIR=sha
 ##DOSOBJFILE=..\sha.lst
+##WIN16##LIBNAME=..\crypto.lib
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
@@ -25,7 +26,8 @@ all-windows:: $(OBJFILE)
 
 ##DOS$(OBJFILE): $(OBJS)
 ##DOS	$(RM) $(OBJFILE)
-##DOS	$(LIBECHO) -p $(MYDIR)\ *.obj > $(OBJFILE)
+##WIN16##	$(CP) nul: $(OBJFILE)
+##WIN32##	$(LIBECHO) -p $(MYDIR)\ *.obj > $(OBJFILE)
 
 shared:
 	mkdir shared

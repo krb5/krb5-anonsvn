@@ -3,6 +3,7 @@ CFLAGS = $(CCOPTS) $(DEFS)
 ##DOSBUILDTOP = ..\..\..
 ##DOSMYNAME=keytab
 ##DOSOBJFILE=..\$(MYNAME).lst
+##WIN16##LIBNAME=..\krb5.lib
 
 MAC_SUBDIRS = file
 
@@ -42,7 +43,8 @@ all-windows:: subdirs $(OBJFILE)
 
 ##DOS$(OBJFILE): $(OBJS) file\file.lst
 ##DOS	$(RM) $(OBJFILE)
-##DOS	$(LIBECHO) -p $(MYNAME)\ *.obj file\*.obj > $(OBJFILE)
+##WIN16##	$(CP) nul: $(OBJFILE)
+##WIN32##	$(LIBECHO) -p $(MYNAME)\ *.obj file\*.obj > $(OBJFILE)
 
 clean-unix::
 	$(RM) shared/*

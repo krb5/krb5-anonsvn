@@ -3,6 +3,7 @@ CFLAGS = $(CCOPTS) $(DEFS) -I. -I$(srcdir)
 ##DOSBUILDTOP = ..\..\..
 ##DOSMYNAME=generic
 ##DOSOBJFILE=..\generic.lst
+##WIN16##LIBNAME=..\gssapi.lib
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
@@ -98,7 +99,8 @@ all-windows:: win-include $(HDRS) $(OBJFILE)
 
 ##DOS$(OBJFILE): $(OBJS)
 ##DOS	$(RM) $(OBJFILE)
-##DOS	$(LIBECHO) -p $(MYNAME)\ *.obj > $(OBJFILE)
+##WIN16##	$(CP) nul: $(OBJFILE)
+##WIN32##	$(LIBECHO) -p $(MYNAME)\ *.obj > $(OBJFILE)
 
 win-include::
 	if not exist $(EHDRDIR)\nul mkdir $(EHDRDIR)
