@@ -1,3 +1,23 @@
+Wed Aug 12 18:40:08 1998  Tom Yu  <tlyu@mit.edu>
+
+	* kerberos_v4.c: Add macro K4KDC_ENCTYPE_OK to determine whether a
+	given enctype is compatible with single-DES krb4.
+	(compat_decrypt_key): Declare as static.  Change call signature to
+	include an output krb5_keyblock as well as an input to determine
+	whether the principal should be treated as a service principal.
+	Bash the enctype of the keyblock to raw des3 if it's full-blown
+	des3.
+	(kerb_get_principal): Add k5key and issrv arguments as in
+	compat_decrypt_key, mostly to pass them on there.  Hardcode a
+	search order that includes des3 for looking up service keys.
+	(kerberos_v4): Call krb_create_ticket or krb_cr_tkt_krb5 as
+	appropriate to the key type.  While we're at it, s/ktbtgt/krbtgt/
+	just to avoid confusing people.
+	(check_princ): Add k5key and issrv args for as in
+	compat_decrypt_key.  Fix up null key detection to only operate if
+	it's a single-des key.
+	(set_tgtkey): Call krb_set_key_krb5 if appropriate.
+
 Wed Jul 15 18:32:07 1998  Tom Yu  <tlyu@mit.edu>
 
 	* configure.in: Add CHECK_SIGNALS so that POSIX_SIGNALS gets
