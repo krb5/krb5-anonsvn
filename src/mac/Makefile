@@ -446,6 +446,7 @@ privatekrb5-library-libraries-ppc-debug = ¶
 	{loginlib-ppc-debug} ¶
 	{socketslib-ppc-debug} ¶
 	{errorlib-ppc-debug} ¶
+	{utilitieslib-ppc-debug} ¶
 	{profile-library-output-folder}{profile-library-name}{library-platform-ppc}{library-kind-debug} ¶
 	{comerr-library-output-folder}{comerr-library-name}{library-platform-ppc}{library-kind-debug} ¶
 	¶"{PPCLibraries}PPCMath64Lib.o¶" ¶
@@ -457,6 +458,7 @@ privatekrb5-library-libraries-ppc-final = ¶
 	{loginlib-ppc-final} ¶
 	{socketslib-ppc-final} ¶
 	{errorlib-ppc-final} ¶
+	{utilitieslib-ppc-final} ¶
 	{profile-library-output-folder}{profile-library-name}{library-platform-ppc}{library-kind-final} ¶
 	{comerr-library-output-folder}{comerr-library-name}{library-platform-ppc}{library-kind-final} ¶
 	¶"{PPCLibraries}PPCMath64Lib.o¶" ¶
@@ -938,32 +940,36 @@ glue-profile Ä {profile-library-glue-output}
 glue-comerr Ä {comerr-library-glue-output}
 
 {krb5-library-glue-output} Ä {root-folder}mac:K5.CFMglue.cin {root-folder}mac:K5.CFMglue.proto.h ¶
-	{root-folder}mac:CFMglue.c {root-folder}mac:K5.moreCFMglue.cin {classic-glue-generation-script}
+	{root-folder}mac:CFMglue.c {root-folder}mac:GSSLib.glue.h {root-folder}mac:K5.moreCFMglue.cin {classic-glue-generation-script}
 	{create-folder} {krb5-library-glue-output-folder}
 	perl {classic-glue-generation-script} < {root-folder}mac:K5.CFMglue.proto.h > {root-folder}mac:K5.CFMglue.c
 	Catenate {root-folder}mac:K5.CFMglue.cin {root-folder}mac:CFMglue.c {root-folder}mac:K5.CFMglue.c ¶
-	{root-folder}mac:K5.moreCFMglue.cin | Catenate > {krb5-library-glue-output}
+	{root-folder}mac:K5.moreCFMglue.cin | Catenate > {krb5-library-glue-output-folder}Kerberos5Lib.glue.c
+	Duplicate -y {root-folder}mac:Kerberos5Lib.glue.h {krb5-library-glue-output-folder}Kerberos5Lib.glue.h
 
 {gss-library-glue-output} Ä {root-folder}mac:GSS.CFMglue.cin {root-folder}mac:GSS.CFMglue.proto.h ¶
-	{root-folder}mac:CFMglue.c {root-folder}mac:GSS.moreCFMglue.cin {classic-glue-generation-script}
+	{root-folder}mac:CFMglue.c {root-folder}mac:Kerberos5Lib.glue.h {root-folder}mac:GSS.moreCFMglue.cin {classic-glue-generation-script}
 	{create-folder} {gss-library-glue-output-folder}
 	perl {classic-glue-generation-script} < {root-folder}mac:GSS.CFMglue.proto.h > {root-folder}mac:GSS.CFMglue.c
 	Catenate {root-folder}mac:GSS.CFMglue.cin {root-folder}mac:CFMglue.c {root-folder}mac:GSS.CFMglue.c ¶
-	{root-folder}mac:GSS.moreCFMglue.cin | Catenate > {gss-library-glue-output}
+	{root-folder}mac:GSS.moreCFMglue.cin | Catenate > {gss-library-glue-output-folder}GSSLib.glue.c
+	Duplicate -y {root-folder}mac:GSSLib.glue.h {gss-library-glue-output-folder}GSSLib.glue.h
 
 {profile-library-glue-output} Ä {root-folder}mac:KrbProfileLib.glue.pre.cin {root-folder}mac:KrbProfileLib.glue.proto.h ¶
-	{root-folder}mac:CFMglue.c {root-folder}mac:KrbProfileLib.glue.post.cin {classic-glue-generation-script}
+	{root-folder}mac:CFMglue.c {root-folder}mac:KrbProfileLib.glue.h {root-folder}mac:KrbProfileLib.glue.post.cin {classic-glue-generation-script}
 	{create-folder} {profile-library-glue-output-folder}
 	perl {classic-glue-generation-script} < {root-folder}mac:KrbProfileLib.glue.proto.h > {root-folder}mac:KrbProfileLib.CFMglue.c
 	Catenate {root-folder}mac:KrbProfileLib.glue.pre.cin {root-folder}mac:CFMglue.c {root-folder}mac:KrbProfileLib.CFMglue.c ¶
-	{root-folder}mac:KrbProfileLib.glue.post.cin | Catenate > {profile-library-glue-output}
+	{root-folder}mac:KrbProfileLib.glue.post.cin | Catenate > {profile-library-glue-output-folder}KrbProfileLib.glue.c
+	Duplicate -y {root-folder}mac:KrbProfileLib.glue.h {profile-library-glue-output-folder}KrbProfileLib.glue.h
 
 {comerr-library-glue-output} Ä {root-folder}mac:ComErrLib.glue.pre.cin {root-folder}mac:ComErrLib.glue.proto.h ¶
-	{root-folder}mac:CFMglue.c {root-folder}mac:ComErrLib.glue.post.cin {classic-glue-generation-script}
+	{root-folder}mac:CFMglue.c {root-folder}mac:ComErrLib.glue.h {root-folder}mac:ComErrLib.glue.post.cin {classic-glue-generation-script}
 	{create-folder} {comerr-library-glue-output-folder}
 	perl {classic-glue-generation-script} < {root-folder}mac:ComErrLib.glue.proto.h > {root-folder}mac:ComErrLib.CFMglue.c
 	Catenate {root-folder}mac:ComErrLib.glue.pre.cin {root-folder}mac:CFMglue.c {root-folder}mac:ComErrLib.CFMglue.c ¶
-	{root-folder}mac:ComErrLib.glue.post.cin | Catenate > {comerr-library-glue-output}
+	{root-folder}mac:ComErrLib.glue.post.cin | Catenate > {comerr-library-glue-output-folder}ComErrLib.glue.c
+	Duplicate -y {root-folder}mac:ComErrLib.glue.h {comerr-library-glue-output-folder}ComErrLib.glue.h
 
 ##############################################################################################################
 ###			Clean target deletes all generated files
