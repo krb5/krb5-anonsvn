@@ -177,7 +177,8 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
       return(GSS_S_NO_CRED);
    }
 
-   /* verify the token's integrity, and leave the token in ap_req */
+   /* verify the token's integrity, and leave the token in ap_req.
+      figure out which mech oid was used, and save it */
 
    ptr = (unsigned char *) input_token->value;
 
@@ -198,10 +199,22 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
 					 input_token->length))) {
 	     *minor_status = err;
 	     return(GSS_S_DEFECTIVE_TOKEN);
-	} else
+	} else {
+	     if (! cred->prerfc_mech) {
+		  *minor_error = G_WRONG_MECH;
+		  return(GSS_S_DEFECTIVE_TOKEN);
+	     }
+
 	     mech_used = gss_mech_krb5_old;
-   } else
+	}
+   } else {
+	if (! cred->rfc_mech) {
+	     *minor_error = G_WRONG_MECH;
+	     return(GSS_S_DEFECTIVE_TOKEN);
+	}
+
 	mech_used = gss_mech_krb5;
+   }
 
    sptr = (char *) ptr;
    TREAD_STR(sptr, ap_req.data, ap_req.length);

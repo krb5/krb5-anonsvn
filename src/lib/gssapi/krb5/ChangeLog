@@ -1,3 +1,9 @@
+Thu Jun 20 23:15:57 1996  Marc Horowitz  <marc@mit.edu>
+
+	* accept_sec_context.c (krb5_gss_accept_sec_context): make sure
+ 	that the oid in the token is compatible with the mechanisms
+ 	specified by the credential.
+
 Sun May 12 00:54:35 1996  Marc Horowitz  <marc@mit.edu>
 
 	* util_crypt.c (kg_encrypt): It used to be that krb5_encrypt could
