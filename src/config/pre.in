@@ -163,6 +163,75 @@ OBJEXT = o
 LIBEXT = a
 EXEEXT =
 
+#
+# variables for libraries, for use in linking programs
+# -- this may want to get broken out into a separate frag later
+#
+#
+# Note: the following variables must be set in any Makefile.in that
+# uses KRB5_BUILD_PROGRAM
+#
+# PROG_LIBPATH	list of dirs, in -Ldir form, to search for libraries at link
+# PROG_RPATH	list of dirs, in dir1:dir2 form, for rpath purposes
+#
+# invocation is like:
+# prog: foo.o bar.o $(KRB5_BASE_DEPLIBS)
+# 	$(CC_LINK) -o $@ foo.o bar.o $(KRB5_BASE_LIBS)
+
+
+CC_LINK=@CC_LINK@
+
+# this gets set by configure to either $(STLIBEXT) or $(SHLIBEXT),
+# depending on whether we're building with shared libraries.
+DEPLIBEXT=@DEPLIBEXT@
+
+KADMCLNT_DEPLIB	= $(TOPLIBD)/libkadm5clnt$(DEPLIBEXT)
+KADMSRV_DEPLIB	= $(TOPLIBD)/libkadm5srv$(DEPLIBEXT)
+KDB5_DEPLIB	= $(TOPLIBD)/libkdb5$(DEPLIBEXT)
+GSSRPC_DEPLIB	= $(TOPLIBD)/libgssrpc$(DEPLIBEXT)
+GSS_DEPLIB	= $(TOPLIBD)/libgssapi_krb5$(DEPLIBEXT)
+KRB4_DEPLIB	= @KRB4_DEPLIB@		# $(TOPLIBD)/libkrb4$(DEPLIBEXT)
+DES425_DEPLIB	= @DES425_DEPLIB@	# $(TOPLIBD)/libdes425$(DEPLIBEXT)
+KRB5_DEPLIB	= $(TOPLIBD)/libkrb5$(DEPLIBEXT)
+CRYPTO_DEPLIB	= $(TOPLIBD)/libcrypto$(DEPLIBEXT)
+COM_ERR_DEPLIB	= $(TOPLIBD)/libcom_err$(DEPLIBEXT)
+DYN_DEPLIB	= $(TOPLIBD)/libdyn$(DEPLIBEXT)
+
+PTY_DEPLIB	= $(TOPLIBD)/libpty$(DEPLIBEXT)
+
+# These are forced to use ".a" as an extension because they're never
+# built shared.
+UTIL_DEPLIB	= $(TOPLIBD)/libkrb5util.a
+SS_DEPLIB	= $(TOPLIBD)/libss.a
+DB_DEPLIB	= $(TOPLIBD)/libdb.a
+
+KRB5_BASE_DEPLIBS	= $(KRB5_DEPLIB) $(CRYPTO_DEPLIB) $(COM_ERR_DEPLIB)
+KRB4COMPAT_DEPLIBS	= $(KRB4_DEPLIB) $(DES425_DEPLIB) $(KRB5_BASE_DEPLBS)
+KRB5_KDC_DEPLIBS	= $(KDB5_DEPLIB) $(DB_DEPLIB) $(KRB4COMPAT_DEPLIBS)
+GSS_DEPLIBS		= $(GSS_DEPLIB)
+GSSRPC_DEPLIBS		= $(GSSRPC_DEPLIB) $(DYN_DEPLIB) $(GSS_DEPLIBS)
+KADM_COMM_DEPLIBS	= $(UTIL_DEPLIB) $(KDB5_DEPLIB) $(DB_DEPLIB) $(GSSRPC_DEPLIBS)
+KADMSRV_DEPLIBS		= $(KADMSRV_DEPLIB) $(KADM_COMM_DEPLIBS)
+KADMCLNT_DEPLIBS	= $(KADMCLNT_DEPLIBS) $(KADM_COMM_DEPLIBS)
+
+# LIBS gets substituted in... e.g. -lgen -lnsl -lsocket
+
+DB_LIB		= $(TOPLIBD)/libdb.a
+SS_LIB		= $(TOPLIBD)/libss.a
+KRB4_LIB	= @KRB4_LIB@	# -lkrb4
+DES425_LIB	= @DES425_LIB@	# -ldes425
+KRB5_BASE_LIBS	= -lkrb5 -lcrypto -lcom_err $(LIBS)
+KRB4COMPAT_LIBS	= $(KRB4_LIB) -lkrb5 $(DES425_LIB) -lcrypto -lcom_err $(LIBS)
+KRB5_KDC_LIBS	= -lkdb5 $(DB_LIB) $(KRB4COMPAT_LIBS)
+GSS_LIBS	= -lgssapi_krb5
+GSSRPC_LIBS	= -lgssrpc -ldyn $(GSS_LIBS)
+KADM_COMM_LIBS	= -lutil -lkdb5 $(DB_LIB) $(GSSRPC_LIBS)
+KADMSRV_LIBS	= -lkadm5srv $(KADM_COMM_LIBS)
+KADMCLNT_LIBS	= -lkadm5clnt $(KADM_COMM_LIBS)
+
+UTIL_LIB	= -lkrb5util
+PTY_LIB		= -lpty
+
 # error table rules
 #
 ### /* these are invoked as $(...) foo.et, which works, but could be better */
