@@ -701,6 +701,7 @@ long FAR PASCAL ScreenWndProc(
       break;
 
     case IDM_ABOUT:
+#ifdef CYGNUS
 #ifdef KRB4
       strcpy(strTmp, "          Kerberos 4 for Windows\n");
 #endif
@@ -710,6 +711,10 @@ long FAR PASCAL ScreenWndProc(
       strcat(strTmp, "\n                   Version 1.00\n\n");
       strcat(strTmp, "             For support, contact:\n");
       strcat(strTmp, "   Cygnus Support - (415) 903-1400\n");
+#else /* CYGNUS */
+      strcpy(strTmp, "   Kerberos 5 Telnet for Windows\n");
+      strcat(strTmp, "               ALPHA SNAPSHOT 1\n\n");
+#endif /* CYGNUS */
       if (encrypt_flag) {
 	strcat(strTmp, "\n[Encryption of output requested.  State: ");
 	strcat(strTmp, (encrypt_output ? "encrypting]" : "INACTIVE]"));

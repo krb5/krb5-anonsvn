@@ -1368,6 +1368,7 @@ kwin_command(HWND hwnd, int cid, HWND hwndCtl, UINT codeNotify)
     if (isblocking)
       return; /* TRUE */
 
+#ifdef CYGNUS
     strcpy(copyright, "        KerbNet for Windows ");
 #ifdef _WIN32
     strcat(copyright, "32-bit\n");
@@ -1377,7 +1378,16 @@ kwin_command(HWND hwnd, int cid, HWND hwndCtl, UINT codeNotify)
     strcat(copyright, "\n                Version 1.11\n\n");
     strcat(copyright, "          For support, contact:\n");
     strcat(copyright, ORGANIZATION);
-    MessageBox(hwnd, copyright, "KerbNet", MB_OK);
+#else /* Cygnus */
+    strcpy(copyright, "    Kerberos V5 for Windows ");
+#ifdef _WIN32
+    strcat(copyright, "32-bit\n");
+#else
+    strcat(copyright, "16-bit\n");
+#endif
+    strcat(copyright, "\n                Version 1.11\n\n");
+#endif /* Cygnus */
+    MessageBox(hwnd, copyright, KWIN_DIALOG_NAME, MB_OK);
 
     return; /* TRUE */
   }

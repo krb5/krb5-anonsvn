@@ -32,9 +32,10 @@
 #define MAX_KPW_LEN	        128
 /* include space for '.' and '@' */
 #define	MAX_K_NAME_SZ	    (ANAME_SZ + INST_SZ + REALM_SZ + 2)
+#ifdef CYGNUS
 #define ORGANIZATION        "Cygnus Support - (415) 903-1400"
-#define CREDENTIALS         char
 #endif
+#define CREDENTIALS         char
 
 /*
  * Constants
@@ -68,8 +69,12 @@
  * Dialog and dialog item ids
  */
 #define KWIN_DIALOG_CLASS "KERBEROS"	/* class for kerberos dialog */
+#ifdef CYGNUS
 #define KWIN_DIALOG_NAME "KerbNet"	/* name for kerberos dialog */
-
+#else
+#define KWIN_DIALOG_NAME "Krb5"		/* name for kerberos dialog */
+#endif
+	
 #define ID_KWIN 100			/* the main kerberos dialog */
 #define IDD_KWIN_FIRST 101
 #define   IDD_TICKET_LIST_TITLE 101
