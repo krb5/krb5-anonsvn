@@ -1,3 +1,7 @@
+Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
+
+        * Makefile.in: win32 build
+
 Tue Jul 23 22:50:22 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* Makefile.in (MAC_SUBDIRS): Remove mechglue from the list of
