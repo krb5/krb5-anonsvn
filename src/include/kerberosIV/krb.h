@@ -433,7 +433,9 @@ char *tkt_string();
 
 /* If this source file requires it, define struct sockaddr_in
    (and possibly other things related to network I/O).  FIXME.  */
-#if defined(DEFINE_SOCKADDR) && !defined(_WINDOWS)
+#if defined(DEFINE_SOCKADDR)
+
+#if !defined(_WINDOWS)
 #include <netinet/in.h>		/* For struct sockaddr_in and in_addr */
 #include <arpa/inet.h>		/* For inet_ntoa */
 #include <netdb.h>		/* For struct hostent, gethostbyname, etc */
@@ -443,7 +445,15 @@ char *tkt_string();
 #ifdef NEED_TIME_H
 #include <time.h>		/* For localtime, etc */
 #endif
+#endif /* !_WINDOWS */
+
+#ifndef INVALID_SOCKET
+#define INVALID_SOCKET (-1)
 #endif
+
+#endif /* DEFINE_SOCKADDR */
+
+
 /*
  * Compatability with WinSock calls on MS-Windows...
  */
