@@ -25,22 +25,25 @@
 #define KRB5_DLLIMP
 #endif /* !KRB5_CALLCONV */
 
+#include <windows.h>
+	
 /*
  * The following defines are needed to make <windows.h> work
  * in stdc mode (/Za flag). Winsock.h needs <windows.h>.
  */
+#ifndef FAR
 #define FAR     __far
 #define NEAR    __near
+#endif
+
+#ifndef _far
 #define _far    __far
 #define _near   __near
 #define _pascal __pascal
 #define _cdecl  __cdecl
 #define _huge   __huge
-
-#ifdef NEED_WINDOWS
-#include <windows.h>
 #endif
-	
+
 #else
 	/* Windows 32 specific */
 #define SIZEOF_INT      4
