@@ -1,3 +1,12 @@
+Mon Aug 17 23:40:11 1998  Tom Yu  <tlyu@mit.edu>
+
+	* keyhash_provider/k5_md4des.c (k5_md4des_verify): Add
+	compatibility for krb5-beta5 checksums.
+
+	* keyhash_provider/k5_md5des.c (k5_md5des_verify): Add
+	compatibility for krb5-beta5 checksums.  Fix typos similar to
+	those corrected in k5_md4des.c.
+
 Wed Apr 15 18:02:44 1998  Tom Yu  <tlyu@mit.edu>
 
 	* Makefile.in (LIB): Rename to k5crypto.
