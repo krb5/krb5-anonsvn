@@ -1,3 +1,0 @@
-AC_INIT(unifdef.c)
-CONFIG_RULES
-AC_OUTPUT(Makefile,[EXTRA_RULES])

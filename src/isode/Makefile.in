@@ -1,6 +1,0 @@
-srcdir = @srcdir@
-VPATH = @srcdir@
-
-all::
-
-SUBDIRS = @SUBDIRS@

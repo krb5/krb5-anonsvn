@@ -1,3 +1,0 @@
-AC_INIT(configure.in)
-HAVE_YYLINENO
-AC_OUTPUT(Makefile)
