@@ -26,15 +26,24 @@
 #define SIZEOF_LONG     4
 #endif
 
-#if defined(macintosh)
+#if defined(macintosh) || defined (__MACH__)
+#include <KerberosConditionalMacros.h>
+#endif
+
+#if TARGET_RT_MAC_CFM
 #define NO_SYS_TYPES_H
 #define NO_SYS_STAT_H
 #endif
 
 /* If you want the library to share read-only profile data to save memory, define SHARE_TREE_DATA */
-#ifdef macintosh
+/* If you want the library to support foreign newlines in the profile file, define PROFILE_SUPPORTS_FOREIGN_NEWLINES */
+#if TARGET_OS_MAC
+#define PROFILE_SUPPORTS_FOREIGN_NEWLINES 1
+
+#if TARGET_RT_MAC_CFM
 #define SHARE_TREE_DATA 1
-#endif /* macintosh */
+#endif
+#endif /* TARGET_OS_MAC */
 
 typedef long prf_magic_t;
 

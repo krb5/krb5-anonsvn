@@ -1,3 +1,8 @@
+2000-10-26  Miro Jurisic <meeroh@mit.edu>
+
+        * prof_int.h, prof_parse.c:
+        Added support for foreign newlines
+
 2000-10-16  Miro Jurisic <meeroh@mit.edu>
 
         * profile.exp, prof_init.c, profile.hin:
