@@ -1,3 +1,7 @@
+Mon Aug 17 18:10:29 1998  Tom Yu  <tlyu@mit.edu>
+
+	* aclocal.m4: Fix Sam's fixes (variable capitalization).
+
 Wed Jul  8 01:10:44 1998  Matthew D Hancher  <mdh@mit.edu>
 
 	* aclocal.m4: Allow shared libraries to build properly under Irix
