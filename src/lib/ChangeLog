@@ -1,3 +1,7 @@
+Sun Feb  2 11:22:24 1997  Richard Basch  <basch@lehman.com>
+
+	* krb5_16.def: Need to declare the library name
+
 Thu Jan 30 21:27:07 1997  Richard Basch  <basch@lehman.com>
 
 	* krb5_16.def krb5_32.def: 
