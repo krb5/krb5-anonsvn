@@ -1,3 +1,9 @@
+1999-06-07 Miro Jurisic   <meeroh@mit.edu>
+
+	* prof_file.c (profile_update_file): if fopen fails and errno is 0, set
+	errno to ENOENT so that we can try multiple names for settings file
+	(From Chas Williams)
+
 1999-04-14    <tytso@rsts-11.mit.edu>
 
 	* prof_init.c (profile_abandon): New function which frees the

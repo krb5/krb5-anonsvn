@@ -7,19 +7,19 @@ type 'vend' {
 		pstring;												/* address */
 		pstring;												/* voice phone */
 		pstring;												/* fax phone */
-		pstring;												/* info URL	*/
-		pstring;												/* update URL */
+		pstring;												/* update URL	*/
+		pstring;												/* info URL */
 		pstring;												/* e-mail URL */
 };
 
 resource 'vers' (2, purgeable) {
 	2,
-	0,
+	01,
 	final,
 	0,
 	verUS,
-	"2.0",
-	"MIT Kerberos for the Macintosh 2.0"
+	"2.0.1",
+	"MIT Kerberos for the Macintosh 2.0.1"
 };
 
 resource 'vend' (-20640, purgeable) {
@@ -28,7 +28,7 @@ resource 'vend' (-20640, purgeable) {
 	"77 Massachusetts Avenue, E40-318, Cambridge, MA 02139",
 	"",
 	"",
-	"http://mit.edu/macdev/www/",
 	"",
+	"http://mit.edu/macdev/www/",
 	"mailto:macdev@mit.edu"
 };

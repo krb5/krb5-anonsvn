@@ -1,3 +1,36 @@
+1999-06-11  Miro Jurisic  <meeroh@mit.edu>
+
+	* init_os_ctx.c (os_init_paths): added NRL config file name correctly
+		(thanks dalmeida)
+
+1999-06-07  Miro Jurisic  <meeroh@mit.edu>
+
+	* c_ustime.c (AbsoluteToSecsNanosecs): Fixed the UInt64 division
+	* c_ustime.c (krb5_crypto_us_timeofday): now returning the correct value
+
+1999-06-07  Miro Jurisic  <meeroh@mit.edu>
+
+	* c_ustime.c (AbsoluteToSecsNanosecs): Fixed the UInt64 comparison
+
+1999-06-07  Miro Jurisic  <meeroh@mit.edu>
+
+	* net_read.c, net_write.c: now setting errno on Mac too
+	
+1999-06-07  Miro Jurisic  <meeroh@mit.edu>
+
+	* c_ustime.c (krb5_crypto_us_timeofday, HaveAccurateTime,
+		AbsoluteToSecsNanosecs): Added support for microseconds or
+		better timers on the Mac when available
+
+	* c_ustime.c (krb5_crypto_us_timeofday): fixed usecs counting bug
+		(From Chas Williams)
+
+	* init_os_ctx.c (GetMacProfilePathname): removed hardcoded config file name
+		(From Chas Williams)
+	
+	* init_os_ctx.c (os_init_paths): added NRL config file name
+		(From Chas Williams)
+
 1999-04-01  Theodore Ts'o  <tytso@rsts-11.mit.edu>
 
 	* prompter.c (krb5_prompter_posix): Update to use new prompter
