@@ -1,3 +1,7 @@
+Sat Jun 22 21:43:39 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* configure.in: define AN_TO_LN_RULES
+
 Wed Jun 12 00:40:29 1996  Theodore Ts'o  <tytso@rsts-11.mit.edu>
 
 	* adm_proto.h: Change usage of INTERFACE to use KRB5_CALLCONV and

@@ -109,6 +109,7 @@ int main() { return regcomp(&x,"pat.*",0) || regexec(&x,"pattern",1,&m,0); }
 ], ac_cv_func_regcomp=yes, ac_cv_func_regcomp=no)])
 test $ac_cv_func_regcomp = yes && AC_DEFINE(HAVE_REGCOMP)
 HAS_ANSI_VOLATILE
+AC_DEFINE(AN_TO_LN_RULES)
 
 dnl
 dnl Determine where to put the replay cache.
