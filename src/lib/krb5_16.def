@@ -119,6 +119,7 @@ EXPORTS
 	krb5_auth_con_free
 	krb5_auth_con_genaddrs
 	krb5_auth_con_getflags
+	krb5_auth_con_getkey
 	krb5_auth_con_getlocalsubkey
 	krb5_auth_con_getremotesubkey
 	krb5_auth_con_init
