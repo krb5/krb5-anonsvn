@@ -64,7 +64,7 @@
 #define KRB5_DLLIMP __declspec(KRB5_DECLSPEC)
 #define KRB5_CALLCONV __stdcall
 #define KRB5_CALLCONV_C __cdecl
-#define KRB5_EXPORTVAR __far
+#define KRB5_EXPORTVAR
 #endif /* !KRB5_CALLCONV */
 
 #endif /* _MSDOS */
