@@ -72,8 +72,6 @@ static const gss_OID_set_desc oidsets[] = {
 
 const gss_OID_set_desc * const gss_mech_set_krb5 = oidsets+0;
 
-krb5_context kg_context;
-
 void *kg_vdb = NULL;
 
 /** default credential support */
@@ -92,10 +90,7 @@ kg_get_defcred(minor_status, cred)
    if (defcred == GSS_C_NO_CREDENTIAL) {
       OM_uint32 major;
 
-      if (!kg_context && kg_get_context())
-	      return GSS_S_FAILURE;
-
-      if ((major = krb5_gss_acquire_cred(kg_context, minor_status, 
+      if ((major = krb5_gss_acquire_cred(minor_status, 
 					 (gss_name_t) NULL, GSS_C_INDEFINITE, 
 					 GSS_C_NULL_OID_SET, GSS_C_INITIATE, 
 					 &defcred, NULL, NULL)) &&
@@ -119,19 +114,24 @@ kg_release_defcred(minor_status)
       return(GSS_S_COMPLETE);
    }
 
-   if (!kg_context && kg_get_context())
-	   return GSS_S_FAILURE;
-   
-   return(krb5_gss_release_cred(kg_context, minor_status, &defcred));
+   return(krb5_gss_release_cred(minor_status, &defcred));
 }
 
 OM_uint32
-kg_get_context()
+kg_get_context(minor_status, context)
+   OM_uint32 *minor_status;
+   krb5_context *context;
 {
-	if (kg_context)
-		return GSS_S_COMPLETE;
-	if (krb5_init_context(&kg_context))
-		return GSS_S_FAILURE;
-	krb5_init_ets(kg_context);
-	return GSS_S_COMPLETE;
+   static krb5_context kg_context = NULL;
+   krb5_error_code code;
+
+   if ((! kg_context) &&
+       (code = krb5_init_context(&kg_context))) {
+      *minor_status = (OM_uint32) code;
+      return GSS_S_FAILURE;
+   }
+
+   *context = kg_context;
+   *minor_status = 0;
+   return GSS_S_COMPLETE;
 }

@@ -26,42 +26,49 @@
  * $Id$
  */
 
-OM_uint32
-krb5_gss_sign(minor_status, context_handle,
-	      qop_req, message_buffer, 
-	      message_token)
-     OM_uint32 *minor_status;
-     gss_ctx_id_t context_handle;
-     int qop_req;
-     gss_buffer_t message_buffer;
-     gss_buffer_t message_token;
-{
-   krb5_context context;
-   
-   if (GSS_ERROR(kg_get_context(minor_status, &context)))
-      return(GSS_S_FAILURE);
-
-   return(kg_seal(context, minor_status, context_handle, 0,
-		  qop_req, message_buffer, NULL,
-		  message_token, KG_TOK_SIGN_MSG));
-}
-
 /* V2 interface */
 OM_uint32
-krb5_gss_get_mic(minor_status, context_handle, qop_req,
-		 message_buffer, message_token)
+krb5_gss_wrap_size_limit(minor_status, context_handle, conf_req_flag,
+			 qop_req, req_output_size, max_input_size)
     OM_uint32		*minor_status;
     gss_ctx_id_t	context_handle;
+    int			conf_req_flag;
     gss_qop_t		qop_req;
-    gss_buffer_t	message_buffer;
-    gss_buffer_t	message_token;
+    OM_uint32		req_output_size;
+    OM_uint32		*max_input_size;
 {
-    krb5_context context;
-    
+    krb5_context	context;
+    krb5_gss_ctx_id_rec	*ctx;
+    OM_uint32		cfsize;
+    OM_uint32		ohlen;
+
     if (GSS_ERROR(kg_get_context(minor_status, &context)))
        return(GSS_S_FAILURE);
 
-    return(kg_seal(context, minor_status, context_handle, 0,
-		   (int) qop_req, message_buffer, NULL,
-		   message_token, KG_TOK_MIC_MSG));
+    /* only default qop is allowed */
+    if (qop_req != GSS_C_QOP_DEFAULT) {
+	*minor_status = (OM_uint32) G_UNKNOWN_QOP;
+	return(GSS_S_FAILURE);
+    }
+    
+    /* validate the context handle */
+    if (! kg_validate_ctx_id(context_handle)) {
+	*minor_status = (OM_uint32) G_VALIDATE_FAILED;
+	return(GSS_S_NO_CONTEXT);
+    }
+    
+    ctx = (krb5_gss_ctx_id_rec *) context_handle;
+    if (! ctx->established) {
+	*minor_status = KG_CTX_INCOMPLETE;
+	return(GSS_S_NO_CONTEXT);
+    }
+
+    /* Calculate the token size and subtract that from the output size */
+    cfsize = (conf_req_flag) ? kg_confounder_size(&ctx->enc) : 0;
+    ohlen = g_token_size((gss_OID) gss_mech_krb5, (unsigned int) cfsize + 22);
+
+    /* Cannot have trailer length that will cause us to pad over our length */
+    *max_input_size = (req_output_size - ohlen) & (~7);
+    *minor_status = 0;
+    return(GSS_S_COMPLETE);
 }

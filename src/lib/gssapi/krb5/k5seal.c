@@ -90,6 +90,13 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
    /* pad the plaintext, encrypt if needed, and stick it in the token */
 
+   /* initialize the the cksum and allocate the contents buffer */
+   md5cksum.checksum_type = CKSUMTYPE_RSA_MD5;
+   md5cksum.length = krb5_checksum_size(context, CKSUMTYPE_RSA_MD5);
+   if ((md5cksum.contents = (krb5_octet *) xmalloc(md5cksum.length)) == NULL) {
+      return(ENOMEM);
+   }
+ 
    if (toktype == KG_TOK_SEAL_MSG) {
       unsigned char *plain;
       unsigned char pad;
@@ -118,7 +125,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
       }
 
       if (encrypt) {
-	 if (code = kg_encrypt(enc_ed, NULL, (krb5_pointer) plain,
+	 if (code = kg_encrypt(context, enc_ed, NULL, (krb5_pointer) plain,
 			       (krb5_pointer) (ptr+22), tmsglen)) {
 	    if (plain)
 	       xfree(plain);
@@ -135,7 +142,8 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
       /* compute the checksum */
 
       /* 8 = head of token body as specified by mech spec */
-      if (! (data_ptr = xmalloc(8 + (bigend ? text->length : tmsglen)))) {
+      if (! (data_ptr =
+	     (char *) xmalloc(8 + (bigend ? text->length : tmsglen)))) {
 	  if (plain)
 	      xfree(plain);
 	  xfree(t);
@@ -146,7 +154,7 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 	  (void) memcpy(data_ptr+8, text->value, text->length);
       else
 	  (void) memcpy(data_ptr+8, plain, tmsglen);
-      code = krb5_calculate_checksum(context, CKSUMTYPE_RSA_MD5, data_ptr,
+      code = krb5_calculate_checksum(context, md5cksum.checksum_type, data_ptr,
 				     8 + (bigend ? text->length : tmsglen),
 				     0, 0, &md5cksum);
       xfree(data_ptr);
@@ -162,13 +170,13 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
    } else {
       /* compute the checksum */
 
-      if (! (data_ptr = xmalloc(8 + text->length))) {
+      if (! (data_ptr = (char *) xmalloc(8 + text->length))) {
 	  xfree(t);
 	  return(ENOMEM);
       }
       (void) memcpy(data_ptr, ptr-2, 8);
       (void) memcpy(data_ptr+8, text->value, text->length);
-      code = krb5_calculate_checksum(context, CKSUMTYPE_RSA_MD5, data_ptr,
+      code = krb5_calculate_checksum(context, md5cksum.checksum_type, data_ptr,
 				     8 + text->length,
 				     0, 0, &md5cksum);
       xfree(data_ptr);
@@ -181,7 +189,14 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
    /* XXX this depends on the key being a single-des key, but that's
       all that kerberos supports right now */
 
-   code = krb5_calculate_checksum(context, CKSUMTYPE_DESCBC,
+   /* initialize the the cksum and allocate the contents buffer */
+   desmac.checksum_type = CKSUMTYPE_DESCBC;
+   desmac.length = krb5_checksum_size(context, CKSUMTYPE_DESCBC);
+   if ((desmac.contents = (krb5_octet *) xmalloc(desmac.length)) == NULL) {
+      return(ENOMEM);
+   }
+ 
+   code = krb5_calculate_checksum(context, desmac.checksum_type,
 				  md5cksum.contents, 16,
 				  seq_ed->key->contents, 
 				  seq_ed->key->length,
@@ -196,12 +211,11 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
    memcpy(ptr+14, desmac.contents, 8);
 
-   /* XXX krb5_free_checksum_contents? */
-   xfree(desmac.contents);
+   krb5_xfree(desmac.contents);
 
    /* create the seq_num */
 
-   if (code = kg_make_seq_num(seq_ed, direction?0:0xff, *seqnum,
+   if (code = kg_make_seq_num(context, seq_ed, direction?0:0xff, *seqnum,
 			      ptr+14, ptr+6)) {
       xfree(t);
       return(code);

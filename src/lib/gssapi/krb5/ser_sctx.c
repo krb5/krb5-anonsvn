@@ -30,45 +30,14 @@
 /*
  * This module contains routines to [de]serialize 
  *	krb5_gss_enc_desc and krb5_gss_ctx_id_t.
+ * XXX This whole serialization abstraction is unnecessary in a
+ * non-messaging environment, which krb5 is.  Someday, this should
+ * all get redone without the extra level of indirection. I've done
+ * some of this work here, since adding new serializers is an internal
+ * krb5 interface, and I won't use those.  There is some more
+ * deobfuscation (no longer anonymizing pointers, mostly) which could
+ * still be done. --marc
  */
-
-/* Windows needs these prototypes since the structure they're assigned
- *  into is prototyped.
- */
-static krb5_error_code kg_enc_desc_size
-	PROTOTYPE((krb5_context kcontext,
-		   krb5_pointer arg,
-		   size_t *sizep));
-
-static krb5_error_code kg_enc_desc_externalize
-	PROTOTYPE((krb5_context kcontext,
-		   krb5_pointer arg,
-		   krb5_octet **buffer,
-		   size_t *lenremain));
-
-static krb5_error_code kg_enc_desc_internalize
-	PROTOTYPE((krb5_context kcontext,
-		   krb5_pointer *argp,
-		   krb5_octet **buffer,
-		   size_t *lenremain));
-
-
-static krb5_error_code kg_ctx_size
-	PROTOTYPE((krb5_context kcontext,
-		   krb5_pointer arg,
-		   size_t *sizep));
-
-static krb5_error_code kg_ctx_externalize
-	PROTOTYPE((krb5_context kcontext,
-		   krb5_pointer arg,
-		   krb5_octet **buffer,
-		   size_t *lenremain));
-
-static krb5_error_code kg_ctx_internalize
-	PROTOTYPE((krb5_context kcontext,
-		   krb5_pointer *argp,
-		   krb5_octet **buffer,
-		   size_t *lenremain));
 
 /*
  * Determine the size required for this krb5_gss_enc_desc.
@@ -259,7 +228,7 @@ kg_enc_desc_internalize(kcontext, argp, buffer, lenremain)
 /*
  * Determine the size required for this krb5_gss_ctx_id_t.
  */
-static krb5_error_code
+krb5_error_code
 kg_ctx_size(kcontext, arg, sizep)
     krb5_context	kcontext;
     krb5_pointer	arg;
@@ -309,14 +278,12 @@ kg_ctx_size(kcontext, arg, sizep)
 				    &required);
 
 	if (!kret)
-	    kret = krb5_size_opaque(kcontext,
-				    KG_ENC_DESC,
+	    kret = kg_enc_desc_size(kcontext,
 				    (krb5_pointer) &ctx->enc,
 				    &required);
 
 	if (!kret)
-	    kret = krb5_size_opaque(kcontext,
-				    KG_ENC_DESC,
+	    kret = kg_enc_desc_size(kcontext,
 				    (krb5_pointer) &ctx->seq,
 				    &required);
 
@@ -329,7 +296,7 @@ kg_ctx_size(kcontext, arg, sizep)
 /*
  * Externalize this krb5_gss_ctx_id_t.
  */
-static krb5_error_code
+krb5_error_code
 kg_ctx_externalize(kcontext, arg, buffer, lenremain)
     krb5_context	kcontext;
     krb5_pointer	arg;
@@ -398,14 +365,12 @@ kg_ctx_externalize(kcontext, arg, buffer, lenremain)
 					       &bp, &remain);
 
 	    if (!kret)
-		kret = krb5_externalize_opaque(kcontext,
-					       KG_ENC_DESC,
+		kret = kg_enc_desc_externalize(kcontext,
 					       (krb5_pointer) &ctx->enc,
 					       &bp, &remain);
 
 	    if (!kret)
-		kret = krb5_externalize_opaque(kcontext,
-					       KG_ENC_DESC,
+		kret = kg_enc_desc_externalize(kcontext,
 					       (krb5_pointer) &ctx->seq,
 					       &bp, &remain);
 
@@ -422,7 +387,7 @@ kg_ctx_externalize(kcontext, arg, buffer, lenremain)
 /*
  * Internalize this krb5_gss_ctx_id_t.
  */
-static krb5_error_code
+krb5_error_code
 kg_ctx_internalize(kcontext, argp, buffer, lenremain)
     krb5_context	kcontext;
     krb5_pointer	*argp;
@@ -497,8 +462,7 @@ kg_ctx_internalize(kcontext, argp, buffer, lenremain)
 		    kret = 0;
 	    }
 	    if (!kret) {
-		if ((kret = krb5_internalize_opaque(kcontext,
-						    KG_ENC_DESC,
+		if ((kret = kg_enc_desc_internalize(kcontext,
 						    (krb5_pointer *) &edp,
 						    &bp, &remain))) {
 		    if (kret == EINVAL)
@@ -510,8 +474,7 @@ kg_ctx_internalize(kcontext, argp, buffer, lenremain)
 		}
 	    }
 	    if (!kret) {
-		if ((kret = krb5_internalize_opaque(kcontext,
-						    KG_ENC_DESC,
+		if ((kret = kg_enc_desc_internalize(kcontext,
 						    (krb5_pointer *) &edp,
 						    &bp, &remain))) {
 		    if (kret == EINVAL)
@@ -556,30 +519,5 @@ kg_ctx_internalize(kcontext, argp, buffer, lenremain)
 	    }
 	}
     }
-    return(kret);
-}
-
-static const krb5_ser_entry kg_enc_desc_ser_entry = {
-    KG_ENC_DESC,			/* Type			*/
-    kg_enc_desc_size,			/* Sizer routine	*/
-    kg_enc_desc_externalize,		/* Externalize routine	*/
-    kg_enc_desc_internalize		/* Internalize routine	*/
-};
-static const krb5_ser_entry kg_ctx_ser_entry = {
-    KG_CONTEXT,				/* Type			*/
-    kg_ctx_size,			/* Sizer routine	*/
-    kg_ctx_externalize,			/* Externalize routine	*/
-    kg_ctx_internalize			/* Internalize routine	*/
-};
-
-krb5_error_code
-kg_ser_context_init(kcontext)
-    krb5_context	kcontext;
-{
-    krb5_error_code	kret;
-
-    kret = krb5_register_serializer(kcontext, &kg_enc_desc_ser_entry);
-    if (!kret)
-	kret = krb5_register_serializer(kcontext, &kg_ctx_ser_entry);
     return(kret);
 }

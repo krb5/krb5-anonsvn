@@ -1,3 +1,40 @@
+Wed Apr 17 21:08:59 1996  Marc Horowitz  <marc@mit.edu>
+
+	* accept_sec_context.c (krb5_gss_set_backward_mode): removed
+
+	* krb5_gss_glue.c, wrap_size_limit.c: added
+	
+	* import_sec_context.c: intern the newly created context id so
+ 	that the validation functions will accept it.
+	
+	* Makefile.in (CFLAGS): Don't need md5 header files anymore.
+  	(OBJS, SRCS): Change the list of files to build.
+
+	* export_sec_context.c, import_sec_context.c, gssapiP_krb5.h,
+ 	ser_sctx.c: don't use the serialization abstraction, since it
+ 	doesn't add anything, and is internal to kerberos.  Instead, make
+ 	the {de,}serialization functions internal gssapi functions, and
+ 	call those directly.
+
+	* accept_sec_context.c, acquire_cred.c, context_time.c,
+ 	delete_sec_context.c, disp_name.c, disp_status.c,
+ 	export_sec_context.c, gssapi_krb5.c (kg_get_context),
+ 	import_name.c, import_sec_context.c, indicate_mechs.c,
+ 	init_sec_context.c, inq_context.c, inq_cred.c, inq_names.c,
+ 	process_context_token.c, rel_cred.c, rel_name.c, seal.c, sign.c,
+ 	unseal.c, verify.c:
+ 	Don't pass in the context from the caller.  Instead, call
+ 	kg_get_context() to find out the kerberos library context.  Also,
+ 	random minor compile-time fixes.
+
+	* accept_sec_context.c, gssapi_krb5.c (kg_get_defcred),
+ 	gssapiP_krb5.h, init_sec_context.c, k5seal.c, k5unseal.c,
+ 	util_cksum.c (kg_checksum_channel_bindings), util_seqnum.c
+ 	(kg_make_seq_num, kg_get_seq_num), util_seed.c (kg_make_seed),
+ 	util_crypt.c (kg_encrypt, kg_decrypt): 
+	pass the context to the kg_* functions which need it instead of
+ 	determining it directly.
+
 Tue Apr  2 15:20:24 1996  Theodore Y. Ts'o  <tytso@dcl>
 
 	* Makefile.in (SRCS): Inlined list of source files for SRCS and

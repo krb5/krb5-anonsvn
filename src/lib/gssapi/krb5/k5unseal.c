@@ -61,7 +61,7 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
    int plainlen;
    int err;
    int direction;
-   unsigned int seqnum;
+   krb5_int32 seqnum;
    OM_uint32 retval;
 
    if (toktype == KG_TOK_SEAL_MSG) {
@@ -124,7 +124,8 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
 	    return(GSS_S_FAILURE);
 	 }
 
-	 if (code = kg_decrypt(&ctx->enc, NULL, ptr+22, plain, tmsglen)) {
+	 if (code = kg_decrypt(context,
+			       &ctx->enc, NULL, ptr+22, plain, tmsglen)) {
 	    xfree(plain);
 	    *minor_status = code;
 	    return(GSS_S_FAILURE);
@@ -143,7 +144,7 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
       }
 
       if (token.length) {
-	 if ((token.value = xmalloc(token.length)) == NULL) {
+	 if ((token.value = (void *) xmalloc(token.length)) == NULL) {
 	    if (sealalg == 0)
 	       xfree(plain);
 	    *minor_status = ENOMEM;
@@ -168,12 +169,19 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
 
    /* compute the checksum of the message */
 
+   /* initialize the the cksum and allocate the contents buffer */
+   md5cksum.checksum_type = CKSUMTYPE_RSA_MD5;
+   md5cksum.length = krb5_checksum_size(context, CKSUMTYPE_RSA_MD5);
+   if ((md5cksum.contents = (krb5_octet *) xmalloc(md5cksum.length)) == NULL) {
+      return(ENOMEM);
+   }
+
    if (signalg == 0) {
       /* compute the checksum of the message */
 
       /* 8 = bytes of token body to be checksummed according to spec */
 
-      if (! (data_ptr =
+      if (! (data_ptr = (void *)
 	     xmalloc(8 + (ctx->big_endian ? token.length : plainlen)))) {
 	  if (sealalg == 0)
 	      xfree(plain);
@@ -187,7 +195,8 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
 	  (void) memcpy(data_ptr+8, token.value, token.length);
       else
 	  (void) memcpy(data_ptr+8, plain, plainlen);
-      code = krb5_calculate_checksum(context, CKSUMTYPE_RSA_MD5, data_ptr, 8 +
+      code = krb5_calculate_checksum(context, md5cksum.checksum_type,
+				     data_ptr, 8 +
 				     (ctx->big_endian ? token.length :
 				      plainlen), 0, 0, &md5cksum);
       xfree(data_ptr);
@@ -206,7 +215,14 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
       /* XXX this depends on the key being a single-des key, but that's
 	 all that kerberos supports right now */
 
-      code = krb5_calculate_checksum(context, CKSUMTYPE_DESCBC,
+      /* initialize the the cksum and allocate the contents buffer */
+      desmac.checksum_type = CKSUMTYPE_DESCBC;
+      desmac.length = krb5_checksum_size(context, CKSUMTYPE_DESCBC);
+      if ((desmac.contents = (krb5_octet *) xmalloc(desmac.length)) == NULL) {
+	 return(ENOMEM);
+      }
+
+      code = krb5_calculate_checksum(context, desmac.checksum_type,
 				     md5cksum.contents, 16,
 				     ctx->seq.key->contents, 
 				     ctx->seq.key->length,
@@ -222,7 +238,7 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
       cksum = desmac.contents;
    } else {
       if (! ctx->seed_init) {
-	 if (code = kg_make_seed(ctx->subkey, ctx->seed)) {
+	 if (code = kg_make_seed(context, ctx->subkey, ctx->seed)) {
 	    if (sealalg == 0)
 	       xfree(plain);
 	    if (toktype == KG_TOK_SEAL_MSG)
@@ -233,7 +249,7 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
 	 ctx->seed_init = 1;
       }
 
-      if (! (data_ptr =
+      if (! (data_ptr = (void *)
 	     xmalloc(8 + (ctx->big_endian ? token.length : plainlen)))) {
 	  if (sealalg == 0)
 	      xfree(plain);
@@ -247,7 +263,8 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
 	  (void) memcpy(data_ptr+8, token.value, token.length);
       else
 	  (void) memcpy(data_ptr+8, plain, plainlen);
-      code = krb5_calculate_checksum(context, CKSUMTYPE_RSA_MD5, data_ptr, 8 +
+      code = krb5_calculate_checksum(context, md5cksum.checksum_type,
+				     data_ptr, 8 +
 				     (ctx->big_endian ? token.length :
 				      plainlen), 0, 0, &md5cksum);
       xfree(data_ptr);
@@ -301,7 +318,7 @@ kg_unseal(context, minor_status, context_handle, input_token_buffer,
 
    /* do sequencing checks */
 
-   if (code = kg_get_seq_num(&(ctx->seq), ptr+14, ptr+6, &direction,
+   if (code = kg_get_seq_num(context, &(ctx->seq), ptr+14, ptr+6, &direction,
 			     &seqnum)) {
       if (toktype == KG_TOK_SEAL_MSG)
 	 xfree(token.value);

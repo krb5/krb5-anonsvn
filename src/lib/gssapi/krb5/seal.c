@@ -27,10 +27,9 @@
  */
 
 OM_uint32
-krb5_gss_seal(ctx, minor_status, context_handle, conf_req_flag,
+krb5_gss_seal(minor_status, context_handle, conf_req_flag,
 	      qop_req, input_message_buffer, conf_state,
 	      output_message_buffer)
-     void *ctx;
      OM_uint32 *minor_status;
      gss_ctx_id_t context_handle;
      int conf_req_flag;
@@ -39,7 +38,11 @@ krb5_gss_seal(ctx, minor_status, context_handle, conf_req_flag,
      int *conf_state;
      gss_buffer_t output_message_buffer;
 {
-   krb5_context context = ctx;
+   krb5_context context;
+
+   if (GSS_ERROR(kg_get_context(minor_status, &context)))
+      return(GSS_S_FAILURE);
+
    return(kg_seal(context, minor_status, context_handle, conf_req_flag,
 		  qop_req, input_message_buffer, conf_state,
 		  output_message_buffer, KG_TOK_SEAL_MSG));
@@ -47,10 +50,9 @@ krb5_gss_seal(ctx, minor_status, context_handle, conf_req_flag,
 
 /* V2 interface */
 OM_uint32
-krb5_gss_wrap(ctx, minor_status, context_handle, conf_req_flag,
+krb5_gss_wrap(minor_status, context_handle, conf_req_flag,
 	      qop_req, input_message_buffer, conf_state,
 	      output_message_buffer)
-    void *ctx;
     OM_uint32		*minor_status;
     gss_ctx_id_t	context_handle;
     int			conf_req_flag;
@@ -59,8 +61,11 @@ krb5_gss_wrap(ctx, minor_status, context_handle, conf_req_flag,
     int			*conf_state;
     gss_buffer_t	output_message_buffer;
 {
-    krb5_context	context = ctx;
+    krb5_context	context;
     
+    if (GSS_ERROR(kg_get_context(minor_status, &context)))
+       return(GSS_S_FAILURE);
+
     return(kg_seal(context, minor_status, context_handle, conf_req_flag,
 		   (int) qop_req, input_message_buffer, conf_state,
 		   output_message_buffer, KG_TOK_WRAP_MSG));

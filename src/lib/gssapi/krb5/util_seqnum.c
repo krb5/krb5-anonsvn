@@ -27,7 +27,8 @@
  */
 
 krb5_error_code
-kg_make_seq_num(ed, direction, seqnum, cksum, buf)
+kg_make_seq_num(context, ed, direction, seqnum, cksum, buf)
+     krb5_context context;
      krb5_gss_enc_desc *ed;
      int direction;
      krb5_int32 seqnum;
@@ -46,17 +47,21 @@ kg_make_seq_num(ed, direction, seqnum, cksum, buf)
    plain[6] = direction;
    plain[7] = direction;
 
-   return(kg_encrypt(ed, cksum, plain, buf, 8));
+   return(kg_encrypt(context, ed, cksum, plain, buf, 8));
 }
 
-krb5_error_code kg_get_seq_num(krb5_gss_enc_desc *ed, unsigned char *cksum,
-			       unsigned char *buf, int *direction,
-			       unsigned int *seqnum)
+krb5_error_code kg_get_seq_num(context, ed, cksum, buf, direction, seqnum)
+     krb5_context context;
+     krb5_gss_enc_desc *ed;
+     unsigned char *cksum;
+     unsigned char *buf;
+     int *direction;
+     krb5_int32 *seqnum;
 {
    krb5_error_code code;
    unsigned char plain[8];
 
-   if (code = kg_decrypt(ed, cksum, buf, plain, 8))
+   if (code = kg_decrypt(context, ed, cksum, buf, plain, 8))
       return(code);
 
    if ((plain[4] != plain[5]) ||

@@ -27,14 +27,16 @@
  */
 
 OM_uint32
-krb5_gss_delete_sec_context(ct, minor_status, context_handle, output_token)
-     void *ct;
+krb5_gss_delete_sec_context(minor_status, context_handle, output_token)
      OM_uint32 *minor_status;
      gss_ctx_id_t *context_handle;
      gss_buffer_t output_token;
 {
-   krb5_context context = ct;
+   krb5_context context;
    krb5_gss_ctx_id_rec *ctx;
+
+   if (GSS_ERROR(kg_get_context(minor_status, &context)))
+      return(GSS_S_FAILURE);
 
    if (output_token) {
       output_token->length = 0;
@@ -93,6 +95,8 @@ krb5_gss_delete_sec_context(ct, minor_status, context_handle, output_token)
    if (ctx->auth_context)
        krb5_auth_con_free(context, ctx->auth_context);
    
+   /* Zero out context */
+   memset(ctx, 0, sizeof(*ctx));
    xfree(ctx);
 
    /* zero the handle itself */
