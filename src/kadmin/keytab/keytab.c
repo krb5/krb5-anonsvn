@@ -23,9 +23,6 @@ int remove_principal(char *keytab_str, krb5_keytab keytab, char
 		     *princ_str, char *kvno_str);
 static char *etype_string(krb5_enctype enctype);
 
-#define DEFAULT_KEYTAB "WRFILE:/etc/v5srvtab"
-
-extern char *krb5_defkeyname;
 krb5_context context;
 char *whoami;
 int quiet;
@@ -44,6 +41,7 @@ main(int argc0, char **argv0)
      extern krb5_kt_ops krb5_ktf_writable_ops;
      krb5_keytab keytab = 0;
      char *me_str, *princ_str, *keytab_str, *kvno_str;
+     char keytab_buf[1024];
      int argc, code, did_something, create;
      char **argv;
 
@@ -62,7 +60,6 @@ main(int argc0, char **argv0)
 		  "while registering writable key table functions");
 	  exit(1);
      }
-     krb5_defkeyname = DEFAULT_KEYTAB;
 
      /* process non-action arguments first */
      argc = argc0-1;
@@ -108,15 +105,14 @@ main(int argc0, char **argv0)
      }
 
      if (keytab == NULL) {
-	  if (! (keytab_str = strdup(DEFAULT_KEYTAB))) {
-	      com_err(whoami, ENOMEM, "while creating keytab name");
-	      exit(1);
-	  }
 	  code = krb5_kt_default(context, &keytab);
 	  if (code != 0) {
 	       com_err(whoami, code, "while opening default keytab");
 	       exit(1);
 	  }
+	  code = krb5_kt_get_name(context, keytab,
+				  keytab_buf, sizeof(keytab_buf));
+	  keytab_str = keytab_buf;
      }
 
      argc = argc0-1;
