@@ -39,7 +39,9 @@ long code;
     char *cp;
 
 #if defined(_MSDOS) || defined(_WIN32)
+#ifndef HAVE_STRERROR
 #define HAVE_STRERROR 1
+#endif /* HAVE_STRERROR */
 /*
 ** Winsock defines errors in the range 10000-10100. These are equivalent
 ** to 10000 plus the Berkeley error numbers.

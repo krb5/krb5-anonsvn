@@ -3,7 +3,7 @@ SED = sed
 
 ##DOSBUILDTOP = ..\..
 ##DOSLIBNAME=comerr.lib
-##DOSXTRA=-DSYS_ERRLIST_DECLARED
+##DOSXTRA=
 ##DOSOBJFILE=comerr.lst
 
 .c.o:
