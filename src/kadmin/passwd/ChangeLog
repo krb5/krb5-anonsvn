@@ -1,3 +1,8 @@
+Tue Feb  4 21:06:23 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in:
+	* configure.in: Update to new program build procedure.
+
 Wed Nov 27 13:50:03 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* configure.in: Link against kdb5 explicitly on all systems except
