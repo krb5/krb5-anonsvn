@@ -47,6 +47,10 @@ clean-unix::
 clean-mac::
 clean-windows::
 
+DONE:: $(OBJS)
+	 $(RM) DONE
+	 echo $(OBJS) >DONE
+
 libdyn.$(STEXT): $(OBJS)
 	$(RM) $@
 	$(ARADD) $@ $(OBJS)
@@ -57,5 +61,5 @@ install:: libdyn.a
 	$(RANLIB) $(DESTDIR)$(KRB5_LIBDIR)/libdyn.a
 
 clean::
-	$(RM) libdyn.$(LIBEXT) libdyn.bak
+	$(RM) libdyn.$(LIBEXT) libdyn.bak DONE
 
