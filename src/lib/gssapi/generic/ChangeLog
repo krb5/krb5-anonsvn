@@ -1,3 +1,8 @@
+Tue Jan 14 20:16:46 1997  Tom Yu  <tlyu@mit.edu>
+
+	* Makefile.in:
+	* configure.in: Update to new library build procedure.
+
 Wed Nov 20 13:59:58 1996  Ezra Peisach  <epeisach@mit.edu>
 
 	* Makefile.in (install): Install gssapi.h from the build tree.

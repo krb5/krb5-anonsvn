@@ -3,26 +3,14 @@ CFLAGS = $(CCOPTS) $(DEFS) -I. -I$(srcdir) -I../generic -I$(srcdir)/../generic -
 ##DOSBUILDTOP = ..\..\..
 ##DOSLIBNAME=..\gssapi.$(LIBEXT)
 
-.c.o:
-	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
-@SHARED_RULE@
-
-all-unix:: shared $(OBJS)
-
-all-mac:: shared $(OBJS)
-
 all-windows:: $(OBJS)
-
-shared:
-	mkdir shared
 
 ETSRCS= gssapi_err_krb5.c
 ETOBJS= gssapi_err_krb5.$(OBJEXT)
 ETHDRS= gssapi_err_krb5.h
 
 gssapi_err_krb5.$(OBJEXT): gssapi_err_krb5.c
-	$(CC) $(CFLAGS) -c $*.c
-@SHARED_RULE_LOCAL@
+
 ##WIN16##	$(LIBCMD) $(PAGESIZE) /nologo $(LIBNAME) -+$@;
 ##WIN32##	$(LIBCMD) /out:$(LIBNAME) /nologo $@
 
@@ -110,24 +98,61 @@ OBJS = \
 #	k5mech.$(OBJEXT) \
 #	pname_to_uid.$(OBJEXT)
 
+STLIBOBJS = \
+	accept_sec_context.o \
+	acquire_cred.o \
+	compare_name.o \
+	context_time.o \
+	delete_sec_context.o \
+	disp_name.o \
+	disp_status.o \
+	export_sec_context.o \
+	get_tkt_flags.o \
+	gssapi_krb5.o \
+	import_name.o \
+	import_sec_context.o \
+	indicate_mechs.o \
+	init_sec_context.o \
+	inq_context.o \
+	inq_cred.o \
+	inq_names.o \
+	k5seal.o \
+	k5unseal.o \
+	krb5_gss_glue.o \
+	process_context_token.o \
+	rel_cred.o \
+	rel_oid.o \
+	rel_name.o \
+	seal.o \
+	ser_sctx.o \
+	sign.o \
+	unseal.o \
+	util_cksum.o \
+	util_crypt.o \
+	util_seed.o \
+	util_seqnum.o \
+	verify.o \
+	wrap_size_limit.o \
+	gssapi_err_krb5.o
+
+#	k5mech.o \
+#	pname_to_uid.o
+
 HDRS= $(ETHDRS)
 
 EHDRDIR=$(BUILDTOP)$(S)include$(S)gssapi
 EXPORTED_HEADERS= gssapi_krb5.h
 
-all-unix:: $(SRCS) $(HDRS) includes $(OBJS)
-all-mac:: $(SRCS) $(HDRS) includes $(OBJS)
+all-unix:: $(SRCS) $(HDRS) includes
+all-unix:: all-libobjs
 all-windows:: win-include $(SRCS) $(HDRS) $(OBJS)
 
 win-include::
 	if not exist $(EHDRDIR)\nul mkdir $(EHDRDIR)
 	copy gssapi_krb5.h $(EHDRDIR)
 
-clean-unix::
-	$(RM) $(ETHDRS) $(ETSRCS) shared/*
-
-clean-mac::
-	$(RM) $(ETHDRS) $(ETSRCS) shared/*
+clean-unix:: clean-libobjs
+	$(RM) $(ETHDRS) $(ETSRCS)
 
 clean-windows::
 	$(RM) $(EHDRDIR)\gssapi_krb5.h
