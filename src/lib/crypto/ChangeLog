@@ -1,3 +1,7 @@
+Mon Sep 14 23:21:17 1998  Tom Yu  <tlyu@mit.edu>
+
+	* old/decrypt.c (krb5_old_decrypt): Fix memory leak.
+
 Tue Sep  1 19:33:38 1998  Tom Yu  <tlyu@mit.edu>
 
 	* etypes.c: Add ETYPE_LOCAL_DES3_HMAC_SHA1 to deal with marc's
