@@ -1,3 +1,10 @@
+Fri Dec 27 17:06:41 1996  Tom Yu  <tlyu@mit.edu>
+
+	* pre.in:
+	* post.in: Fix up recursion to be somewhat saner.
+	* lib.in:
+	* libobj.in: Add these frags for new library build system.
+
 Tue Dec 24 16:43:45 1996  Tom Yu  <tlyu@mit.edu>
 
 	* config.guess:
