@@ -1,3 +1,0 @@
-all::
-	/*placebo*/
-	@echo nothing to build yet.

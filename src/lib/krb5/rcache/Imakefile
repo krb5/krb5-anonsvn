@@ -1,4 +1,0 @@
-/* placebo */
-all:	
-	@echo Placebo for lib/rcache
-

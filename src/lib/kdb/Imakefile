@@ -1,5 +1,0 @@
-NormalLibraryObjectRule()
-
-OBJS=kdb_dbm.o
-
-NormalLibraryTarget(kdb,$(OBJS))
