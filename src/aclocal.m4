@@ -933,38 +933,37 @@ dnl
 dnl AC_KRB5_TCL - determine if the TCL library is present on system
 dnl
 AC_DEFUN(AC_KRB5_TCL,[
-TCL_INC=
-TCL_LIB=
+TCL_INCLUDES=
+TCL_LIBPATH=
+TCL_RPATH=
+TCL_LIBS=
 TCL_WITH=
 AC_ARG_WITH(tcl,
 [  --with-tcl=path         where Tcl resides],
 	TCL_WITH=$withval
 	if test "$withval" != yes -a "$withval" != no ; then
-		TCL_INC=-I$withval/include
-		TCL_LIB=-L$withval/lib
+		TCL_INCLUDES=-I$withval/include
+		TCL_LIBPATH=-L$withval/lib
+		TCL_RPATH=:$withval/lib
 	fi)
 AC_CHECK_LIB(dl, dlopen, DL_LIB=-ldl)
 if test "$TCL_WITH" != no ; then
-	hold_cflags=$CPPFLAGS
-	hold_ldflags=$LDFLAGS
-	CPPFLAGS="$CPPFLAGS $TCL_INC"
-	LDFLAGS="$CPPFLAGS $TCL_LIB"
 	AC_CHECK_HEADER(tcl.h,dnl
 		AC_CHECK_LIB(tcl7.5, Tcl_CreateCommand, 
-			TCL_LIB="$TCL_LIB -ltcl7.5 $DL_LIB",
+			TCL_LIBS="$TCL_LIBS -ltcl7.5 -lm $DL_LIB",
 			AC_CHECK_LIB(tcl, Tcl_CreateCommand, 
-				TCL_LIB="$TCL_LIB -ltcl $DL_LIB",
+				TCL_LIBS="$TCL_LIBS -ltcl -lm $DL_LIB",
 				AC_MSG_WARN("tcl.h found but not library"),
 				-lm $DL_LIB),
 			-lm $DL_LIB)
 	,dnl If tcl.h not found
 	AC_MSG_WARN(Could not find Tcl which is needed for the kadm5 tests)
-	TCL_LIB=
+	TCL_LIBS=
 	)
-	CPPFLAGS=$hold_cflags
-	LDFLAGS=$hold_ldflags
-	AC_SUBST(TCL_LIB)
-	AC_SUBST(TCL_INC)
+	AC_SUBST(TCL_INCLUDES)
+	AC_SUBST(TCL_LIBS)
+	AC_SUBST(TCL_LIBPATH)
+	AC_SUBST(TCL_RPATH)
 else
 	AC_MSG_RESULT("Not looking for Tcl library")
 fi

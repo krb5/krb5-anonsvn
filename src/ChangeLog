@@ -1,5 +1,8 @@
 Wed Feb  5 21:03:41 1997  Tom Yu  <tlyu@mit.edu>
 
+	* aclocal.m4 (AC_KRB5_TCL): Fix up to work better with new program
+	build procedure.
+
 	* aclocal.m4 (WITH_KRB4): Fix up KRB4_INCLUDES to look in the
 	build tree as well.
 
