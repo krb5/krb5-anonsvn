@@ -42,7 +42,7 @@ all-unix:: libkadm.a
 all-mac:: $(BASE_OBJS) $(DB_OBJS)
 all-windows:: $(OBJFILE)
 
-##DOS$(OBJFILE):: $(BASE_OBJS)
+##DOS$(OBJFILE): $(BASE_OBJS)
 ##DOS	$(RM) $(OBJFILE)
 ##DOS	$(LIBECHO) *.obj > $(OBJFILE)
 

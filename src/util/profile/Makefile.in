@@ -35,7 +35,7 @@ shared:
 
 all-windows:: $(OBJFILE)
 
-##DOS$(OBJFILE):: $(OBJS)
+##DOS$(OBJFILE): $(OBJS)
 ##DOS	$(RM) $(OBJFILE)
 ##DOS	$(LIBECHO) *.obj > $(OBJFILE)
 

@@ -16,7 +16,7 @@ all-unix:: shared $(OBJS)
 all-mac: $(OBJS)
 all-windows:: $(OBJFILE)
 
-##DOS$(OBJFILE):: syslog.obj sscanf.obj
+##DOS$(OBJFILE): syslog.obj sscanf.obj
 ##DOS	$(RM) $(OBJFILE)
 ##DOS	$(LIBECHO) -p $(MYNAME)\ *.obj > $(OBJFILE)
 

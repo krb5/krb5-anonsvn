@@ -67,7 +67,7 @@ all-unix:: $(OBJS) shared
 all-mac:: $(OBJS) shared
 all-windows:: $(OBJFILE)
 
-##DOS$(OBJFILE):: $(OBJS)
+##DOS$(OBJFILE): $(OBJS)
 ##DOS	$(RM) $(OBJFILE)
 ##DOS	$(LIBECHO) -p $(MYNAME)\ *.obj > $(OBJFILE)
 
