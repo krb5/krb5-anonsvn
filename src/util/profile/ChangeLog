@@ -1,3 +1,6 @@
+2002-03-06	Alexandra Ellwood <lxs@mit.edu>
+    prof_file.c, prof_init.c: Updated header paths for Mac OS X
+
 2002-03-03	Alexandra Ellwood <lxs@mit.edu>
     profile.pbexp: removed library initializer
 

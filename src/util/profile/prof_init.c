@@ -11,7 +11,7 @@
 #include <errno.h>
 
 #if TARGET_OS_MAC
-#include <KerberosSupport/FullPOSIXPath.h>
+#include <Kerberos/FullPOSIXPath.h>
 #endif
 
 #include "prof_int.h"

@@ -46,7 +46,7 @@ static OSErr GetMacOSTempFilespec (
 
 #endif
 #ifdef COPY_RESOURCE_FORK
-#include <KerberosSupport/FileCopy.h>
+#include <Kerberos/FileCopy.h>
 #endif
 
 static int rw_access(filespec)
