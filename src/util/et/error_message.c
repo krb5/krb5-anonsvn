@@ -26,9 +26,9 @@ static const char copyright[] =
 
 static char buffer[25];
 
-struct et_list * _et_list = (struct et_list *) NULL;
+KRB5_DLLIMP struct et_list KRB5_EXPORTVAR * _et_list = (struct et_list *) NULL;
 
-KRB5_DLLIMP const char * KRB5_CALLCONV error_message (code)
+KRB5_DLLIMP const char FAR * KRB5_CALLCONV error_message (code)
 long code;
 {
     int offset;

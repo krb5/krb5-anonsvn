@@ -20,6 +20,7 @@
 #define KRB5_CALLCONV
 #define KRB5_CALLCONV_C
 #define KRB5_DLLIMP
+#define KRB5_EXPORTVAR
 #define INTERFACE
 #define INTERFACE_C
 #endif /* KRB5_CALLCONV */
@@ -32,15 +33,15 @@
 #include <errno.h>
 
 struct error_table {
-    char const * const * msgs;
+    char const FAR * const FAR * msgs;
     long base;
     int n_msgs;
 };
 struct et_list {
-    struct et_list *next;
-    const struct error_table *table;
+    struct et_list FAR *next;
+    const struct error_table FAR *table;
 };
-extern struct et_list * _et_list;
+extern KRB5_DLLIMP struct et_list KRB5_EXPORTVAR * _et_list;
 
 #define	ERRCODE_RANGE	8	/* # of bits to shift table number */
 #define	BITS_PER_CHAR	6	/* # bits to shift per character in name */

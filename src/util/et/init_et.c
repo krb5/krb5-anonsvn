@@ -20,10 +20,9 @@ struct foobar {
     struct error_table et;
 };
 
-extern struct et_list * _et_list;
-
-int init_error_table(msgs, base, count)
-    const char * const * msgs;
+KRB5_DLLIMP int KRB5_CALLCONV
+init_error_table(msgs, base, count)
+    const char FAR * const FAR * msgs;
     int base;
     int count;
 {
