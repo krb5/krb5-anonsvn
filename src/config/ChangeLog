@@ -1,9 +1,6 @@
-Wed Jan 29 20:59:20 EST 1997	Richard Basch	<basch@lehman.com>
+Thu Jan 30 22:08:42 1997  Richard Basch  <basch@lehman.com>
 
-	* windows.in:
-		Compile with /MD so that compiled objects will
-		use the runtime C library, instead of a possibly
-		incompatible C library (for Borland C++ users)
+	* windows.in: Compile with /MD to link against the runtime library
 
 Thu Nov 21 11:55:16 EST 1996    Richard Basch   <basch@lehman.com>
 
