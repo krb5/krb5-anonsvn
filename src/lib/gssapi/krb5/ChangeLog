@@ -1,5 +1,8 @@
 Thu Jun 20 23:15:57 1996  Marc Horowitz  <marc@mit.edu>
 
+	* ser_sctx.c (kg_oid_size, kg_ctx_size): pull the oid-related code
+ 	out of kg_ctx_size into kg_oid_size.
+	
 	* k5unseal.c (kg_unseal), k5seal.c (make_seal_token): == cannot be
  	used to compare oid's.  The g_OID_equal macro must be used.
 
