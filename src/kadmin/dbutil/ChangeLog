@@ -1,3 +1,7 @@
+Thu Jul 18 19:22:04 1996  Marc Horowitz  <marc@mit.edu>
+
+	* configure.in: removed SS_RULES
+
 Wed Jul 10 19:43:22 1996  Marc Horowitz  <marc@mit.edu>
 
 	* dumpv4.c (configure.in, Makefile.in): make autoconf work after
