@@ -888,10 +888,6 @@ AC_ARG_ENABLE([shared],
 	*)
 		if test "$krb5_force_static" = "yes"; then
 			AC_MSG_RESULT([Forcing static libraries.])
-		SHLIBEXT=.so-nobuild
-	SHLIBVEXT=.so.v-nobuild
-		CC_LINK="$CC_LINK_STATIC"
-	SHLIBSEXT=.so.s-nobuild
 		else
 			AC_MSG_RESULT([Enabling shared libraries.])
 			LIBLIST="$LIBLIST "'lib$(LIB)$(SHLIBEXT)'
@@ -907,13 +903,13 @@ AC_ARG_ENABLE([shared],
 				;;
 			esac
 			OBJLISTS="$OBJLISTS OBJS.SH"
+		fi
 		DEPLIBEXT=$SHLIBEXT
 		CC_LINK="$CC_LINK_SHARED"
 		if test "$STLIBEXT" = "$SHLIBEXT" ; then
 		  STLIBEXT=".a-no-build"
 		  LIBINSTLIST="install-shared" #don't install static
 		fi
-fi
 		;;
 	esac
 else
