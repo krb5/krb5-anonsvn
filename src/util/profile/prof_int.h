@@ -1,11 +1,25 @@
+#ifndef PROF_INT_H
+#define PROF_INT_H
+
 /*
  * prof-int.h
  */
 
 #include <time.h>
+
+#if defined(macintosh) || (defined(__MACH__) && defined(__APPLE__))
+#include <TargetConditionals.h>
+#include <Kerberos/com_err.h>
+#include <Kerberos/FullPOSIXPath.h>
+#include <CoreServices/CoreServices.h>
+#else
 #include "com_err.h"
-#include "prof_err.h"
+#endif
+
 #include "profile.h"
+#ifndef ERROR_TABLE_BASE_prof
+#include "prof_err.h"
+#endif
 
 #if defined(__STDC__) || defined(_MSDOS) || defined(_WIN32)
 #define PROTOTYPE(x) x
@@ -26,26 +40,51 @@
 #define SIZEOF_LONG     4
 #endif
 
-#if defined(macintosh)
-#define NO_SYS_TYPES_H
-#define NO_SYS_STAT_H
-#endif
+/* If you want the library to share read-only profile data to save memory, define SHARE_TREE_DATA */
+/* If you want the library to support foreign newlines in the profile file, define PROFILE_SUPPORTS_FOREIGN_NEWLINES */
+#if TARGET_OS_MAC
+#define PROFILE_SUPPORTS_FOREIGN_NEWLINES 1
+#define SHARE_TREE_DATA 1
+#endif /* TARGET_OS_MAC */
 
 typedef long prf_magic_t;
+
+/*
+ * This is the structure which holds profile data for a particular
+ * configuration file. When using SHARE_TREE_DATA, one copy of this structure
+ * can be shared among multiple profiles.
+ */
+
+struct _prf_data_t {
+	prf_magic_t 			magic;			/* magic */
+	profile_filespec_t		filespec;		/* file from which the configuration was read */
+	char*					comment;		/* top of the file comment (I think) */
+	struct profile_node*	root;			/* profile tree for this file */
+	time_t					timestamp;		/* time tree last updated */
+	int						upd_serial;		/* incremented every time the data changes */
+	int						flags;			/* read/write, dirty/clean */
+	int						refcount;		/* number of profiles sharing this data */
+	struct _prf_data_t*		next;			/* next data in the list */
+};
+
+typedef struct _prf_data_t* prf_data_t;
+
+#ifdef SHARE_TREE_DATA
+#include "prof_threads.h"
+/* This is the head of the global list of shared trees */
+extern prf_data_t g_shared_trees;
+/* This is the mutex used to lock it */
+extern prof_mutex g_shared_trees_mutex;
+#endif /* SHARE_TREE_DATA */
 
 /*
  * This is the structure which stores the profile information for a
  * particular configuration file.
  */
 struct _prf_file_t {
-	prf_magic_t	magic;
-	char		*comment;
-	profile_filespec_t filespec;
-	struct profile_node *root;
-	time_t		timestamp;
-	int		flags;
-	int		upd_serial;
-	struct _prf_file_t *next;
+	prf_magic_t				magic;			/* magic */
+	prf_data_t				data;			/* data for this file */
+	struct _prf_file_t*		next;			/* next data in the profile */
 };
 
 typedef struct _prf_file_t *prf_file_t;
@@ -55,6 +94,7 @@ typedef struct _prf_file_t *prf_file_t;
  */
 #define PROFILE_FILE_RW		0x0001
 #define PROFILE_FILE_DIRTY	0x0002
+#define PROFILE_FILE_SHARED	0x0004
 
 /*
  * This structure defines the high-level, user visible profile_t
@@ -79,11 +119,7 @@ struct _profile_t {
  * Check if a filespec is last in a list (NULL on UNIX, invalid FSSpec on MacOS
  */
 
-#ifdef PROFILE_USES_PATHS
 #define	PROFILE_LAST_FILESPEC(x) (((x) == NULL) || ((x)[0] == '\0'))
-#else
-#define PROFILE_LAST_FILESPEC(x) (((x).vRefNum == 0) && ((x).parID == 0) && ((x).name[0] == '\0'))
-#endif
 
 /* profile_parse.c */
 
@@ -175,14 +211,17 @@ errcode_t profile_rename_node
 errcode_t profile_open_file
 	PROTOTYPE ((const_profile_filespec_t file, prf_file_t *ret_prof));
 
-errcode_t profile_update_file
-	PROTOTYPE ((prf_file_t profile));
+errcode_t profile_update_file_data
+	PROTOTYPE ((prf_data_t profile));
 
-errcode_t profile_flush_file
-	PROTOTYPE ((prf_file_t profile));
-
+errcode_t profile_flush_file_data
+    PROTOTYPE ((prf_data_t data));
+    
 void profile_free_file
 	PROTOTYPE ((prf_file_t profile));
+
+void profile_free_file_data
+	PROTOTYPE ((prf_data_t data));
 
 errcode_t profile_close_file
 	PROTOTYPE ((prf_file_t profile));
@@ -197,3 +236,5 @@ errcode_t profile_get_value
 /* Others included from profile.h */
 	
 /* prof_set.c -- included from profile.h */
+
+#endif /* PROF_INT_H */
