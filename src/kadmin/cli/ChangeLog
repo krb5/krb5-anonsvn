@@ -1,5 +1,7 @@
 Thu Jul 18 19:14:51 1996  Marc Horowitz  <marc@mit.edu>
 
+	* attic/configure.in: removed SS_RULES
+
 	* keytab.c (etype_string): ifdef out des3 reference
 
 	* configure.in: removed SS_RULES
