@@ -12,6 +12,8 @@ AC_CHECK_SIZEOF(long)
 SIZEOF_LONG=$ac_cv_sizeof_long
 AC_SUBST(SIZEOF_LONG)
 
+DECLARE_SYS_ERRLIST
+
 V5_SHARED_LIB_OBJS
 V5_MAKE_SHARED_LIB(libgssrpc,1.0,.., ./rpc)
 GSSAPI_KRB5_SH_VERS=$krb5_cv_shlib_version_libgssapi_krb5
