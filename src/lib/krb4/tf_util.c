@@ -68,6 +68,7 @@ int utimes(path, times)
 
 
 #ifdef POSIX_FILE_LOCKS
+#include <fcntl.h>
 
 /*
  * This function emulates a subset of flock()
