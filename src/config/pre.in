@@ -214,15 +214,23 @@ KADM_COMM_DEPLIBS	= $(UTIL_DEPLIB) $(KDB5_DEPLIB) $(DB_DEPLIB) $(GSSRPC_DEPLIBS)
 KADMSRV_DEPLIBS		= $(KADMSRV_DEPLIB) $(KADM_COMM_DEPLIBS)
 KADMCLNT_DEPLIBS	= $(KADMCLNT_DEPLIBS) $(KADM_COMM_DEPLIBS)
 
-# LIBS gets substituted in... e.g. -lgen -lnsl -lsocket
+# LIBS gets substituted in... e.g. -lnsl -lsocket
+
+# GEN_LIB is -lgen if needed for regexp
+GEN_LIB		= @GEN_LIB@
 
 DB_LIB		= $(TOPLIBD)/libdb.a
 SS_LIB		= $(TOPLIBD)/libss.a
 KDB5_LIB	= -lkdb5
-KRB4_LIB	= @KRB4_LIB@	# -lkrb4
-DES425_LIB	= @DES425_LIB@	# -ldes425
-KRB5_BASE_LIBS	= -lkrb5 -lcrypto -lcom_err $(LIBS)
-KRB4COMPAT_LIBS	= $(KRB4_LIB) -lkrb5 $(DES425_LIB) -lcrypto -lcom_err $(LIBS)
+
+# KRB4_LIB is -lkrb4 if building --with-krb4
+KRB4_LIB	= @KRB4_LIB@
+
+# DES425_LIB is -ldes425 if building --with-krb4
+DES425_LIB	= @DES425_LIB@
+
+KRB5_BASE_LIBS	= -lkrb5 -lcrypto -lcom_err $(GEN_LIB) $(LIBS)
+KRB4COMPAT_LIBS	= $(KRB4_LIB) -lkrb5 $(DES425_LIB) -lcrypto -lcom_err $(GEN_LIB) $(LIBS)
 KRB5_KDC_LIBS	= -lkdb5 $(DB_LIB) $(KRB4COMPAT_LIBS)
 GSS_LIBS	= -lgssapi_krb5
 GSSRPC_LIBS	= -lgssrpc -ldyn $(GSS_LIBS)

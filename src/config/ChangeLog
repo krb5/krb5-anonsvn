@@ -1,4 +1,11 @@
+Mon Feb  3 23:29:02 1997  Tom Yu  <tlyu@mit.edu>
+
+	* pre.in: Add GEN_LIB support (-lgen); also fix --with-krb4 stuff
+	(such as KRB4_LIB).
+
 Fri Jan 31 20:41:34 1997  Tom Yu  <tlyu@mit.edu>
+
+	* pre.in: Fix up GEN_LIB to DTRT
 
 	* pre.in: Add KDB5_LIB, and also fix typo (-lutil -> -lkrb5util)
 
