@@ -45,37 +45,34 @@ profile_init(files, ret_profile)
 	memset(profile, 0, sizeof(struct _profile_t));
 	profile->magic = PROF_MAGIC_PROFILE;
 
-        /* if the filenames list is not specified return an empty profile */
-        if ( files ) {
+    /* if the filenames list is not specified return an empty profile */
+    if ( files ) {
 	    for (fs = files; !PROFILE_LAST_FILESPEC(*fs); fs++) {
-/*                printf ("profile_init (%s)\n", *fs); */
-		retval = profile_open_file(*fs, &new_file);
-		/* if this file is missing or if its perms have changed, skip to the next */
-		if (retval == ENOENT || retval == EACCES) {
-			continue;
-		}
-		if (retval) {
-			profile_release(profile);
-			return retval;
-		}
-		if (last)
-			last->next = new_file;
-		else
-			profile->first_file = new_file;
-		last = new_file;
+            retval = profile_open_file(*fs, &new_file);
+            /* if this file is missing or if its perms have changed, skip to the next */
+            if (retval == ENOENT || retval == EACCES) {
+                continue;
+            }
+            if (retval) {
+                profile_release(profile);
+                return retval;
+            }
+            if (last)
+                last->next = new_file;
+            else
+                profile->first_file = new_file;
+            last = new_file;
 	    }
-	    /*
-	     * If last is still null after the loop, then all the files were
-	     * missing, so return the appropriate error.
-	     */
-	    if (!last) {
-		profile_release(profile);
-		return ENOENT;
-	    }
-	}
+	    /* If last is still null after the loop, then all the files were
+         * missing, so return the appropriate error. */
+        if (!last) {
+            profile_release(profile);
+            return ENOENT;
+        }
+    }
 
-        *ret_profile = profile;
-        return 0;
+    *ret_profile = profile;
+    return 0;
 }
 
 KRB5_DLLIMP errcode_t KRB5_CALLCONV
@@ -256,12 +253,8 @@ errcode_t profile_ser_size(unused, profile, sizep)
     required = 3*sizeof(prof_int32);
     for (pfp = profile->first_file; pfp; pfp = pfp->next) {
 	required += sizeof(prof_int32);
-#ifdef PROFILE_USES_PATHS
 	if (pfp->data->filespec)
 	    required += strlen(pfp->data->filespec);
-#else
-	required += sizeof (profile_filespec_t);
-#endif
     }
     *sizep += required;
     return 0;
@@ -307,22 +300,14 @@ errcode_t profile_ser_externalize(unused, profile, bufpp, remainp)
 	    pack_int32(PROF_MAGIC_PROFILE, &bp, &remain);
 	    pack_int32(fcount, &bp, &remain);
 	    for (pfp = profile->first_file; pfp; pfp = pfp->next) {
-#ifdef PROFILE_USES_PATHS
-		slen = (pfp->data->filespec) ?
-		    (prof_int32) strlen(pfp->data->filespec) : 0;
-		pack_int32(slen, &bp, &remain);
-		if (slen) {
-		    memcpy(bp, pfp->data->filespec, (size_t) slen);
-		    bp += slen;
-		    remain -= (size_t) slen;
-		}
-#else
-		slen = sizeof (FSSpec);
-		pack_int32(slen, &bp, &remain);
-		memcpy (bp, &(pfp->data->filespec), (size_t) slen);
-		bp += slen;
-		remain -= (size_t) slen;
-#endif
+            slen = (pfp->data->filespec) ?
+                   (prof_int32) strlen(pfp->data->filespec) : 0;
+            pack_int32(slen, &bp, &remain);
+            if (slen) {
+                memcpy(bp, pfp->data->filespec, (size_t) slen);
+                bp += slen;
+                remain -= (size_t) slen;
+            }
 	    }
 	    pack_int32(PROF_MAGIC_PROFILE, &bp, &remain);
 	    retval = 0;
@@ -387,15 +372,11 @@ errcode_t profile_ser_internalize(unused, profilep, bufpp, remainp)
 	memset(flist, 0, sizeof(char *) * (fcount+1));
 	for (i=0; i<fcount; i++) {
 		if (!unpack_int32(&tmp, &bp, &remain)) {
-#ifdef PROFILE_USES_PATHS
 			flist[i] = (char *) malloc((size_t) (tmp+1));
 			if (!flist[i])
 				goto cleanup;
 			memcpy(flist[i], bp, (size_t) tmp);
 			flist[i][tmp] = '\0';
-#else
-			memcpy (&flist[i], bp, (size_t) tmp);
-#endif
 			bp += tmp;
 			remain -= (size_t) tmp;
 		}
@@ -415,12 +396,10 @@ errcode_t profile_ser_internalize(unused, profilep, bufpp, remainp)
     
 cleanup:
 	if (flist) {
-#ifdef PROFILE_USES_PATHS
 		for (i=0; i<fcount; i++) {
 			if (flist[i])
 				free(flist[i]);
 		}
-#endif
 		free(flist);
 	}
 	return(retval);

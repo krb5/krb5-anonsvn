@@ -31,7 +31,6 @@
 PROFILEINT_BEGIN_DECLS
 
 /* We use file paths as unique file identifiers */
-#define PROFILE_USES_PATHS 1
 #if TARGET_OS_MAC
     #define COPY_RESOURCE_FORK 1
 #endif

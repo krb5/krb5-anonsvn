@@ -11,7 +11,6 @@
 #include <TargetConditionals.h>
 #include <Kerberos/com_err.h>
 #include <Kerberos/FullPOSIXPath.h>
-#include <Kerberos/FileCopy.h>
 #include <CoreServices/CoreServices.h>
 #else
 #include "com_err.h"
@@ -120,11 +119,7 @@ struct _profile_t {
  * Check if a filespec is last in a list (NULL on UNIX, invalid FSSpec on MacOS
  */
 
-#ifdef PROFILE_USES_PATHS
 #define	PROFILE_LAST_FILESPEC(x) (((x) == NULL) || ((x)[0] == '\0'))
-#else
-#define PROFILE_LAST_FILESPEC(x) (((x).vRefNum == 0) && ((x).parID == 0) && ((x).name[0] == '\0'))
-#endif
 
 /* profile_parse.c */
 

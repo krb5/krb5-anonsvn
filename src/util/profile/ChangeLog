@@ -1,3 +1,13 @@
+2002-05-16 Alexandra Ellwood <lxs@mit.edu>
+	* prof_file.c, prof_init.c, prof_int.h, prof_set.c, profile.hin:
+	Removed use of FSSpecs by the profile library other than FSSpec 
+	functions already exported. (Apple doesn't want this, and it causes 
+	serious performance problems for krb5_init_context on Mac OS X).  
+	Fixed code which uses paths to actually share data properly (these
+	bugs were also causing some of our performance problems).  This also 
+	fixes the bug where if you move your prefs out of /Library/Preferences
+	and copy new ones in, some apps don't notice.
+
 2002-04-03 Alexandra Ellwood <lxs@mit.edu>
     * profile.hin: Updated C++ protection to not interfere with emacs 
     auto indentation

@@ -48,7 +48,6 @@ static errcode_t rw_setup(profile)
 			new_data -> comment = NULL;
 			new_data -> root = NULL;
 			new_data -> flags &= ~PROFILE_FILE_SHARED;
-#ifdef PROFILE_USES_PATHS
 			/* copy the file spec */
 			new_data -> filespec = malloc (strlen (file -> data -> filespec) + 1);
 			if (new_data -> filespec == NULL) {
@@ -56,7 +55,6 @@ static errcode_t rw_setup(profile)
 			} else {
 				strcpy (new_data -> filespec, file -> data -> filespec);
 			}
-#endif /* PROFILE_USES_PATHS */
 		}
 		
 		if (retval == 0) {

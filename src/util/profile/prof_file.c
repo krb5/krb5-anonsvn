@@ -19,6 +19,9 @@
 #ifndef NO_SYS_STAT_H
 #include <sys/stat.h>
 #endif
+#ifndef NO_PWD_H
+#include <pwd.h>
+#endif
 #include <errno.h>
 
 
@@ -37,19 +40,36 @@ prf_data_t g_shared_trees;
 prof_mutex g_shared_trees_mutex;
 #endif /* SHARE_TREE_DATA */
 
-#ifndef PROFILE_USES_PATHS
-#include <FSp_fopen.h>
-
-static OSErr GetMacOSTempFilespec (
-	const	FSSpec*	inFilespec,
-			FSSpec*	outFilespec);
-
-#endif
 #ifdef COPY_RESOURCE_FORK
 #include <Kerberos/FileCopy.h>
 #endif
 
-static int rw_access(filespec)
+static int read_write_access(filespec)
+	profile_filespec_t filespec;
+{
+#ifdef HAVE_ACCESS
+	if (access(filespec, R_OK | W_OK) == 0)
+		return 1;
+	else
+		return 0;
+#else
+	/*
+	 * We're on a substandard OS that doesn't support access.  So
+	 * we kludge a test using stdio routines, and hope fopen
+	 * checks the read and write permissions.
+	 */
+	FILE	*f;
+
+	f = fopen(filespec, "r+");
+	if (f) {
+		fclose(f);
+		return 1;
+	}
+	return 0;
+#endif
+}
+
+static int read_access(filespec)
 	profile_filespec_t filespec;
 {
 #ifdef HAVE_ACCESS
@@ -65,40 +85,7 @@ static int rw_access(filespec)
 	 */
 	FILE	*f;
 
-#ifdef PROFILE_USES_PATHS
-	f = fopen(filespec, "r");
-#else
-	f = FSp_fopen(&filespec, "r");
-#endif
-	if (f) {
-		fclose(f);
-		return 1;
-	}
-	return 0;
-#endif
-}
-
-static int read_access(filespec)
-	profile_filespec_t filespec;
-{
-#ifdef HAVE_ACCESS
-	if (access(filespec, W_OK) == 0)
-		return 1;
-	else
-		return 0;
-#else
-	/*
-	 * We're on a substandard OS that doesn't support access.  So
-	 * we kludge a test using stdio routines, and hope fopen
-	 * checks the r/w permissions.
-	 */
-	FILE	*f;
-
-#ifdef PROFILE_USES_PATHS
 	f = fopen(filespec, "r+");
-#else
-	f = FSp_fopen(&filespec, "r+");
-#endif
 	if (f) {
 		fclose(f);
 		return 1;
@@ -114,10 +101,42 @@ errcode_t profile_open_file(filespec, ret_prof)
 	prf_file_t	prf = NULL;
 	prf_data_t	data = NULL;
 	errcode_t	retval = 0;
-	char		*home_env = NULL;
-	int		len;
-	
-
+	char		*filespecExpandedPath = NULL;
+    int			filespecExpandedPathLen = strlen (filespec) + 1;
+    struct passwd *pw = NULL;
+    
+	if (filespec[0] == '~' && filespec[1] == '/') {
+        /* Get the homedir for homedir relative paths */
+        /* client might be setuid root so favor euid but avoid root */
+        uid_t uid = (geteuid () == 0) ? getuid () : geteuid ();
+        
+        /* Use the password database instead of an environment variable */
+        /* because getenv defeats the krb5 "secure" context */
+        pw = getpwuid (uid);
+    
+        if ((pw != NULL) && (strlen (pw->pw_dir) > 0)) {
+            filespecExpandedPathLen += strlen (pw->pw_dir);
+        }
+    }
+    
+    filespecExpandedPath = (char *) malloc (filespecExpandedPathLen* sizeof (char));
+    if (filespecExpandedPath == NULL) {
+        retval = ENOMEM;
+        goto end;
+    }
+    
+	if (filespec[0] == '~' && filespec[1] == '/') {
+        if ((pw != NULL) && (strlen (pw->pw_dir) > 0)) {
+            strcpy (filespecExpandedPath, pw->pw_dir);
+            strcpy (&filespecExpandedPath[strlen (pw->pw_dir)], &filespec[1]);
+        } else {
+            strcpy (filespecExpandedPath, &filespec[1]);
+        }
+    } else {
+        /* Absolute path, just copy */
+        strcpy (filespecExpandedPath, filespec);
+    }
+    
 	prf = malloc(sizeof(struct _prf_file_t));
 	if (prf == NULL) {
 		retval = ENOMEM;
@@ -141,22 +160,11 @@ errcode_t profile_open_file(filespec, ret_prof)
 		data = g_shared_trees;
 		
 		while (data != NULL) {
-#ifdef PROFILE_USES_PATHS
-			if ((data -> filespec [0] == '/') && (filespec [0] != '/')
-				&& (strcmp (data -> filespec, filespec) != 0)
-				&& read_access (filespec)) {
-				/* Both absolute, and they match, and we have read access to the cached copy */
-					break;
+            /* check for absolute paths */
+			if ((strcmp (data -> filespec, filespecExpandedPath) == 0) && read_access (data->filespec)) {
+				/* They match, and we have read access to the cached copy */
+                break;
 			}
-#else /* !PROFILE_USES_PATHS */
-			if ((data -> filespec.vRefNum == filespec.vRefNum) &&
-				(data -> filespec.parID == filespec.parID) &&
-				(EqualString (data -> filespec.name, filespec.name, false, true))
-				&& read_access (filespec)) {
-				/* Match, and we have read access to the cached copy */
-					break;
-			}
-#endif /* PROFILE_USES_PATHS */
 			data = data -> next;
 		}
 		
@@ -165,7 +173,7 @@ errcode_t profile_open_file(filespec, ret_prof)
 			data -> refcount++;
 			prf -> data = data;
 			*ret_prof = prf;
-			retval = 0;
+			retval = profile_update_file_data (data); /* make sure the saved file hasn't changed */
 			prof_mutex_unlock (&g_shared_trees_mutex);
 			goto end;
 		}
@@ -186,29 +194,10 @@ errcode_t profile_open_file(filespec, ret_prof)
 	
 	memset (data, 0, sizeof (struct _prf_data_t));
 
-#ifdef PROFILE_USES_PATHS
-	len = strlen(filespec)+1;
-	if (filespec[0] == '~' && filespec[1] == '/') {
-		home_env = getenv("HOME");
-		if (home_env)
-			len += strlen(home_env);
-	}
-
-	data->filespec = malloc(len);
-	if (data->filespec == NULL) {
-		goto end;
-	}
-
-	if (home_env) {
-		strcpy(data->filespec, home_env);
-		strcat(data->filespec, filespec+1);
-	} else {
-		strcpy(data->filespec, filespec);
-	}
-#else
-	data->filespec = filespec;
-#endif
-
+    /* Since we already made a copy to expand homedir relative paths, just absorb it */
+	data->filespec = filespecExpandedPath;
+    filespecExpandedPath = NULL; /* remember we're saving it */
+    
 	prf->magic = PROF_MAGIC_FILE;
 	prf -> data = data;
 	data -> magic = PROF_MAGIC_FILE_DATA;
@@ -235,14 +224,15 @@ errcode_t profile_open_file(filespec, ret_prof)
 	*ret_prof = prf;
 	
 end:
+    if (filespecExpandedPath != NULL) {
+        free (filespecExpandedPath);
+    }
 	if (retval != 0) {
 		if (prf != NULL)
 			free (prf);
 		if (data != NULL) {
-#ifdef PROFILE_USES_PATHS
 			if (data -> filespec != NULL) 
 				free (data -> filespec);
-#endif /* PROFILE_USES_PATHS */
 			free (data);
 		}
 	}
@@ -298,11 +288,7 @@ errcode_t profile_update_file_data(data)
 
 #endif
 	errno = 0;
-#ifdef PROFILE_USES_PATHS
 	f = fopen(data->filespec, "r");
-#else
-	f = FSp_fopen (&data->filespec, "r");
-#endif
 	if (f == NULL) {
 		retval = errno;
 		if (retval == 0)
@@ -311,7 +297,7 @@ errcode_t profile_update_file_data(data)
 	}
 	data->upd_serial++;
 	data->flags = 0;
-	if (rw_access(data->filespec))
+	if (read_write_access(data->filespec))
 		data->flags |= PROFILE_FILE_RW;
 	retval = profile_parse_file(f, &data->root);
 	fclose(f);
@@ -331,23 +317,6 @@ end:
 	return retval;
 }
 
-#ifndef PROFILE_USES_PATHS
-OSErr GetMacOSTempFilespec (
-	const	FSSpec*	inFileSpec,
-			FSSpec*	outFileSpec)
-{
-	OSErr	err;
-	
-	err = FindFolder (inFileSpec -> vRefNum, kTemporaryFolderType,
-		kCreateFolder, &(outFileSpec -> vRefNum), &(outFileSpec -> parID));
-	if (err != noErr)
-		return err;
-		
-	BlockMoveData (&(inFileSpec -> name), &(outFileSpec -> name), StrLength (inFileSpec -> name) + 1);
-	return noErr;
-}
-#endif
-
 
 errcode_t profile_flush_file_data(data)
 	prf_data_t data;
@@ -361,9 +330,7 @@ errcode_t profile_flush_file_data(data)
 	int havelock = 1;
 #endif
 
-#ifdef PROFILE_USES_PATHS
 	new_file = old_file = 0;
-#endif
 
 #ifdef SHARE_TREE_DATA	
 	prof_mutex_lock (&g_shared_trees_mutex);
@@ -386,7 +353,6 @@ errcode_t profile_flush_file_data(data)
 
 	retval = ENOMEM;
 	
-#ifdef PROFILE_USES_PATHS
 	new_file = malloc(strlen(data->filespec) + 5);
 	if (!new_file)
 		goto end;
@@ -400,12 +366,6 @@ errcode_t profile_flush_file_data(data)
 	errno = 0;
 
 	f = fopen(new_file, "w");
-#else
-	/* On MacOS, we do this by writing to a new file and then atomically
-	swapping the files with a file system call */
-	GetMacOSTempFilespec (&data->filespec, &new_file);
-	f = FSp_fopen (&new_file, "w");
-#endif
 	
 	if (!f) {
 		retval = errno;
@@ -420,7 +380,6 @@ errcode_t profile_flush_file_data(data)
 		goto end;
 	}
         
-#ifdef PROFILE_USES_PATHS
 #ifdef COPY_RESOURCE_FORK
 	{
 		FSSpec from;
@@ -449,41 +408,19 @@ errcode_t profile_flush_file_data(data)
 		rename(old_file, data->filespec); /* back out... */
 		goto end;
 	}
-#else
-	{
-		OSErr err = noErr;
-#ifdef COPY_RESOURCE_FORK
-		err = FSpResourceForkCopy (&data -> filespec, &new_file);
-#endif
-
-		if (err == noErr) {
-			err = FSpExchangeFiles (&data->filespec, &new_file);
-		}
-
-		if (err != noErr) {
-			retval = ENOENT;
-			goto end;
-		}
-
-		FSpDelete (&new_file);
-	}
-#endif
-
 
 	data->flags &= ~PROFILE_FILE_DIRTY;
-	if (rw_access(data->filespec))
+	if (read_write_access(data->filespec))
 		data->flags |= PROFILE_FILE_RW;
 	else
 		data->flags &= ~PROFILE_FILE_RW;
 	retval = 0;
 	
 end:
-#ifdef PROFILE_USES_PATHS
 	if (new_file)
 		free(new_file);
 	if (old_file)
 		free(old_file);
-#endif
 
 #ifdef SHARE_TREE_DATA
 	if (havelock)
@@ -543,10 +480,8 @@ void profile_free_file_data(data)
 #endif /* SHARE_TREE_DATA */
 
 
-#ifdef PROFILE_USES_PATHS
 	if (data->filespec)
 		free(data->filespec);
-#endif
 	if (data->root)
 		profile_free_node(data->root);
 	if (data->comment)
