@@ -12,7 +12,7 @@ Please address any questions or comments to the author at brnstnd@acf10.nyu.edu.
 typedef struct krb5_inRC
  {
   struct krb5_rc_type *ops;
-  void *data;
+  krb5_pointer data;
  }
 *krb5_RC;
 

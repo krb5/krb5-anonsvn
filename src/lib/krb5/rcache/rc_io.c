@@ -56,7 +56,9 @@ static void getdir()
   }
 }
 
-krb5_error_code krb5_rc_io_creat PROTOTYPE((krb5_rc_iostuff *d,char **fn))
+krb5_error_code krb5_rc_io_creat (d, fn)
+krb5_rc_iostuff *d;
+char **fn;
 {
  char *c;
 
@@ -112,7 +114,9 @@ krb5_error_code krb5_rc_io_creat PROTOTYPE((krb5_rc_iostuff *d,char **fn))
  return 0;
 }
 
-krb5_error_code krb5_rc_io_open PROTOTYPE((krb5_rc_iostuff *d,char *fn))
+krb5_error_code krb5_rc_io_open (d, fn)
+krb5_rc_iostuff *d;
+char *fn;
 {
  GETDIR;
  if (!(d->fn = malloc(strlen(fn) + dirlen + 1)))
@@ -137,7 +141,9 @@ krb5_error_code krb5_rc_io_open PROTOTYPE((krb5_rc_iostuff *d,char *fn))
  return 0;
 }
 
-krb5_error_code krb5_rc_io_move PROTOTYPE((krb5_rc_iostuff *new,krb5_rc_iostuff *old))
+krb5_error_code krb5_rc_io_move (new, old)
+krb5_rc_iostuff *new;
+krb5_rc_iostuff *old;
 {
  if (rename(old->fn,new->fn) == -1) /* MUST be atomic! */
    return KRB5_RC_IO_UNKNOWN;
@@ -147,7 +153,10 @@ krb5_error_code krb5_rc_io_move PROTOTYPE((krb5_rc_iostuff *new,krb5_rc_iostuff 
  return 0;
 }
 
-krb5_error_code krb5_rc_io_write PROTOTYPE((krb5_rc_iostuff *d,krb5_pointer buf,int num))
+krb5_error_code krb5_rc_io_write (d, buf, num)
+krb5_rc_iostuff *d;
+krb5_pointer buf;
+int num;
 {
  if (write(d->fd,(char *) buf,num) == -1)
    switch(errno)
@@ -169,7 +178,10 @@ krb5_error_code krb5_rc_io_write PROTOTYPE((krb5_rc_iostuff *d,krb5_pointer buf,
  return 0;
 }
 
-krb5_error_code krb5_rc_io_read PROTOTYPE((krb5_rc_iostuff *d,krb5_pointer buf,int num))
+krb5_error_code krb5_rc_io_read (d, buf, num)
+krb5_rc_iostuff *d;
+krb5_pointer buf;
+int num;
 {
  if (read(d->fd,(char *) buf,num) == -1)
    switch(errno)
@@ -181,7 +193,8 @@ krb5_error_code krb5_rc_io_read PROTOTYPE((krb5_rc_iostuff *d,krb5_pointer buf,i
  return 0;
 }
 
-krb5_error_code krb5_rc_io_close PROTOTYPE((krb5_rc_iostuff *d))
+krb5_error_code krb5_rc_io_close (d)
+krb5_rc_iostuff *d;
 {
  FREE(d->fn);
  if (close(d->fd) == -1) /* can't happen */
@@ -189,7 +202,8 @@ krb5_error_code krb5_rc_io_close PROTOTYPE((krb5_rc_iostuff *d))
  return 0;
 }
 
-krb5_error_code krb5_rc_io_destroy PROTOTYPE((krb5_rc_iostuff *d))
+krb5_error_code krb5_rc_io_destroy (d)
+krb5_rc_iostuff *d;
 {
  if (unlink(d->fn) == -1)
    switch(errno)
@@ -204,13 +218,15 @@ krb5_error_code krb5_rc_io_destroy PROTOTYPE((krb5_rc_iostuff *d))
  return 0;
 }
 
-krb5_error_code krb5_rc_io_mark PROTOTYPE((krb5_rc_iostuff *d))
+krb5_error_code krb5_rc_io_mark (d)
+krb5_rc_iostuff *d;
 {
  d->mark = lseek(d->fd,0,L_INCR); /* can't fail */
  return 0;
 }
 
-krb5_error_code krb5_rc_io_unmark PROTOTYPE((krb5_rc_iostuff *d))
+krb5_error_code krb5_rc_io_unmark (d)
+krb5_rc_iostuff *d;
 {
  (void) lseek(d->fd,d->mark,L_SET); /* if it fails, tough luck */
  return 0;
