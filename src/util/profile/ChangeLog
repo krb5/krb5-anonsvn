@@ -1,3 +1,7 @@
+2002-06-18 Alexandra Ellwood <lxs@mit.edu>
+    * prof_get.c: Fixed bug where profile_get_integer was assuming that strtol
+    resets errno when there isn't an error.  Fixed error handling.
+
 2002-06-05 Alexandra Ellwood <lxs@mit.edu>
     * prof_threads.[ch]: Added prof_mutex_destroy so we don't leak memory
     on library unload.
