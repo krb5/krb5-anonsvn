@@ -1,5 +1,7 @@
 CFLAGS = $(CCOPTS) $(DEFS)
 KRB5_RUN_ENV = @KRB5_RUN_ENV@
+PROG_LIBPATH=-L$(TOPLIBD)
+PROG_RPATH=$(KRB5_LIBDIR)
 
 ##DOSBUILDTOP = ..\..\..
 ##DOSLIBNAME=..\krb5.lib
@@ -136,11 +138,11 @@ T_STD_CONF_OBJS= t_std_conf.o def_realm.o get_krbhst.o realm_dom.o \
 
 T_AN_TO_LN_OBJS = t_an_to_ln.o an_to_ln.o 
 
-t_std_conf: $(T_STD_CONF_OBJS) $(DEPLIBS)
-	$(LD) $(LDFLAGS) $(LDARGS) -o t_std_conf $(T_STD_CONF_OBJS) $(LIBS)
+t_std_conf: $(T_STD_CONF_OBJS) $(KRB5_BASE_DEPLIBS)
+	$(CC_LINK) -o t_std_conf $(T_STD_CONF_OBJS) $(KRB5_BASE_LIBS)
 
-t_an_to_ln: $(T_AN_TO_LN_OBJS) $(DEPLIBS)
-	$(LD) $(LDFLAGS) $(LDARGS) -o t_an_to_ln $(T_AN_TO_LN_OBJS) $(LIBS)
+t_an_to_ln: $(T_AN_TO_LN_OBJS) $(KRB5_BASE_DEPLIBS)
+	$(CC_LINK) -o t_an_to_ln $(T_AN_TO_LN_OBJS) $(KRB5_BASE_LIBS)
 
 check-unix:: $(TEST_PROGS)
 	KRB5_CONFIG=$(srcdir)/td_krb5.conf ; export KRB5_CONFIG ;\
