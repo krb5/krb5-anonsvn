@@ -547,9 +547,10 @@ void try_normal(argv)
 {
     char *host;
     
+#ifndef KRB5_ATHENA_COMPAT
     if (encrypt_flag)
 	exit(1);
-
+#endif
     /*
      * if we were invoked as 'rsh host mumble', strip off the rsh
      * from arglist.

@@ -1,3 +1,10 @@
+Fri Feb  2 16:10:56 1996  Sam Hartman  <hartmans@tertius.mit.edu>
+
+	* configure.in (save_path): Look for "ucb" varients in /usr/athena/bin if --enable-athena specified.
+
+
+	* krsh.c krlogin.c krcp.c (try_normal): If a--enable-athena, don't quit just because we are encrypted.
+
 Thu Feb  1 00:09:13 1996  Sam Hartman  <hartmans@tertius.mit.edu>
 
 	* rcp.M: Fix typo.
