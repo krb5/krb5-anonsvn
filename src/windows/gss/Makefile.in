@@ -6,8 +6,6 @@ OBJS 	 = gss.obj gss-client.obj gss-misc.obj
 ##### Options
 DEBUG 	 = 1
 BUILDTOP =..\..
-LIBDIR	 = $(BUILDTOP)\lib
-GLIB	 = $(LIBDIR)\gssapi.lib
 ##WIN16##WLIB	 = $(LIBDIR)\winsock.lib
 INCLUDES = /I$(BUILDTOP)\include /I$(BUILDTOP)\include\krb5
 
@@ -19,12 +17,9 @@ CFLAGS 	 = $(CCOPTS2) $(INCLUDES)
 !endif
 
 ##### RC Compiler
-RC 	 = rc
 ##WIN16##RFLAGS 	 = /nologo /D$(KRB)=1 $(INCLUDES)
 ##WIN32##RFLAGS 	 = $(INCLUDES)
 
-##### CVTRES -- .res -> .obj converter
-CVTRES = cvtres
 
 ##### Linker
 LINK 	 = link
