@@ -5,10 +5,10 @@ AC_PROG_ARCHIVE_ADD
 AC_PROG_RANLIB
 AC_PROG_INSTALL
 AC_PROG_LEX
+AC_PROG_AWK
 AC_CHECK_HEADERS(syslog.h)
 AC_REPLACE_FUNCS(setenv)
 AC_CHECK_FUNCS(compile step re_comp re_exec regcomp regexec openlog syslog closelog strftime vsprintf)
-ET_RULES
 V5_SHARED_LIB_OBJS
 V5_MAKE_SHARED_LIB(libkadm5srv,1.0,.., ./kadm5,srv)
 V5_MAKE_SHARED_LIB(libkadm5clnt,1.0,.., ./kadm5,clnt)
