@@ -225,81 +225,8 @@ kg_enc_desc_internalize(kcontext, argp, buffer, lenremain)
     return(kret);
 }
 
-/*
- * Determine the size required for this krb5_gss_ctx_id_rec.
- */
-krb5_error_code
-kg_ctx_size(kcontext, arg, sizep)
-    krb5_context	kcontext;
-    krb5_pointer	arg;
-    size_t		*sizep;
-{
-    krb5_error_code	kret;
-    krb5_gss_ctx_id_rec	*ctx;
-    size_t		required;
-
-    /*
-     * krb5_gss_ctx_id_rec requires:
-     *	krb5_int32	for KG_CONTEXT
-     *	krb5_int32	for initiate.
-     *	krb5_int32	for mutual.
-     *	krb5_int32	for seed_init.
-     *	sizeof(seed)	for seed
-     *  krb5_int32	for signalg.
-     *  krb5_int32	for cksum_size.
-     *  krb5_int32	for sealalg.
-     *	krb5_int32	for endtime.
-     *	krb5_int32	for flags.
-     *	krb5_int32	for seq_send.
-     *	krb5_int32	for seq_recv.
-     *	krb5_int32	for established.
-     *	krb5_int32	for big_endian.
-     *	krb5_int32	for trailer.
-     *  OM_uint32	for length of mech_used
-     *  length(mech_used) for mech_used
-     */
-    kret = EINVAL;
-    if ((ctx = (krb5_gss_ctx_id_rec *) arg)) {
-	required = 15*sizeof(krb5_int32);
-	required += sizeof(ctx->seed);
-	required += ctx->mech_used->length;
-
-	kret = 0;
-	if (!kret && ctx->here)
-	    kret = krb5_size_opaque(kcontext,
-				    KV5M_PRINCIPAL,
-				    (krb5_pointer) ctx->here,
-				    &required);
-
-	if (!kret && ctx->there)
-	    kret = krb5_size_opaque(kcontext,
-				    KV5M_PRINCIPAL,
-				    (krb5_pointer) ctx->there,
-				    &required);
-
-	if (!kret && ctx->subkey)
-	    kret = krb5_size_opaque(kcontext,
-				    KV5M_KEYBLOCK,
-				    (krb5_pointer) ctx->subkey,
-				    &required);
-
-	if (!kret)
-	    kret = kg_enc_desc_size(kcontext,
-				    (krb5_pointer) &ctx->enc,
-				    &required);
-
-	if (!kret)
-	    kret = kg_enc_desc_size(kcontext,
-				    (krb5_pointer) &ctx->seq,
-				    &required);
-
-	if (!kret)
-	    *sizep += required;
-    }
-    return(kret);
-}
-
-static krb5_error_code kg_oid_externalize(kcontext, arg, buffer, lenremain)
+static krb5_error_code
+kg_oid_externalize(kcontext, arg, buffer, lenremain)
     krb5_context	kcontext;
     krb5_pointer	arg;
     krb5_octet		**buffer;
@@ -331,6 +258,105 @@ kg_oid_internalize(kcontext, argp, buffer, lenremain)
      (void) krb5_ser_unpack_bytes((krb5_octet *) oid->elements,
 				  oid->length, buffer, lenremain);
      return 0;
+}
+
+krb5_error_code
+kg_oid_size(kcontext, arg, sizep)
+    krb5_context	kcontext;
+    krb5_pointer	arg;
+    size_t		*sizep;
+{
+   krb5_error_code kret;
+   gss_OID oid;
+   size_t required;
+
+   kret = EINVAL;
+   if ((oid = (gss_OID) arg)) {
+      required = sizeof(krb5_int32);
+      required += oid->length;
+
+      kret = 0;
+
+      *sizep += required;
+   }
+
+   return(kret);
+}
+
+/*
+ * Determine the size required for this krb5_gss_ctx_id_rec.
+ */
+krb5_error_code
+kg_ctx_size(kcontext, arg, sizep)
+    krb5_context	kcontext;
+    krb5_pointer	arg;
+    size_t		*sizep;
+{
+    krb5_error_code	kret;
+    krb5_gss_ctx_id_rec	*ctx;
+    size_t		required;
+
+    /*
+     * krb5_gss_ctx_id_rec requires:
+     *	krb5_int32	for KG_CONTEXT
+     *	krb5_int32	for initiate.
+     *	krb5_int32	for mutual.
+     *	krb5_int32	for seed_init.
+     *	sizeof(seed)	for seed
+     *  krb5_int32	for signalg.
+     *  krb5_int32	for cksum_size.
+     *  krb5_int32	for sealalg.
+     *	krb5_int32	for endtime.
+     *	krb5_int32	for flags.
+     *	krb5_int32	for seq_send.
+     *	krb5_int32	for seq_recv.
+     *	krb5_int32	for established.
+     *	krb5_int32	for big_endian.
+     *	krb5_int32	for trailer.
+     */
+    kret = EINVAL;
+    if ((ctx = (krb5_gss_ctx_id_rec *) arg)) {
+	required = 14*sizeof(krb5_int32);
+	required += sizeof(ctx->seed);
+
+	kret = 0;
+	if (!kret && ctx->here)
+	    kret = krb5_size_opaque(kcontext,
+				    KV5M_PRINCIPAL,
+				    (krb5_pointer) ctx->here,
+				    &required);
+
+	if (!kret && ctx->there)
+	    kret = krb5_size_opaque(kcontext,
+				    KV5M_PRINCIPAL,
+				    (krb5_pointer) ctx->there,
+				    &required);
+
+	if (!kret && ctx->subkey)
+	    kret = krb5_size_opaque(kcontext,
+				    KV5M_KEYBLOCK,
+				    (krb5_pointer) ctx->subkey,
+				    &required);
+
+	if (!kret)
+	    kret = kg_enc_desc_size(kcontext,
+				    (krb5_pointer) &ctx->enc,
+				    &required);
+
+	if (!kret)
+	    kret = kg_enc_desc_size(kcontext,
+				    (krb5_pointer) &ctx->seq,
+				    &required);
+
+	if (!kret)
+	    kret = kg_oid_size(kcontext,
+			       (krb5_pointer) ctx->mech_used,
+			       &required);
+
+	if (!kret)
+	    *sizep += required;
+    }
+    return(kret);
 }
 
 /*
