@@ -1,5 +1,8 @@
 Sat Feb  8 15:39:08 1997  Tom Yu  <tlyu@mit.edu>
 
+	* aclocal.m4: Fix up AC_KRB5_TCL somewhat to deal with
+	--with-tcl=pathname properly.
+
 	* aclocal.m4 (KRB5_RUN_FLAGS): Convert to no longer use old cache
 	variable kludge.
 	(KRB5_LIB_AUX): Set CC_LINK to CC_LINK_SHARED or CC_LINK_STATIC,

@@ -922,8 +922,13 @@ AC_ARG_WITH(tcl,
 		TCL_LIBPATH=-L$withval/lib
 		TCL_RPATH=:$withval/lib
 	fi)
-AC_CHECK_LIB(dl, dlopen, DL_LIB=-ldl)
 if test "$TCL_WITH" != no ; then
+	AC_CHECK_LIB(dl, dlopen, DL_LIB=-ldl)
+	AC_CHECK_LIB(ld, main, DL_LIB=-lld)
+	krb5_save_CPPFLAGS="$CPPFLAGS"
+	krb5_save_LDFLAGS="$LDFLAGS"
+	CPPFLAGS="$TCL_INCLUDES $CPPFLAGS"
+	LDFLAGS="$TCL_LIBPATH $LDFLAGS"
 	AC_CHECK_HEADER(tcl.h,dnl
 		AC_CHECK_LIB(tcl7.5, Tcl_CreateCommand, 
 			TCL_LIBS="$TCL_LIBS -ltcl7.5 -lm $DL_LIB",
@@ -931,11 +936,11 @@ if test "$TCL_WITH" != no ; then
 				TCL_LIBS="$TCL_LIBS -ltcl -lm $DL_LIB",
 				AC_MSG_WARN("tcl.h found but not library"),
 				-lm $DL_LIB),
-			-lm $DL_LIB)
-	,dnl If tcl.h not found
+			-lm $DL_LIB),dnl tcl.h not found
 	AC_MSG_WARN(Could not find Tcl which is needed for the kadm5 tests)
-	TCL_LIBS=
-	)
+	TCL_LIBS=)
+	CPPFLAGS="$krb5_save_CPPFLAGS"
+	LDFLAGS="$krb5_save_LDFLAGS"
 	AC_SUBST(TCL_INCLUDES)
 	AC_SUBST(TCL_LIBS)
 	AC_SUBST(TCL_LIBPATH)
