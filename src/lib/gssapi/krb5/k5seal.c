@@ -38,8 +38,11 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
      int bigend;
 {
    krb5_error_code code;
+   krb5_cksumtype cksum_type;
    MD5_CTX md5;
-   krb5_checksum desmac;
+   krb5_enctype enctype;
+   krb5_checksum cksum;
+   int cksum_size;
    int tmsglen, tlen;
    unsigned char *t, *ptr;
 
@@ -54,7 +57,21 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
       tmsglen = 0;
    }
 
-   tlen = g_token_size((gss_OID) gss_mech_krb5, 22+tmsglen);
+   enctype = krb5_eblock_enctype(context, &enc_ed->eblock);
+   switch(enctype) {
+   case ENCTYPE_DES_CBC_RAW:
+       cksum_type = 0;
+       cksum_size = 8;
+       break;
+   case ENCTYPE_DES3_CBC_RAW:
+       cksum_type = 3;
+       cksum_size = 16;
+       break;
+   default:
+       return KRB5_PROG_ETYPE_NOSUPP;
+   }
+
+   tlen = g_token_size((gss_OID) gss_mech_krb5, 14+cksum_size+tmsglen);
 
    if ((t = (unsigned char *) xmalloc(tlen)) == NULL)
       return(ENOMEM);
@@ -63,25 +80,36 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
    ptr = t;
 
-   g_make_token_header((gss_OID) gss_mech_krb5, 22+tmsglen, &ptr, toktype);
+   g_make_token_header((gss_OID) gss_mech_krb5,
+		       14+cksum_size+tmsglen, &ptr, toktype);
 
-   /* for now, only generate DES integrity */
+   /* 0..1 SIGN_ALG */
 
-   ptr[0] = 0;
+   ptr[0] = cksum_type;
    ptr[1] = 0;
+   
+   /* 2..3 SEAL_ALG or Filler */
 
-   /* SEAL_ALG, or filler */
-
-   if (((toktype == KG_TOK_SEAL_MSG) ||
-	(toktype == KG_TOK_WRAP_MSG)) && encrypt) {
-      ptr[2] = 0;
-      ptr[3] = 0;
+   if (!encrypt ||
+       ((toktype != KG_TOK_SEAL_MSG) && (toktype != KG_TOK_WRAP_MSG)))
+   {
+       /* No seal */
+       ptr[2] = 0xff;
+       ptr[3] = 0xff;
    } else {
-      ptr[2] = 0xff;
-      ptr[3] = 0xff;
+       switch(enctype) {
+       case ENCTYPE_DES_CBC_RAW:
+	   ptr[2] = 0; ptr[3] = 0;
+	   break;
+       case ENCTYPE_DES3_CBC_RAW:
+	   ptr[2] = 1; ptr[3] = 0;
+	   break;
+       default:
+	   return KRB5_PROG_ETYPE_NOSUPP;
+       }
    }
 
-   /* filler */
+   /* 4..5 Filler */
 
    ptr[4] = 0xff;
    ptr[5] = 0xff;
@@ -111,53 +139,61 @@ make_seal_token(context, enc_ed, seq_ed, seqnum, direction, text, token,
 
       if (encrypt) {
 	 if (code = kg_encrypt(enc_ed, NULL, (krb5_pointer) plain,
-			       (krb5_pointer) (ptr+22), tmsglen)) {
+			       (krb5_pointer) (ptr+14+cksum_size), tmsglen)) {
 	    xfree(plain);
 	    xfree(t);
 	    return(code);
 	 }
       } else {
 	 if (bigend)
-	    memcpy(ptr+22, text->value, text->length);
+	    memcpy(ptr+14+cksum_size, text->value, text->length);
 	 else
-	    memcpy(ptr+22, plain, tmsglen);
+	    memcpy(ptr+14+cksum_size, plain, tmsglen);
       }
 
-      /* compute the checksum */
-
-      MD5Init(&md5);
-      MD5Update(&md5, (unsigned char *) ptr-2, 8);
-      if (bigend)
-	 MD5Update(&md5, text->value, text->length);
-      else
-	 MD5Update(&md5, plain, tmsglen);
-      MD5Final(&md5);
-
       xfree(plain);
-   } else {
-      /* compute the checksum */
-
-      MD5Init(&md5);
-      MD5Update(&md5, (unsigned char *) ptr-2, 8);
-      MD5Update(&md5, text->value, text->length);
-      MD5Final(&md5);
    }
 
-   /* XXX this depends on the key being a single-des key, but that's
-      all that kerberos supports right now */
+   switch(cksum_type) {
+   case 0:
+   case 3:
+       MD5Init(&md5);
+       MD5Update(&md5, (unsigned char *) ptr-2, 8);
+       if (!bigend &&
+	   ((toktype == KG_TOK_SEAL_MSG) || (toktype == KG_TOK_WRAP_MSG)))
+	   MD5Update(&md5, ptr+14+cksum_size, tmsglen);
+       else
+	   MD5Update(&md5, text->value, text->length);
+       MD5Final(&md5);
 
-   if (code = krb5_calculate_checksum(context, CKSUMTYPE_DESCBC, md5.digest, 16,
+#if 0
+       code = krb5_calculate_checksum(context, CKSUMTYPE_DESCBC,
+				      md5.digest, 16,
 				      seq_ed->key->contents, 
-				      seq_ed->key->length,
-				      &desmac)) {
-      xfree(t);
-      return(code);
+				      seq_ed->key->length, &cksum);
+#endif
+       code = kg_encrypt(seq_ed, NULL, md5.digest, md5.digest, 16);
+
+       if (cksum_type == 0)
+	   cksum.length = 8;
+       else
+	   cksum.length = 16;
+       cksum.contents = (krb5_pointer)md5.digest + 16 - cksum.length;
+
+       if (code) {
+	   xfree(t);
+	   return code;
+       }
+       
+       break;
    }
 
-   memcpy(ptr+14, desmac.contents, 8);
-
-   /* XXX krb5_free_checksum_contents? */
-   xfree(desmac.contents);
+   if (cksum.length != cksum_size) {
+       xfree(t);
+       return GSS_S_FAILURE;
+   }
+       
+   memcpy(ptr+14, cksum.contents, cksum.length);
 
    /* create the seq_num */
 
@@ -276,11 +312,11 @@ kg_seal_size(context, minor_status, context_handle, conf_req_flag, qop_req,
 
     /* Calculate the token size and subtract that from the output size */
     cfsize = (conf_req_flag) ? kg_confounder_size(&ctx->enc) : 0;
-    ohlen = g_token_size((gss_OID) gss_mech_krb5, (unsigned int) cfsize + 22);
+    ohlen = g_token_size((gss_OID) gss_mech_krb5,
+			 (unsigned int) cfsize + 14 + kg_cksum_len(&ctx->enc));
 
     /* Cannot have trailer length that will cause us to pad over our length */
     *input_size = (output_size - ohlen) & (~7);
     *minor_status = 0;
     return(GSS_S_COMPLETE);
 }
-

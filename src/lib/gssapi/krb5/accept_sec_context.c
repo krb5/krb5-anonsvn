@@ -89,6 +89,7 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
    krb5_principal name;
    int gss_flags;
    krb5_gss_ctx_id_rec *ctx;
+   krb5_enctype enctype;
    krb5_timestamp now;
    gss_buffer_desc token;
    krb5_auth_context auth_context = NULL;
@@ -344,20 +345,43 @@ krb5_gss_accept_sec_context(ct, minor_status, context_handle,
       return(GSS_S_FAILURE);
    }
 
+   switch(ctx->subkey->enctype) {
+   case ENCTYPE_DES_CBC_MD5:
+   case ENCTYPE_DES_CBC_CRC:
+       enctype = ENCTYPE_DES_CBC_RAW;
+       break;
+   case ENCTYPE_DES3_CBC_MD5:
+       enctype = ENCTYPE_DES3_CBC_RAW;
+       break;
+   default:
+       return GSS_S_FAILURE;
+   }
+
    /* fill in the encryption descriptors */
 
-   krb5_use_enctype(context, &ctx->enc.eblock, ENCTYPE_DES_CBC_RAW);
+   krb5_use_enctype(context, &ctx->enc.eblock, enctype);
    ctx->enc.processed = 0;
    if ((code = krb5_copy_keyblock(context, ctx->subkey, &ctx->enc.key)))
       return(code); 
    for (i=0; i<ctx->enc.key->length; i++)
       /*SUPPRESS 113*/
       ctx->enc.key->contents[i] ^= 0xf0;
+#if 0
+   if ((code = krb5_process_key(context, &ctx->enc.eblock, ctx->enc.key)))
+       return(code);
+   ctx->enc.processed = 1;
+#endif
 
-   krb5_use_enctype(context, &ctx->seq.eblock, ENCTYPE_DES_CBC_RAW);
+   krb5_use_enctype(context, &ctx->seq.eblock, enctype);
    ctx->seq.processed = 0;
    if ((code = krb5_copy_keyblock(context, ctx->subkey, &ctx->seq.key)))
        return(code);
+#if 0
+   if ((code = krb5_process_key(context, &ctx->seq.eblock, ctx->seq.key)))
+       return(code);
+   ctx->seq.processed = 1;
+#endif
+
    ctx->endtime = ticket->enc_part2->times.endtime;
    ctx->flags = ticket->enc_part2->flags;
 

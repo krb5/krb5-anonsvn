@@ -34,6 +34,26 @@ kg_confounder_size(ed)
    return(ed->eblock.crypto_entry->block_length);
 }
 
+int
+kg_cksum_len(ed)
+     krb5_gss_enc_desc *ed;
+{
+    krb5_enctype enctype;
+    
+   if (!kg_context && kg_get_context())
+       return 0;
+   
+    enctype = krb5_eblock_enctype(kg_context, &ed->eblock);
+    switch(enctype) {
+    case ENCTYPE_DES_CBC_RAW:
+	return 8;
+    case ENCTYPE_DES3_CBC_RAW:
+	return 16;
+    default:
+	return 0;
+    }    
+}
+
 krb5_error_code
 kg_make_confounder(ed, buf)
      krb5_gss_enc_desc *ed;

@@ -142,7 +142,7 @@ make_ap_req(ctx, auth_context, cred, server, endtime, chan_bindings,
 	goto cleanup;
     
     in_creds.times.endtime = *endtime;
-    in_creds.keyblock.enctype = ENCTYPE_DES_CBC_CRC;
+    
     /*
      * Get the credential..., I don't know in 0 is a good value for the
      * kdcoptions
@@ -230,6 +230,7 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
     krb5_gss_cred_id_t 	  cred;
     krb5_error_code 	  code; 
     krb5_gss_ctx_id_rec *ctx;
+    krb5_enctype enctype;
     krb5_timestamp now;
     gss_buffer_desc token;
     int i;
@@ -352,20 +353,42 @@ krb5_gss_init_sec_context(ct, minor_status, claimant_cred_handle,
 
       /* fill in the encryption descriptors */
 
+      switch(ctx->subkey->enctype) {
+      case ENCTYPE_DES_CBC_MD5:
+      case ENCTYPE_DES_CBC_CRC:
+	  enctype = ENCTYPE_DES_CBC_RAW;
+	  break;
+      case ENCTYPE_DES3_CBC_MD5:
+	  enctype = ENCTYPE_DES3_CBC_RAW;
+	  break;
+      default:
+	  return GSS_S_FAILURE;
+      }
+
       /* the encryption key is the session key XOR 0xf0f0f0f0f0f0f0f0 */
 
-      krb5_use_enctype(context, &ctx->enc.eblock, ENCTYPE_DES_CBC_RAW);
+      krb5_use_enctype(context, &ctx->enc.eblock, enctype);
       ctx->enc.processed = 0;
       if ((code = krb5_copy_keyblock(context, ctx->subkey, &ctx->enc.key)))
 	 return(code); 
       for (i=0; i<ctx->enc.key->length; i++)
 	 /*SUPPRESS 113*/
 	 ctx->enc.key->contents[i] ^= 0xf0;
+#if 0
+      if ((code = krb5_process_key(context, &ctx->enc.eblock, ctx->enc.key)))
+	  return(code);
+      ctx->enc.processed = 1;
+#endif
 
-      krb5_use_enctype(context, &ctx->seq.eblock, ENCTYPE_DES_CBC_RAW);
+      krb5_use_enctype(context, &ctx->seq.eblock, enctype);
       ctx->seq.processed = 0;
       if ((code = krb5_copy_keyblock(context, ctx->subkey, &ctx->seq.key)))
 	  return(code);
+#if 0
+      if ((code = krb5_process_key(context, &ctx->seq.eblock, ctx->seq.key)))
+	  return(code);
+      ctx->seq.processed = 1;
+#endif
 
       /* at this point, the context is constructed and valid,
 	 hence, releaseable */

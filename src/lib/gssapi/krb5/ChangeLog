@@ -24,6 +24,15 @@ Tue Apr  2 15:20:24 1996  Theodore Y. Ts'o  <tytso@dcl>
 	* k5mech.c: Added Macintosh #ifdef so that the #include path is
 		right for the Macintosh.
 
+Thu Mar 28 11:47:26 1996  Richard Basch  <basch@lehman.com>
+
+	* k5unseal.c, k5seal.c:
+		Implemented a DES3 checksum algorithm (MD5 DES3-MAC)
+		Also, DES MAC MD5 did not follow spec by using a zero ivec.
+
+	* init_sec_context.c, accept_sec_context.c:
+		Allow for DES3_CBC_MD5 credentials to be used.
+
 Wed Mar 20 20:25:53 1996  Theodore Y. Ts'o  <tytso@dcl>
 
 	* rel_oid.c (krb5_gss_release_oid): Don't compile this procedure,
