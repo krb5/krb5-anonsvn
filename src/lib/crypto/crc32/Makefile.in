@@ -1,7 +1,8 @@
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..
-##DOSLIBNAME=..\crypto.lib
+##DOSMYNAME=crc32
+##DOSOBJFILE=..\crc32.lst
 
 .c.o:
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
@@ -13,7 +14,11 @@ SRCS=	$(srcdir)/crc.c
 
 all-unix:: shared $(OBJS) 
 all-mac:: shared $(OBJS) 
-all-windows:: $(OBJS)
+all-windows:: $(OBJFILE)
+
+##DOS$(OBJFILE):: $(OBJS)
+##DOS	$(RM) $(OBJFILE)
+##DOS	$(LIBECHO) -p $(MYNAME)\ *.obj > $(OBJFILE)
 
 shared:
 	mkdir shared
@@ -36,3 +41,4 @@ clean-unix::
 clean-mac::
 	$(RM) shared/*
 clean-windows::
+	$(RM) $(OBJFILE)

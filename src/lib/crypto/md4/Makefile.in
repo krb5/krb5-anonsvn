@@ -2,7 +2,8 @@
 CFLAGS = $(CCOPTS) $(DEFS) -I$(srcdir)/../des -I"$(srcdir)"
 
 ##DOSBUILDTOP = ..\..\..
-##DOSLIBNAME=..\crypto.lib
+##DOSMYNAME=md4
+##DOSOBJFILE=..\md4.lst
 RUN_SETUP=@KRB5_RUN_ENV@
 
 .c.o:
@@ -15,7 +16,11 @@ SRCS=	$(srcdir)/md4.c $(srcdir)/md4glue.c $(srcdir)/md4crypto.c
 
 all-unix:: shared $(OBJS) 
 all-mac:: shared $(OBJS) 
-all-windows:: $(OBJS)
+all-windows:: $(OBJFILE)
+
+##DOS$(OBJFILE):: $(OBJS)
+##DOS	$(RM) $(OBJFILE)
+##DOS	$(LIBECHO) -p $(MYNAME)\ *.obj > $(OBJFILE)
 
 shared:
 	mkdir shared
@@ -59,3 +64,4 @@ clean-unix::
 clean-mac::
 	$(RM) shared/*
 clean-windows::
+	$(RM) $(OBJFILE)
