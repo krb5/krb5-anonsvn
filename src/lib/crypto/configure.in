@@ -1,10 +1,10 @@
-AC_INIT(configure.in)
+AC_INIT(des_crc.c)
 CONFIG_RULES
-CONFIG_DIRS(des crc32 md4 md5 sha os)
 AC_PROG_ARCHIVE
 AC_PROG_ARCHIVE_ADD
 AC_PROG_RANLIB
 AC_PROG_INSTALL
+KRB5_RUN_FLAGS
 dnl
 dnl Determine which cryptosystems we are enabling
 dnl
@@ -119,8 +119,22 @@ else
 	AC_MSG_RESULT(Disabling NIST_SHA)
 fi
 
-V5_SHARED_LIB_OBJS
-SubdirLibraryRule([${OBJS}])
-DO_SUBDIRS
-V5_MAKE_SHARED_LIB(libcrypto,0.1,.., ./crypto)
-V5_AC_OUTPUT_MAKEFILE
+SHARED_RULE=
+SHARED_RULE_LOCAL=
+AC_SUBST(SHARED_RULE)
+AC_SUBST(SHARED_RULE_LOCAL)
+
+dnl for os
+AC_REPLACE_FUNCS(memmove)
+AC_HAVE_FUNCS(srand48 srand srandom getpid)
+KRB5_SOCKADDR_SA_LEN
+
+dnl V5_SHARED_LIB_OBJS
+dnl V5_MAKE_SHARED_LIB(libcrypto,0.1,.., ./crypto)
+AC_OUTPUT(Makefile:../../config/pre.in+Makefile.in+../../config/recurse.in+../../config/post.in
+  des/Makefile:../../config/pre.in+des/Makefile.in+../../config/post.in
+  crc32/Makefile:../../config/pre.in+crc32/Makefile.in+../../config/post.in
+  md4/Makefile:../../config/pre.in+md4/Makefile.in+../../config/post.in
+  md5/Makefile:../../config/pre.in+md5/Makefile.in+../../config/post.in
+  sha/Makefile:../../config/pre.in+sha/Makefile.in+../../config/post.in
+  os/Makefile:../../config/pre.in+os/Makefile.in+../../config/post.in)

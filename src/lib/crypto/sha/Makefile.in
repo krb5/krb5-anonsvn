@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS) -I$(srcdir)/../des
 
 ##DOSBUILDTOP = ..\..\..
@@ -18,7 +21,11 @@ SRCS=	$(srcdir)/shs.c		\
 	$(srcdir)/sha_glue.c
 
 
-all-unix:: shared $(OBJS) 
+all-unix:: shared $(OBJS) DONE
+
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: shared $(OBJS) 
 all-windows:: $(OBJS)
 
@@ -41,7 +48,7 @@ clean::
 	$(RM) t_shs$(EXEEXT) t_shs.$(OBJEXT)
 
 clean-unix::
-	$(RM) shared/*
+	$(RM) shared/* DONE
 clean-mac::
 	$(RM) shared/*
 clean-windows::

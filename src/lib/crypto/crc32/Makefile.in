@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..
@@ -11,7 +14,11 @@ OBJS=	crc.$(OBJEXT)
 
 SRCS=	$(srcdir)/crc.c
 
-all-unix:: shared $(OBJS) 
+all-unix:: shared $(OBJS) DONE
+
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: shared $(OBJS) 
 all-windows:: $(OBJS)
 
@@ -32,7 +39,7 @@ clean::
 	$(RM) crctest$(EXEEXT) crctest.$(OBJEXT)
 
 clean-unix::
-	$(RM) shared/*
+	$(RM) shared/* DONE
 clean-mac::
 	$(RM) shared/*
 clean-windows::

@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 # -I$(srcdir) is needed to pull in $(srcdir)/rsa-md4.h for ./t_mddriver.c.
 CFLAGS = $(CCOPTS) $(DEFS) -I$(srcdir)/../des -I"$(srcdir)"
 
@@ -13,7 +16,11 @@ OBJS=	md4.$(OBJEXT) md4glue.$(OBJEXT) md4crypto.$(OBJEXT)
 
 SRCS=	$(srcdir)/md4.c $(srcdir)/md4glue.c $(srcdir)/md4crypto.c
 
-all-unix:: shared $(OBJS) 
+all-unix:: shared $(OBJS) DONE
+
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: shared $(OBJS) 
 all-windows:: $(OBJS)
 
@@ -55,7 +62,7 @@ clean::
 	$(RM) t_cksum$(EXEEXT) t_cksum.$(OBJEXT) t_cksum.c
 
 clean-unix::
-	$(RM) shared/*
+	$(RM) shared/* DONE
 clean-mac::
 	$(RM) shared/*
 clean-windows::

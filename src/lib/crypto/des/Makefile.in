@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..
@@ -62,7 +65,10 @@ SRCS=	$(srcdir)/afsstring2key.c \
 	$(srcdir)/u_rn_key.c
 
 
-all:: $(OBJS)
+all:: $(OBJS) DONE
+
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
 
 all-unix:: shared
 all-mac:: shared
@@ -105,7 +111,7 @@ clean::
 	t_verify.$(OBJEXT) t_random.$(OBJEXT) t_random$(EXEEXT)
 
 clean-unix::
-	$(RM) shared/*
+	$(RM) shared/* DONE
 clean-mac::
 	$(RM) shared/*
 clean-windows::

@@ -1,3 +1,8 @@
+Mon Jun 24 17:00:44 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* configure.in, Makefile.in: (also in each subdir) fix up for
+		configuring this tree from a single script.  More later.
+
 Thu Jun  6 00:04:38 1996  Theodore Y. Ts'o  <tytso@mit.edu>
 
 	* Makefile.in (all-windows): Don't pass $(LIBCMD) on the command

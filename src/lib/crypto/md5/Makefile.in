@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS) -I$(srcdir)/../des
 
 ##DOSBUILDTOP = ..\..\..
@@ -11,7 +14,11 @@ OBJS=	md5.$(OBJEXT) md5glue.$(OBJEXT) md5crypto.$(OBJEXT)
 
 SRCS=	$(srcdir)/md5.c $(srcdir)/md5glue.c $(srcdir)/md5crypto.c
 
-all-unix:: shared $(OBJS) 
+all-unix:: shared $(OBJS) DONE
+
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
+
 all-mac:: shared $(OBJS) 
 all-windows:: $(OBJS)
 
@@ -39,7 +46,7 @@ clean::
 	$(RM) t_cksum$(EXEEXT) t_cksum.$(OBJEXT)
 
 clean-unix::
-	$(RM) shared/*
+	$(RM) shared/* DONE
 clean-mac::
 	$(RM) shared/*
 clean-windows::

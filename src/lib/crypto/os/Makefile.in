@@ -1,3 +1,6 @@
+BUILDTOP=./../../$(top_dir)
+SRCTOP=$(top_srcdir)/../..
+
 CFLAGS = $(CCOPTS) $(DEFS)
 
 ##DOSBUILDTOP = ..\..\..
@@ -14,7 +17,10 @@ OBJS= $(COBJS) $(LIBOBJS)
 
 SRCS=	rnd_confoun.c c_localaddr.c c_ustime.c
 
-all-unix:: shared $(OBJS)
+all-unix:: shared $(OBJS) DONE
+
+DONE: $(OBJS)
+	@echo $(OBJS) > DONE
 
 all-mac:: $(OBJS)
 
@@ -23,19 +29,16 @@ all-windows: $(COBJS)
 shared:
 	mkdir shared
 	
-memmove.c: $(SRCTOP)$(S)lib$(S)krb5$(S)posix$(S)memmove.c
-	-$(LN) $(SRCTOP)$(S)lib$(S)krb5$(S)posix$(S)memmove.c $@
-
-memmove.o: memmove.c
+memmove.o: $(SRCTOP)$(S)lib$(S)krb5$(S)posix$(S)memmove.c
 	$(CC) $(CFLAGS) -c $*.c
 @SHARED_RULE_LOCAL@
-	
+
 
 clean:: 
 	$(RM) memmove.c
 
 clean-unix::
-	$(RM) shared/*
+	$(RM) shared/* DONE
 clean-mac::
 	$(RM) shared/*
 clean-windows::
