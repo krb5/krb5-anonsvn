@@ -17,10 +17,12 @@
 #define NO_PASSWORD
 #define HAVE_LABS
 #define ANSI_STDIO
+#define USE_CCAPI
 
 #include <unix.h>
 #include <ctype.h>
 #include <SocketErrors.h>
+#include <unistd.h>
 
 #define PROVIDE_RSA_MD4
 #define PROVIDE_RSA_MD5
@@ -42,5 +44,5 @@
 
 enum {
 EROFS  = 30,
-ENFILE = 23
+/*ENFILE = 23*/
 };
