@@ -1,3 +1,9 @@
+Sat Jun 22 16:42:13 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* post.in: fix up makefile remaking rules
+	* pre.in: substitute in top_dir
+	* recurse.in: recursion rules
+
 Wed Jun 19 21:08:39 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* post.in: fix Makefiles rule (for now)
