@@ -113,7 +113,7 @@ errcode_t profile_open_file(filespec, ret_prof)
 {
 	prf_file_t	prf = NULL;
 	prf_data_t	data = NULL;
-	errcode_t	retval;
+	errcode_t	retval = 0;
 	char		*home_env = NULL;
 	int		len;
 	
@@ -357,13 +357,15 @@ errcode_t profile_flush_file_data(data)
 	profile_filespec_t old_file;
 	errcode_t	retval = 0;
 	
+#ifdef SHARE_TREE_DATA
+	int havelock = 1;
+#endif
+
 #ifdef PROFILE_USES_PATHS
 	new_file = old_file = 0;
 #endif
 
-#ifdef SHARE_TREE_DATA
-	int havelock = 1;
-	
+#ifdef SHARE_TREE_DATA	
 	prof_mutex_lock (&g_shared_trees_mutex);
 	if ((data -> flags & PROFILE_FILE_SHARED) == 0) {
 		/* Not shared, don't need the lock */

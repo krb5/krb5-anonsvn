@@ -9,8 +9,9 @@
 #define PROF_THREADS_H
 
 #ifdef HAVE_PTHREADS
+#include <pthread.h>
 
-typedef prof_mutext pthread_mutex_t;
+typedef pthread_mutex_t prof_mutex;
 
 #define prof_mutex_init(mutex)											\
 	pthread_mutex_init (mutex, PTHREAD_PROCESS_PRIVATE)

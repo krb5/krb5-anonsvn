@@ -8,14 +8,19 @@
 #include <time.h>
 
 #if defined(macintosh) || (defined(__MACH__) && defined(__APPLE__))
-#include <KerberosSupport/KerberosConditionalMacros.h>
-#include <KerberosComErr/KerberosComErr.h>
+#include <TargetConditionals.h>
+#include <Kerberos/com_err.h>
+#include <Kerberos/FullPOSIXPath.h>
+#include <Kerberos/FileCopy.h>
+#include <CoreServices/CoreServices.h>
 #else
 #include "com_err.h"
 #endif
 
-#include "prof_err.h"
 #include "profile.h"
+#ifndef ERROR_TABLE_BASE_prof
+#include "prof_err.h"
+#endif
 
 #if defined(__STDC__) || defined(_MSDOS) || defined(_WIN32)
 #define PROTOTYPE(x) x
@@ -36,19 +41,11 @@
 #define SIZEOF_LONG     4
 #endif
 
-#if TARGET_RT_MAC_CFM
-#define NO_SYS_TYPES_H
-#define NO_SYS_STAT_H
-#endif
-
 /* If you want the library to share read-only profile data to save memory, define SHARE_TREE_DATA */
 /* If you want the library to support foreign newlines in the profile file, define PROFILE_SUPPORTS_FOREIGN_NEWLINES */
 #if TARGET_OS_MAC
 #define PROFILE_SUPPORTS_FOREIGN_NEWLINES 1
-
-#if TARGET_RT_MAC_CFM
 #define SHARE_TREE_DATA 1
-#endif
 #endif /* TARGET_OS_MAC */
 
 typedef long prf_magic_t;
@@ -222,9 +219,9 @@ errcode_t profile_open_file
 errcode_t profile_update_file_data
 	PROTOTYPE ((prf_data_t profile));
 
-errcode_t profile_flush_file
-	PROTOTYPE ((prf_file_t profile));
-
+errcode_t profile_flush_file_data
+    PROTOTYPE ((prf_data_t data));
+    
 void profile_free_file
 	PROTOTYPE ((prf_file_t profile));
 
