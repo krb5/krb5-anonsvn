@@ -145,7 +145,7 @@ profile_flush(profile)
 		return PROF_MAGIC_PROFILE;
 
 	if (profile->first_file)
-		return profile_flush_file(profile->first_file);
+		return profile_flush_file_data(profile->first_file->data);
 
 	return 0;
 }
@@ -261,7 +261,7 @@ errcode_t profile_ser_externalize(unused, profile, bufpp, remainp)
 #else
 		slen = sizeof (FSSpec);
 		pack_int32(slen, &bp, &remain);
-		memcpy (bp, &(pfp->filespec), (size_t) slen);
+		memcpy (bp, &(pfp->data->filespec), (size_t) slen);
 		bp += slen;
 		remain -= (size_t) slen;
 #endif
