@@ -36,6 +36,7 @@
 #define ORGANIZATION        "Cygnus Support - (415) 903-1400"
 #endif
 #define CREDENTIALS         char
+#endif
 
 /*
  * Constants
