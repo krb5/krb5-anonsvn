@@ -59,6 +59,9 @@
 #undef HAVE_GETENV
 #undef HAVE_SETSID
 
+/* for lib/krb5/os */
+#undef AN_TO_LN_RULES
+
 /* Define if MIT Project Athena default configuration should be used */
 #undef KRB5_ATHENA_COMPAT
 

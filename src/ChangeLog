@@ -1,3 +1,7 @@
+Tue Jun 25 17:57:19 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
+
+	* acconfig.h: add AN_TO_LN_RULES
+
 Sat Jun 22 16:44:42 1996  Tom Yu  <tlyu@voltage-multiplier.mit.edu>
 
 	* acconfig.h: fixes to allow for most of defs in lib/krb5 to be
