@@ -1,3 +1,8 @@
+Fri Jul 19 16:10:39 1996  Marc Horowitz  <marc@mit.edu>
+
+	* ss_wrapper.c (main): ss_execute_line was being called with three
+ 	args.  There are only two, so no error was ever being returned.
+
 Thu Jul 18 19:14:51 1996  Marc Horowitz  <marc@mit.edu>
 
 	* attic/configure.in: removed SS_RULES
