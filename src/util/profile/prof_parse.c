@@ -203,7 +203,7 @@ static errcode_t parse_line(line, state)
 	struct parse_state *state;
 {
 	char	*cp;
-	
+        
 	switch (state->state) {
 	case STATE_INIT_COMMENT:
 		if (line[0] != '[')
@@ -241,11 +241,65 @@ errcode_t profile_parse_file(f, root)
 	while (!feof(f)) {
 		if (fgets(bptr, BUF_SIZE, f) == NULL)
 			break;
+/* Even though normally fgets returns only one line, that's not the
+case when we are opening a file with newlines different from the ones that
+fgets() expects -- for example, fgets on under Mac OS X expects UNIX newlines,
+but we need to support Mac newlines as well. Therefore, we have to find actual lines
+in output of fgets () */
+#if !PROFILE_SUPPORTS_FOREIGN_NEWLINES
 		retval = parse_line(bptr, &state);
 		if (retval) {
 			free (bptr);
 			return retval;
 		}
+#else
+		{
+            char* p;
+            char* end;
+
+            if (strlen(bptr) >= BUF_SIZE - 1) {
+                /* The string may have foreign newlines and gotten chopped off
+                    on a non-newline boundary.  Seek backwards to the last known newline.  */
+                long offset;
+                char *c = bptr + strlen (bptr);  /* the last character of bptr */
+                for (offset = 0; offset > -BUF_SIZE; offset--) {
+                    if (*c == '\r' || *c == '\n') {
+                        *c = '\0';
+                        fseek (f, offset, SEEK_CUR);
+                        break;
+                    }
+                    c--;
+                }
+            }
+            
+            /* First change all newlines to \n */
+            for (p = bptr; *p != '\0'; p++) {
+                    if (*p == '\r')
+                            *p = '\n';
+            }
+            /* Then parse all lines */
+            p = bptr;
+            end = bptr + strlen (bptr);
+            while (p < end) {
+                char* newline;
+                char* newp;
+
+                newline = strchr (p, '\n');
+                if (newline != NULL)
+                        *newline = '\0';
+
+                /* parse_line modifies contents of p */
+                newp = p + strlen (p) + 1;
+                retval = parse_line (p, &state);
+                if (retval) {
+                    free (bptr);
+                    return retval;
+                }
+
+                p = newp;
+            }
+		}
+#endif
 	}
 	*root = state.root_section;
 
