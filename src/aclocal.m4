@@ -1155,7 +1155,7 @@ alpha-dec-osf*)
 	LDCOMBINE='ld -shared -expect_unresolved \* -update_registry $(BUILDTOP)/so_locations'
 	SHLIB_EXPFLAGS='-rpath $(SHLIB_RDIRS) $(SHLIB_DIRS) $(SHLIB_EXPLIBS)'
 	PROFFLAGS=-pg
-	CC_LINK='$(CC) $(PROG_LIBPATH) -R$(PROG_RPATH)'
+	CC_LINK='$(CC) $(PROG_LIBPATH) -Wl,-rpath -Wl,$(PROG_RPATH)'
 	;;
 *-*-netbsd*)
 	PICFLAGS=-fpic
