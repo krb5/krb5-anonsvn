@@ -1,3 +1,7 @@
+Sun May 12 00:46:05 1996  Marc Horowitz  <marc@mit.edu>
+
+	* adm.h (struct __krb5_realm_params): add realm_acl_file
+
 Thu Mar 28 17:57:04 1996  Theodore Y. Ts'o  <tytso@dcl>
 
 	* AddressXlation.h: Updated to use latest versions from the Apple's
