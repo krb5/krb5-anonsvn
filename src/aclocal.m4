@@ -1051,6 +1051,8 @@ dnl Set variables to build a program.
 
 AC_DEFUN(KRB5_BUILD_PROGRAM,
 [AC_REQUIRE([KRB5_LIB_AUX])
+AC_CHECK_LIB(gen, compile, GEN_LIB=-lgen, GEN_LIB=)
+AC_SUBST(GEN_LIB)
 AC_SUBST(CC_LINK)
 AC_SUBST(DEPLIBEXT)])
 
