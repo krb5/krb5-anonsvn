@@ -154,10 +154,12 @@
 	krb5_auth_con_init
 	krb5_auth_con_setaddrs
 	krb5_auth_con_setflags
+	krb5_auth_con_setports
 	krb5_auth_con_getlocalseqnumber
 	krb5_auth_con_getremoteseqnumber
 	krb5_auth_con_setuseruserkey
 	krb5_auth_con_getauthenticator
+	krb5_auth_con_initvector
 	krb5_auth_con_set_req_cksumtype
 	krb5_auth_con_setrcache
 #
