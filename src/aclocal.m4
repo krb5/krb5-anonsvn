@@ -348,6 +348,7 @@ if test $withval = no; then
 	DEPKRB4_CRYPTO_LIB=
 	KDB4_LIB=
 	DEPKDB4_LIB=
+	KRB4_INCLUDES=
 	LDARGS=
 	krb5_cv_build_krb4_libs=no
 	krb5_cv_krb4_libdir=
@@ -361,6 +362,7 @@ else
 	DEPKRB4_CRYPTO_LIB='$(TOPLIBD)/libdes425.a'
 	KDB4_LIB='-lkdb4'
 	DEPKDB4_LIB='$(TOPLIBD)/libkdb4.a'
+	KRB4_INCLUDES='-I$(SRCTOP)/include/kerberosIV'
 	LDARGS=
 	krb5_cv_build_krb4_libs=yes
 	krb5_cv_krb4_libdir=
@@ -372,11 +374,13 @@ else
 	DEPKRB4_CRYPTO_LIB='$(TOPLIBD)/libdes425.a'
 	KDB4_LIB="-lkdb"
 	DEPKDB4_LIB="$withval/lib/libkdb.a"
+	KRB4_INCLUDES="-I$withval/include"
 	LDARGS="-L$withval/lib"
 	krb5_cv_build_krb4_libs=no
 	krb5_cv_krb4_libdir="$withval/lib"
  fi
 fi
+AC_SUBST(KRB4_INCLUDES)
 AC_SUBST(KRB4_LIB)
 AC_SUBST(KDB4_LIB)
 AC_SUBST(KRB4_CRYPTO_LIB)
@@ -808,13 +812,21 @@ ADD_DEF(-Dvolatile=)
 fi
 ])dnl
 dnl
-dnl This rule tells KRB5_LIBRARIES to use the kadmsrv library.
+dnl This rule tells KRB5_LIBRARIES to use the kadm5srv library.
 dnl
 kadmsrv_deplib=''
 kadmsrv_lib=''
 define(USE_KADMSRV_LIBRARY,[
 kadmsrv_deplib="\[$](TOPLIBD)/libkadm5srv.a"
 kadmsrv_lib=-lkadm5srv])
+dnl
+dnl This rule tells KRB5_LIBRARIES to use the kadm5clnt library.
+dnl
+kadmclnt_deplib=''
+kadmclnt_lib=''
+define(USE_KADMCLNT_LIBRARY,[
+kadmclnt_deplib="\[$](TOPLIBD)/libkadm5clnt.a"
+kadmclnt_lib=-lkadm5clnt])
 dnl
 dnl This rule tells KRB5_LIBRARIES to use the gssrpc library.
 dnl
@@ -922,12 +934,22 @@ dnl
 dnl This rule generates library lists for programs.
 dnl
 define(KRB5_LIBRARIES,[
-DEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmsrv_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
-LIBS="\[$](LOCAL_LIBRARIES) $kadmsrv_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
+dnl this is ugly, but it wouldn't be necessary if krb5 didn't abuse
+dnl configure so badly
+SRVDEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmsrv_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
+SRVLIBS="\[$](LOCAL_LIBRARIES) $kadmsrv_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
+CLNTDEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmclnt_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
+CLNTLIBS="\[$](LOCAL_LIBRARIES) $kadmclnt_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
+DEPLIBS="\[$](DEPLOCAL_LIBRARIES) $kadmclnt_deplib $kadmsrv_deplib $gssrpc_deplib $gssapi_deplib $kdb5_deplib $kutil_deplib \[$](TOPLIBD)/libkrb5.a $kdb4_deplib $krb4_deplib $kdbm_deplib $kaname_deplib \[$](TOPLIBD)/libcrypto.a $ss_deplib $dyn_deplib $db_deplib \[$](TOPLIBD)/libcom_err.a"
+LIBS="\[$](LOCAL_LIBRARIES) $kadmclnt_lib $kadmsrv_lib $gssrpc_lib $gssapi_lib $kdb5_lib $kdb4_lib $kutil_lib $krb4_lib -lkrb5 $kdbm_libs $kaname_libs -lcrypto $ss_lib $dyn_lib $db_lib -lcom_err $LIBS"
 LDFLAGS="$LDFLAGS -L\$(TOPLIBD)"
 AC_SUBST(LDFLAGS)
 AC_SUBST(LDARGS)
-AC_SUBST(DEPLIBS)])
+AC_SUBST(DEPLIBS)
+AC_SUBST(SRVDEPLIBS)
+AC_SUBST(SRVLIBS)
+AC_SUBST(CLNTDEPLIBS)
+AC_SUBST(CLNTLIBS)])
 dnl
 dnl This rule supports the generation of the shared library object files
 dnl
@@ -947,7 +969,8 @@ dnl
 dnl This rule adds the additional Makefile fragment necessary to actually 
 dnl create the shared library
 dnl
-dnl V5_MAKE_SHARED_LIB(libname, version, libdir, dirname_relative_to_libdir)
+dnl V5_MAKE_SHARED_LIB(libname, version, libdir, dirname_relative_to_libdir,
+dnl		       lib_subdirs)
 dnl
 define(V5_MAKE_SHARED_LIB,[
 if test "[$]krb5_cv_staticlibs_enabled" = yes
@@ -1013,7 +1036,7 @@ clean-unix::
 $1.[$](SHEXT)$(VEXT): [$](LIBDONE) [$](DEPLIBS)
 	[$](BUILDTOP)/util/makeshlib [$]@	\
 		"[$](SHLIB_LIBDIRS)" \
-		"[$](SHLIB_LIBS)" "[$](SHLIB_LDFLAGS)" "$2" [$](LIB_SUBDIRS)
+		"[$](SHLIB_LIBS)" "[$](SHLIB_LDFLAGS)" "$2" [$](LIB_SUBDIRS) $5
 AC_POP_MAKEFILE()dnl
 if test "$krb5_cv_shlibs_versioned_filenames" = "yes" ; then
 LinkFile($1.[$](SHEXT),$1.[$](SHEXT).$2)
