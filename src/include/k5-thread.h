@@ -1,7 +1,7 @@
 /*
  * include/k5-thread.h
  *
- * Copyright 2004 by the Massachusetts Institute of Technology.
+ * Copyright 2004,2005,2006 by the Massachusetts Institute of Technology.
  * All Rights Reserved.
  *
  * Export of this software from the United States of America may
@@ -388,9 +388,13 @@ typedef k5_os_nothread_mutex k5_os_mutex;
 
    Linux: Stub mutex routines exist, but pthread_once does not.
 
-   Solaris: In libc there's a pthread_once that doesn't seem
-   to do anything.  Bleah.  But pthread_mutexattr_setrobust_np
-   is defined only in libpthread.
+   Solaris: In libc there's a pthread_once that doesn't seem to do
+   anything.  Bleah.  But pthread_mutexattr_setrobust_np is defined
+   only in libpthread.  However, some version of GNU libc (Red Hat's
+   Fedora Core 5, reportedly) seems to have that function, but no
+   declaration, so we'd have to declare it in order to test for its
+   address.  We now have tests to see if pthread_once actually works,
+   so stick with that for now.
 
    IRIX 6.5 stub pthread support in libc is really annoying.  The
    pthread_mutex_lock function returns ENOSYS for a program not linked
@@ -414,9 +418,6 @@ typedef k5_os_nothread_mutex k5_os_mutex;
 # pragma weak pthread_mutex_init
 # pragma weak pthread_self
 # pragma weak pthread_equal
-# ifdef HAVE_PTHREAD_MUTEXATTR_SETROBUST_NP_IN_THREAD_LIB
-#  pragma weak pthread_mutexattr_setrobust_np
-# endif
 extern int krb5int_pthread_loaded(void);
 # define K5_PTHREADS_LOADED	(krb5int_pthread_loaded())
 #else
@@ -760,8 +761,6 @@ typedef enum {
     K5_KEY_COM_ERR,
     K5_KEY_GSS_KRB5_SET_CCACHE_OLD_NAME,
     K5_KEY_GSS_KRB5_CCACHE_NAME,
-    K5_KEY_KDB_ERR_HANDLER,
-    K5_KEY_KADM_CLNT_ERR_HANDLER,
     K5_KEY_MAX
 } k5_key_t;
 /* rename shorthand symbols for export */
@@ -773,5 +772,26 @@ extern int k5_key_register(k5_key_t, void (*)(void *));
 extern void *k5_getspecific(k5_key_t);
 extern int k5_setspecific(k5_key_t, void *);
 extern int k5_key_delete(k5_key_t);
+
+extern int  KRB5_CALLCONV krb5int_mutex_alloc  (k5_mutex_t **);
+extern void KRB5_CALLCONV krb5int_mutex_free   (k5_mutex_t *);
+extern int  KRB5_CALLCONV krb5int_mutex_lock   (k5_mutex_t *);
+extern int  KRB5_CALLCONV krb5int_mutex_unlock (k5_mutex_t *);
+
+/* In time, many of the definitions above should move into the support
+   library, and this file should be greatly simplified.  For type
+   definitions, that'll take some work, since other data structures
+   incorporate mutexes directly, and our mutex type is dependent on
+   configuration options and system attributes.  For most functions,
+   though, it should be relatively easy.
+
+   For now, plugins should use the exported functions, and not the
+   above macros, and use krb5int_mutex_alloc for allocations.  */
+#ifdef PLUGIN
+#undef k5_mutex_lock
+#define k5_mutex_lock krb5int_mutex_lock
+#undef k5_mutex_unlock
+#define k5_mutex_unlock krb5int_mutex_unlock
+#endif
 
 #endif /* multiple inclusion? */

@@ -25,7 +25,7 @@
 MODULE=config
 !include <Makefile.w32>
 
-all: showvars mkalldirs mkversion
+all: showvars showvers mkalldirs mkversion
 
 showvars:
 	$(ECHO) SRC= $(SRC)
@@ -35,6 +35,18 @@ showvars:
 	$(ECHO) CC = $(CC)
 	$(ECHO) DOXYGEN = $(DOXYGEN)
 	$(ECHO) HHC = $(HHC)
+
+showvers:
+	$(ECHO) ---- Version Information ----
+	$(ECHO) NETIDMGR_VERSION=    $(NETIDMGR_VERSION)
+	$(ECHO) NETIDMGR_VERSION_API=$(NETIDMGR_VERSION_API)
+	$(ECHO) NETIDMGR_RELEASEDESC=$(NETIDMGR_RELEASEDESC)
+	$(ECHO) Build Type          :$(KH_BUILD), $(KH_RELEASE)
+	$(ECHO) Strings:
+	$(ECHO) Company    = $(NETIDMGR_SRC_COMPANY_1033)
+	$(ECHO) Copyright  = $(NETIDMGR_SRC_COPYRIGHT_1033)
+	$(ECHO) ---- End Version Information ---
+	$(ECHO).
 
 mkalldirs:
 !	if !exist($(DESTROOT))
@@ -60,6 +72,15 @@ mkalldirs:
 !	endif
 !	if !exist($(DOCDIR))
 	-$(MKDIR) $(DOCDIR)
+!	endif
+!	if !exist($(OBJDIR)\W2K)
+	-$(MKDIR) $(OBJDIR)\W2K
+!	endif
+!	if !exist($(BINDIR)\W2K)
+	-$(MKDIR) $(BINDIR)\W2K
+!	endif
+!	if !exist($(LIBDIR)\W2K)
+	-$(MKDIR) $(LIBDIR)\W2K
 !	endif
 	$(ECHO) Done creating directories.
 

@@ -1,3 +1,4 @@
+#include "autoconf.h"
 #include <stdio.h>
 #include <string.h>
 #if HAVE_TCL_H
@@ -1017,7 +1018,7 @@ static int tcl_ovsec_kadm_init(ClientData clientData, Tcl_Interp *interp,
 
      argv++, argc--;
 
-     krb5_init_context(&context);
+     kadm5_init_krb5_context(&context);
 
      if (argc != 7) {
 	  Tcl_AppendResult(interp, whoami, ": ", arg_error, 0);

@@ -74,6 +74,7 @@ set_identity_from_ui(khui_new_creds * nc,
     khm_size cch_left;
     khm_handle ident;
     LRESULT idx = CB_ERR;
+    khm_int32 rv = KHM_ERROR_SUCCESS;
 
     cch = GetWindowTextLength(d->hw_username);
 
@@ -91,23 +92,34 @@ set_identity_from_ui(khui_new_creds * nc,
        be exact.  For caveats see MSDN for GetWindowTextLength. */
     StringCchLength(un, KCDB_IDENT_MAXCCH_NAME, &cch);
 
+    if (cch >= KCDB_IDENT_MAXCCH_NAME - 3) {
+        /* has to allow space for the '@' and at least a single
+           character realm, and the NULL terminator. */
+        rv = KHM_ERROR_TOO_LONG;
+        goto _set_null_ident;
+    }
+
     realm = un + cch;   /* now points at terminating NULL */
     cch_left = KCDB_IDENT_MAXCCH_NAME - cch;
 
     *realm++ = L'@';
+    *realm = L'\0';
     cch_left--;
 
     cch = GetWindowTextLength(d->hw_realm);
-    if (cch == 0 || cch >= cch_left)
+    if (cch == 0 || cch >= cch_left) {
+        rv = KHM_ERROR_INVALID_NAME;
         goto _set_null_ident;
+    }
 
     GetWindowText(d->hw_realm, realm, (int) cch_left);
 
  _set_ident:
-    if (KHM_FAILED(kcdb_identity_create(un,
-                                        KCDB_IDENT_FLAG_CREATE,
-                                        &ident)))
+    if (KHM_FAILED(rv = kcdb_identity_create(un,
+                                             KCDB_IDENT_FLAG_CREATE,
+                                             &ident))) {
         goto _set_null_ident;
+    }
 
     khui_cw_set_primary_id(nc, ident);
 
@@ -115,7 +127,37 @@ set_identity_from_ui(khui_new_creds * nc,
     return;
 
  _set_null_ident:
-    khui_cw_set_primary_id(nc, NULL);
+    {
+        khui_new_creds_by_type * nct = NULL;
+        wchar_t cmsg[256];
+
+        khui_cw_find_type(nc, credtype_id_krb5, &nct);
+        if (nct && nct->hwnd_panel) {
+
+            switch(rv) {
+            case KHM_ERROR_TOO_LONG:
+                LoadString(hResModule, IDS_NCERR_IDENT_TOO_LONG,
+                           cmsg, ARRAYLENGTH(cmsg));
+                break;
+
+            case KHM_ERROR_INVALID_NAME:
+                LoadString(hResModule, IDS_NCERR_IDENT_INVALID,
+                           cmsg, ARRAYLENGTH(cmsg));
+                break;
+
+            default:
+                LoadString(hResModule, IDS_NCERR_IDENT_UNKNOWN,
+                           cmsg, ARRAYLENGTH(cmsg));
+            }
+
+            SendMessage(nct->hwnd_panel,
+                        KHUI_WM_NC_NOTIFY,
+                        MAKEWPARAM(0, K5_SET_CRED_MSG),
+                        (LPARAM) cmsg);
+        }
+
+        khui_cw_set_primary_id(nc, NULL);
+    }
     return;
 }
 
@@ -957,9 +999,9 @@ k5_ident_update_apply_proc(khm_handle cred,
     khm_handle ident = NULL;
     khm_int32 t;
     khm_int32 flags;
-    __int64 t_expire;
-	__int64 t_cexpire;
-    __int64 t_rexpire;
+    FILETIME t_expire;
+    FILETIME t_cexpire;
+    FILETIME t_rexpire;
     khm_size cb;
     khm_int32 rv = KHM_ERROR_SUCCESS;
 
@@ -980,23 +1022,25 @@ k5_ident_update_apply_proc(khm_handle cred,
                                              KCDB_ATTR_EXPIRE,
                                              NULL,
                                              &t_cexpire,
-                                             &cb))) {										 
-                t_expire = 0;
-                cb = sizeof(t_expire);
-                if (KHM_FAILED(kcdb_identity_get_attr(tident,
-                                                      KCDB_ATTR_EXPIRE,
-                                                      NULL,
-                                                      &t_expire,
-                                                      &cb)) ||
-                    (t_cexpire > t_expire))
-                    kcdb_identity_set_attr(tident, KCDB_ATTR_EXPIRE,
-                                           &t_cexpire, sizeof(t_cexpire));
-        } else {
-            kcdb_identity_set_attr(tident, KCDB_ATTR_EXPIRE, NULL, 0);
+                                             &cb))) {
+            cb = sizeof(t_expire);
+            if (KHM_FAILED(kcdb_identity_get_attr(tident,
+                                                  KCDB_ATTR_EXPIRE,
+                                                  NULL,
+                                                  &t_expire,
+                                                  &cb)) ||
+                CompareFileTime(&t_cexpire, &t_expire) > 0) {
+                goto update_identity;
+            }
         }
-    } else {
-        goto _cleanup;
     }
+
+    goto _cleanup;
+
+ update_identity:
+
+    kcdb_identity_set_attr(tident, KCDB_ATTR_EXPIRE,
+                           &t_cexpire, sizeof(t_cexpire));
 
     cb = sizeof(ccname);
     if (KHM_SUCCEEDED(kcdb_cred_get_attr(cred, KCDB_ATTR_LOCATION,
@@ -1204,6 +1248,28 @@ k5_ident_exit(khm_int32 msg_type,
     return KHM_ERROR_SUCCESS;
 }
 
+/* forward dcl */
+khm_int32 KHMAPI
+k5_ident_name_comp_func(const void * dl, khm_size cb_dl,
+                        const void * dr, khm_size cb_dr);
+
+static khm_int32
+k5_ident_compare_name(khm_int32 msg_type,
+                      khm_int32 msg_subtype,
+                      khm_ui_4 uparam,
+                      void * vparam) {
+    kcdb_ident_name_xfer *px;
+
+    px = (kcdb_ident_name_xfer *) vparam;
+
+    /* note that k5_ident_name_comp_func() ignores the size
+       specifiers.  So we can just pass in 0's. */
+    px->result = k5_ident_name_comp_func(px->name_src, 0,
+                                         px->name_alt, 0);
+
+    return KHM_ERROR_SUCCESS;
+}
+
 #if 0
 /* copy and paste template for ident provider messages */
 static khm_int32
@@ -1248,8 +1314,10 @@ k5_msg_ident(khm_int32 msg_type,
         break;
 
     case KMSG_IDENT_COMPARE_NAME:
-        /* TODO: handle KMSG_IDENT_COMPARE_NAME */
-        break;
+        return k5_ident_compare_name(msg_type,
+                                     msg_subtype,
+                                     uparam,
+                                     vparam);
 
     case KMSG_IDENT_SET_DEFAULT:
         return k5_ident_set_default(msg_type,
@@ -1291,6 +1359,12 @@ k5_msg_ident(khm_int32 msg_type,
     return KHM_ERROR_SUCCESS;
 }
 
+/* note that we are ignoring the size specifiers.  We can do that
+   because we are guaranteed that dl and dr point to NULL terminated
+   unicode strings when used with credential data buffers.  We also
+   use the fact that we are ignoring the size specifiers when we call
+   this function from k5_ident_compare_name() to avoid calculating the
+   length of the string. */
 khm_int32 KHMAPI
 k5_ident_name_comp_func(const void * dl, khm_size cb_dl,
                         const void * dr, khm_size cb_dr) {

@@ -1,7 +1,7 @@
 /*
  * util/support/threads.c
  *
- * Copyright 2004,2005 by the Massachusetts Institute of Technology.
+ * Copyright 2004,2005,2006 by the Massachusetts Institute of Technology.
  * All Rights Reserved.
  *
  * Export of this software from the United States of America may
@@ -42,6 +42,11 @@ static void (*destructors[K5_KEY_MAX])(void *);
 struct tsd_block { void *values[K5_KEY_MAX]; };
 static struct tsd_block tsd_no_threads;
 static unsigned char destructors_set[K5_KEY_MAX];
+
+int krb5int_pthread_loaded (void)
+{
+    return 0;
+}
 
 #elif defined(_WIN32)
 
@@ -139,11 +144,6 @@ int krb5int_pthread_loaded (void)
 	|| &pthread_mutex_init == 0
 	|| &pthread_self == 0
 	|| &pthread_equal == 0
-	/* This catches Solaris 9.  May be redundant with the above
-	   tests now.  */
-# ifdef HAVE_PTHREAD_MUTEXATTR_SETROBUST_NP_IN_THREAD_LIB
-	|| &pthread_mutexattr_setrobust_np == 0
-# endif
 	/* Any program that's really multithreaded will have to be
 	   able to create threads.  */
 	|| &pthread_create == 0
@@ -453,6 +453,10 @@ int krb5int_thread_support_init (void)
     if (err)
 	return err;
 
+    err = krb5int_err_init();
+    if (err)
+	return err;
+
     return 0;
 }
 
@@ -585,7 +589,7 @@ krb5int_mutex_report_stats(k5_mutex_t *m)
 	    sd_hold);
   }
 }
-#elif defined _WIN32
+#else
 /* On Windows, everything defined in the export list must be defined.
    The UNIX systems where we're using the export list don't seem to
    care.  */
@@ -606,3 +610,42 @@ krb5int_mutex_report_stats(k5_mutex_t *m)
 {
 }
 #endif
+
+/* Mutex allocation functions, for use in plugins that may not know
+   what options a given set of libraries was compiled with.  */
+int KRB5_CALLCONV
+krb5int_mutex_alloc (k5_mutex_t **m)
+{
+    k5_mutex_t *ptr;
+    int err;
+
+    ptr = malloc (sizeof (k5_mutex_t));
+    if (ptr == NULL)
+	return errno;
+    err = k5_mutex_init (ptr);
+    if (err) {
+	free (ptr);
+	return err;
+    }
+    *m = ptr;
+    return 0;
+}
+
+void KRB5_CALLCONV
+krb5int_mutex_free (k5_mutex_t *m)
+{
+    (void) k5_mutex_destroy (m);
+    free (m);
+}
+
+/* Callable versions of the various macros.  */
+int KRB5_CALLCONV
+krb5int_mutex_lock (k5_mutex_t *m)
+{
+    return k5_mutex_lock (m);
+}
+int KRB5_CALLCONV
+krb5int_mutex_unlock (k5_mutex_t *m)
+{
+    return k5_mutex_unlock (m);
+}

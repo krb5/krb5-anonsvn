@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 1989,1990,1991,1992,1993,1994,1995,2000,2001, 2003 by the Massachusetts Institute of Technology,
+ * Copyright (C) 1989,1990,1991,1992,1993,1994,1995,2000,2001, 2003,2006 by the Massachusetts Institute of Technology,
  * Cambridge, MA, USA.  All Rights Reserved.
  * 
  * This software is being provided to you, the LICENSEE, by the 
@@ -168,6 +168,9 @@ typedef INT64_TYPE krb5_int64;
 
 /* Get mutex support; currently used only for the replay cache.  */
 #include "k5-thread.h"
+
+/* Get error info support.  */
+#include "k5-err.h"
 
 /* krb5/krb5.h includes many other .h files in the krb5 subdirectory.
    The ones that it doesn't include, we include below.  */
@@ -500,7 +503,7 @@ krb5_error_code krb5_sync_disk_file (krb5_context, FILE *fp);
 
 krb5_error_code krb5int_get_fq_local_hostname (char *, size_t);
 
-krb5_error_code krb5_os_init_context (krb5_context);
+krb5_error_code krb5_os_init_context (krb5_context, krb5_boolean);
 
 void krb5_os_free_context (krb5_context);
 
@@ -517,7 +520,15 @@ krb5_error_code krb5_os_hostaddr
 /* N.B.: You need to include fake-addrinfo.h *before* k5-int.h if you're
    going to use this structure.  */
 struct addrlist {
-    struct addrinfo **addrs;
+    struct {
+#ifdef FAI_DEFINED
+	struct addrinfo *ai;
+#else
+	struct undefined_addrinfo *ai;
+#endif
+	void (*freefn)(void *);
+	void *data;
+    } *addrs;
     int naddrs;
     int space;
 };
@@ -527,24 +538,11 @@ extern int krb5int_grow_addrlist (struct addrlist *, int);
 extern int krb5int_add_host_to_list (struct addrlist *, const char *,
 				     int, int, int, int);
 
+#include "k5-locate.h"
 krb5_error_code
-krb5int_locate_server (krb5_context,
-		       const krb5_data *realm,
-		       struct addrlist *,
-		       /* Only meaningful for kdc, really...  */
-		       int want_masters,
-		       /* look up [realms]->$realm->$name in krb5.conf */
-		       const char *profilename,
-		       /* SRV record lookup */
-		       const char *dnsname,
-		       int is_stream_service,
-		       /* Port numbers, in network order!  For profile
-			  version only, DNS code gets port numbers
-			  itself.  Use 0 for dflport2 if there's no
-			  secondary port (most common, except kdc
-			  case).  */
-		       int dflport1, int dflport2,
-		       int family);
+krb5int_locate_server (krb5_context, const krb5_data *realm,
+		       struct addrlist *, enum locate_service_type svc,
+		       int sockettype, int family);
 
 #endif /* KRB5_LIBOS_PROTO__ */
 
@@ -614,9 +612,10 @@ typedef krb5_error_code (*krb5_str2key_func) (const struct krb5_enc_provider *en
   const krb5_data *salt, const krb5_data *parm, krb5_keyblock *key);
 
 typedef krb5_error_code (*krb5_prf_func)(
-					 const struct krb5_enc_provider *enc, const struct krb5_hash_provider *hash,
+					 const struct krb5_enc_provider *enc,
+					 const struct krb5_hash_provider *hash,
 					 const krb5_keyblock *key,
-					 krb5_data *in, krb5_data *out);
+					 const krb5_data *in, krb5_data *out);
 
 struct krb5_keytypes {
     krb5_enctype etype;
@@ -751,7 +750,7 @@ krb5_error_code krb5_crypto_us_timeofday
 	(krb5_int32 *,
 		krb5_int32 *);
 
-time_t gmt_mktime (struct tm *);
+time_t krb5int_gmt_mktime (struct tm *);
 
 #endif /* KRB5_OLD_CRYPTO */
 
@@ -765,11 +764,6 @@ krb5_error_code krb5_encrypt_helper
 /*
  * End "los-proto.h"
  */
-
-/*
- * Include the KDB definitions.
- */
-#include "kdb.h"
 
 /*
  * Begin "libos.h"
@@ -1014,13 +1008,14 @@ void KRB5_CALLCONV krb5_free_pa_enc_ts
 
 /* #include "krb5/wordsize.h" -- comes in through base-defs.h. */
 #include "com_err.h"
+#include "k5-plugin.h"
 
 struct _krb5_context {
 	krb5_magic	magic;
 	krb5_enctype	*in_tkt_ktypes;
-	int		in_tkt_ktype_count;
+	unsigned int	in_tkt_ktype_count;
 	krb5_enctype	*tgs_ktypes;
-	int		tgs_ktype_count;
+	unsigned int	tgs_ktype_count;
 	/* This used to be a void*, but since we always allocate them
 	   together (though in different source files), and the types
 	   are declared in the same header, might as well just combine
@@ -1059,13 +1054,21 @@ struct _krb5_context {
 	   requested ticket (the session key of which may be
 	   constrained by tgs_ktypes above).  */
 	krb5_enctype	*conf_tgs_ktypes;
-	int		conf_tgs_ktypes_count;
+	unsigned int	conf_tgs_ktypes_count;
 	/* Use the _configured version?  */
 	krb5_boolean	use_conf_ktypes;
 
 #ifdef KRB5_DNS_LOOKUP
         krb5_boolean    profile_in_memory;
 #endif /* KRB5_DNS_LOOKUP */
+
+    /* locate_kdc module stuff */
+    struct plugin_dir_handle libkrb5_plugins;
+    struct krb5plugin_service_locate_ftable *vtbl;
+    void (**locate_fptrs)(void);
+
+    /* error detail info */
+    struct errinfo err;
 };
 
 /* could be used in a table to find an etype and initialize a block */
@@ -1661,7 +1664,7 @@ void krb5int_free_srv_dns_data(struct srv_dns_entry *);
 /* To keep happy libraries which are (for now) accessing internal stuff */
 
 /* Make sure to increment by one when changing the struct */
-#define KRB5INT_ACCESS_STRUCT_VERSION 9
+#define KRB5INT_ACCESS_STRUCT_VERSION 10
 
 #ifndef ANAME_SZ
 struct ktext;			/* from krb.h, for krb524 support */
@@ -1675,10 +1678,6 @@ typedef struct _krb5int_access {
 				   unsigned int icount, const krb5_data *input,
 				   krb5_data *output);
     /* service location and communication */
-    krb5_error_code (*locate_server) (krb5_context, const krb5_data *,
-				      struct addrlist *, int,
-				      const char *, const char *,
-				      int, int, int, int);
     krb5_error_code (*sendto_udp) (krb5_context, const krb5_data *msg,
 				   const struct addrlist *, krb5_data *reply,
 				   struct sockaddr *, socklen_t *, int *);

@@ -59,6 +59,8 @@ KHMEXP void KHMAPI kherr_add_ctx_handler(kherr_ctx_handler h,
                                          khm_int32 filter,
                                          kherr_serial serial) {
 
+    khm_size idx;
+
     assert(h);
 
     EnterCriticalSection(&cs_error);
@@ -86,9 +88,21 @@ KHMEXP void KHMAPI kherr_add_ctx_handler(kherr_ctx_handler h,
             KHERR_CTX_END |
             KHERR_CTX_ERROR;
 
-    ctx_handlers[n_ctx_handlers].h = h;
-    ctx_handlers[n_ctx_handlers].filter = filter;
-    ctx_handlers[n_ctx_handlers].serial = serial;
+    /* Since commit events are the most frequent, we put those
+       handlers at the top of the list.  When dispatching a commit
+       event, we stop looking at the list when we find a filter that
+       doesn't filter for commit events. */
+    if (filter & KHERR_CTX_EVTCOMMIT) {
+	idx = 0;
+	memmove(&ctx_handlers[1], &ctx_handlers[0],
+		n_ctx_handlers * sizeof(ctx_handlers[0]));
+    } else {
+	idx = n_ctx_handlers;
+    }
+
+    ctx_handlers[idx].h = h;
+    ctx_handlers[idx].filter = filter;
+    ctx_handlers[idx].serial = serial;
 
     n_ctx_handlers++;
 
@@ -139,7 +153,14 @@ void notify_ctx_event(enum kherr_ctx_event e, kherr_context * c) {
                 if (h != ctx_handlers[i].h)
                     i--;
             }
-        }
+        } else if (e == KHERR_CTX_EVTCOMMIT &&
+		   !(ctx_handlers[i].filter & KHERR_CTX_EVTCOMMIT)) {
+	    /* All handlers that filter for commit events are at the
+	       top of the list.  If this handler wasn't filtering for
+	       it, then there's no point in goint further down the
+	       list. */
+	    break;
+	}
     }
 }
 
@@ -260,22 +281,22 @@ void free_event_params(kherr_event * e) {
     if(parm_type(e->p1) == KEPT_STRINGT) {
         assert((void *) parm_data(e->p1));
         PFREE((void*) parm_data(e->p1));
-        e->p1 = (kherr_param) 0;
+        ZeroMemory(&e->p1, sizeof(e->p1));
     }
     if(parm_type(e->p2) == KEPT_STRINGT) {
         assert((void *) parm_data(e->p2));
         PFREE((void*) parm_data(e->p2));
-        e->p2 = (kherr_param) 0;
+        ZeroMemory(&e->p2, sizeof(e->p2));
     }
     if(parm_type(e->p3) == KEPT_STRINGT) {
         assert((void *) parm_data(e->p3));
         PFREE((void*) parm_data(e->p3));
-        e->p3 = (kherr_param) 0;
+        ZeroMemory(&e->p3, sizeof(e->p3));
     }
     if(parm_type(e->p4) == KEPT_STRINGT) {
         assert((void *) parm_data(e->p4));
         PFREE((void*) parm_data(e->p4));
-        e->p4 = (kherr_param) 0;
+        ZeroMemory(&e->p4, sizeof(e->p4));
     }
 }
 
@@ -384,7 +405,15 @@ void free_context(kherr_context * c) {
 
 void add_event(kherr_context * c, kherr_event * e)
 {
+    kherr_event * te;
+
     EnterCriticalSection(&cs_error);
+    te = QBOTTOM(c);
+    if (te && !(te->flags & KHERR_RF_COMMIT)) {
+	notify_ctx_event(KHERR_CTX_EVTCOMMIT, c);
+	te->flags |= KHERR_RF_COMMIT;
+    }
+
     QPUT(c,e);
     if(c->severity >= e->severity) {
         if (e->severity <= KHERR_ERROR)
@@ -431,12 +460,13 @@ void pick_err_event(kherr_context * c)
 static void arg_from_param(DWORD_PTR ** parm, kherr_param p) {
     int t;
 
-    if (p != 0) {
+    if (p.type != KEPT_NONE) {
         t = parm_type(p);
         if (t == KEPT_INT32 ||
             t == KEPT_UINT32 ||
             t == KEPT_STRINGC ||
-            t == KEPT_STRINGT) {
+            t == KEPT_STRINGT ||
+            t == KEPT_PTR) {
 
             *(*parm)++ = (DWORD_PTR) parm_data(p);
 
@@ -463,8 +493,8 @@ static void resolve_string_resource(kherr_event * e,
                                     khm_int32 or_flag) {
     wchar_t tfmt[KHERR_MAXCCH_STRING];
     wchar_t tbuf[KHERR_MAXCCH_STRING];
-    size_t chars;
-    size_t bytes;
+    size_t chars = 0;
+    size_t bytes = 0;
 
     if(e->flags & if_flag) {
         if(e->h_module != NULL)
@@ -507,8 +537,8 @@ static void resolve_msg_resource(kherr_event * e,
                                 khm_int32 if_flag,
                                 khm_int32 or_flag) {
     wchar_t tbuf[KHERR_MAXCCH_STRING];
-    size_t chars;
-    size_t bytes;
+    size_t chars = 0;
+    size_t bytes = 0;
     DWORD_PTR args[8];
 
     if(e->flags & if_flag) {
@@ -648,6 +678,9 @@ void resolve_event_strings(kherr_event * e)
 
 
 KHMEXP void KHMAPI kherr_evaluate_event(kherr_event * e) {
+    if (!e)
+        return;
+
     EnterCriticalSection(&cs_error);
     resolve_event_strings(e);
     LeaveCriticalSection(&cs_error);
@@ -673,7 +706,7 @@ KHMEXP void KHMAPI kherr_evaluate_last_event(void) {
 
     resolve_event_strings(e);
 
-_exit:
+ _exit:
     LeaveCriticalSection(&cs_error);
 }
 
@@ -692,7 +725,8 @@ kherr_reportf(const wchar_t * long_desc_fmt, ...) {
 
     e = kherr_report(KHERR_DEBUG_1,
                      NULL, NULL, NULL, buf, NULL, 0,
-                     KHERR_SUGGEST_NONE, 0, 0, 0, 0, KHERR_RF_CSTR_LONG_DESC
+                     KHERR_SUGGEST_NONE, _vnull(), _vnull(), _vnull(), _vnull(),
+                     KHERR_RF_CSTR_LONG_DESC
 #ifdef _WIN32
                      ,NULL
 #endif
@@ -724,7 +758,11 @@ kherr_reportf_ex(enum kherr_severity severity,
     va_end(vl);
 
     e = kherr_report(severity, NULL, facility, NULL, buf, NULL, facility_id,
-                     KHERR_SUGGEST_NONE, 0, 0, 0, 0, KHERR_RF_CSTR_LONG_DESC
+                     KHERR_SUGGEST_NONE,
+                     _vnull(),
+                     _vnull(),
+                     _vnull(),
+                     _vnull(), KHERR_RF_CSTR_LONG_DESC
 #ifdef _WIN32
                      ,hModule
 #endif
@@ -991,7 +1029,7 @@ KHMEXP void KHMAPI kherr_push_new_context(khm_int32 flags)
 kherr_param dup_parm(kherr_param p) {
     if(parm_type(p) == KEPT_STRINGT) {
         wchar_t * d = PWCSDUP((wchar_t *)parm_data(p));
-        return kherr_val(KEPT_STRINGT, d);
+        return kherr_val(KEPT_STRINGT, (khm_ui_8) d);
     } else
         return p;
 }
@@ -1050,6 +1088,12 @@ KHMEXP void KHMAPI kherr_release_context(kherr_context * c) {
     if (c->refcount == 0) {
         kherr_event * e;
         kherr_context * p;
+
+	e = QBOTTOM(c);
+	if (e && !(e->flags & KHERR_RF_COMMIT)) {
+	    notify_ctx_event(KHERR_CTX_EVTCOMMIT, c);
+	    e->flags |= KHERR_RF_COMMIT;
+	}
 
         notify_ctx_event(KHERR_CTX_END, c);
 
@@ -1172,6 +1216,26 @@ KHMEXP kherr_event * KHMAPI kherr_get_next_event(kherr_event * e)
     return ee;
 }
 
+KHMEXP kherr_event * KHMAPI kherr_get_prev_event(kherr_event * e)
+{
+    kherr_event * ee;
+
+    EnterCriticalSection(&cs_error);
+    ee = QPREV(e);
+    LeaveCriticalSection(&cs_error);
+
+    return ee;
+}
+
+KHMEXP kherr_event * KHMAPI kherr_get_last_event(kherr_context * c)
+{
+    kherr_event * e;
+    EnterCriticalSection(&cs_error);
+    e = QBOTTOM(c);
+    LeaveCriticalSection(&cs_error);
+    return e;
+}
+
 KHMEXP kherr_context * KHMAPI kherr_get_first_context(kherr_context * c)
 {
     kherr_context * cc;
@@ -1229,7 +1293,7 @@ KHMEXP kherr_param kherr_dup_string(const wchar_t * s)
     size_t cb_s;
 
     if (s == NULL)
-        return (kherr_param) 0;
+        return _vnull();
 
     if (FAILED(StringCbLength(s, KHERR_MAXCB_STRING, &cb_s)))
         cb_s = KHERR_MAXCB_STRING;
@@ -1244,3 +1308,14 @@ KHMEXP kherr_param kherr_dup_string(const wchar_t * s)
 
     return _tstr(dest);
 }
+
+
+#if 0
+KHMEXP kherr_param kherr_val(khm_octet ptype, khm_ui_8 pvalue) {
+    kherr_param p;
+    p.type = ptype;
+    p.data = pvalue;
+
+    return p;
+}
+#endif

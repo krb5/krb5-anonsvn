@@ -803,6 +803,8 @@ nc_add_control_row(khui_nc_wnd_data * d,
         r_row.bottom += r_input.bottom;
         OffsetRect(&r_label, r_row.left, r_row.top);
     } else {
+        SetRectEmpty(&r_label);
+        SetRectEmpty(&r_input);
 #ifdef DEBUG
         assert(FALSE);
 #else
@@ -899,7 +901,7 @@ nc_handle_wm_command(HWND hwnd,
         switch(LOWORD(wParam)) {
 
         case IDOK:
-            d->nc->result = KHUI_NC_RESULT_GET_CREDS;
+            d->nc->result = KHUI_NC_RESULT_PROCESS;
 
             /* fallthrough */
 
@@ -1178,7 +1180,7 @@ static LRESULT nc_handle_wm_nc_notify(HWND hwnd,
                 if (d->nc->types[i]->dlg_proc == NULL) {
                     d->nc->types[i]->hwnd_panel = NULL;
                 } else {
-                    /* Create the dialog panel */ 
+                    /* Create the dialog panel */
                     d->nc->types[i]->hwnd_panel = 
                         CreateDialogParam(d->nc->types[i]->h_module,
                                           d->nc->types[i]->dlg_template,
@@ -1250,7 +1252,7 @@ static LRESULT nc_handle_wm_nc_notify(HWND hwnd,
                       nc_tab_sort_func);
 
                 for(i=0; i < d->nc->n_types;i++) {
-                    wchar_t * name;
+                    wchar_t * name = NULL;
 
                     d->nc->types[i]->ordinal = i + 1;
 

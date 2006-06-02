@@ -13,12 +13,13 @@
 #ifndef __KADM5_SERVER_INTERNAL_H__
 #define __KADM5_SERVER_INTERNAL_H__
 
+#include    "autoconf.h"
 #ifdef HAVE_MEMORY_H
 #include    <memory.h>
 #endif
 #include    <stdlib.h>
 #include    <errno.h>
-#include    <krb5/kdb.h>
+#include    <kdb.h>
 #include    <kadm5/admin.h>
 #include    "admin_internal.h"
 

@@ -51,11 +51,12 @@
  * WARRANTIES OF MERCHANTIBILITY AND FITNESS FOR A PARTICULAR PURPOSE.
  */
 
+#include "k5-int.h"
+
 #if HAVE_UNISTD_H
 #include <unistd.h>
 #endif
 
-#include "k5-int.h"
 #include <db.h>
 #include <stdio.h>
 #include <errno.h>
@@ -87,7 +88,6 @@ krb5_error_code krb5_db2_db_lock(krb5_context, int);
 static krb5_error_code krb5_db2_db_set_hashfirst(krb5_context, int);
 
 static char default_db_name[] = DEFAULT_KDB_FILE;
-krb5_set_err_func_t krb5_db2_dal_err_funcp = NULL;
 
 /*
  * Locking:
@@ -957,11 +957,12 @@ krb5_db2_db_put_principal(krb5_context context,
     krb5_db2_context *db_ctx;
     kdb5_dal_handle *dal_handle;
 
+    krb5_clear_error_message (context);
     if (db_args) {
 	/* DB2 does not support db_args DB arguments for principal */
-	char    buf[KRB5_MAX_ERR_STR];
-	sprintf(buf, "Unsupported argument \"%s\" for db2", db_args[0]);
-	krb5_db2_dal_err_funcp(context, krb5_err_have_str, EINVAL, buf);
+	krb5_set_error_message(context, EINVAL,
+			       "Unsupported argument \"%s\" for db2",
+			       db_args[0]);
 	return EINVAL;
     }
 
@@ -1208,9 +1209,8 @@ krb5_db2_db_set_lockmode(krb5_context context, krb5_boolean mode)
  *     DAL API functions
  */
 krb5_error_code
-krb5_db2_lib_init(krb5_set_err_func_t set_err)
+krb5_db2_lib_init()
 {
-    krb5_db2_dal_err_funcp = set_err;
     return 0;
 }
 
@@ -1228,6 +1228,8 @@ krb5_db2_open(krb5_context kcontext,
     krb5_error_code status = 0;
     char  **t_ptr = db_args;
     char    db_name_set = 0;
+
+    krb5_clear_error_message (kcontext);
 
     if (k5db2_inited(kcontext))
 	return 0;
@@ -1247,10 +1249,9 @@ krb5_db2_open(krb5_context kcontext,
 	}
 	/* ignore hash argument. Might have been passed from create */
 	else if (!opt || strcmp(opt, "hash")) {
-	    char    buf[KRB5_MAX_ERR_STR];
-	    sprintf(buf, "Unsupported argument \"%s\" for db2",
-		    opt ? opt : val);
-	    krb5_db2_dal_err_funcp(kcontext, krb5_err_have_str, EINVAL, buf);
+	    krb5_set_error_message(kcontext, EINVAL,
+				   "Unsupported argument \"%s\" for db2",
+				   opt ? opt : val);
 	    free(opt);
 	    free(val);
 	    return EINVAL;
@@ -1298,6 +1299,8 @@ krb5_db2_create(krb5_context kcontext, char *conf_section, char **db_args)
     krb5_int32 flags = KRB5_KDB_CREATE_BTREE;
     char   *db_name = NULL;
 
+    krb5_clear_error_message (kcontext);
+
     if (k5db2_inited(kcontext))
 	return 0;
 
@@ -1320,10 +1323,9 @@ krb5_db2_create(krb5_context kcontext, char *conf_section, char **db_args)
 	else if (opt && !strcmp(opt, "hash")) {
 	    flags = KRB5_KDB_CREATE_HASH;
 	} else {
-	    char    buf[KRB5_MAX_ERR_STR];
-	    sprintf(buf, "Unsupported argument \"%s\" for db2",
-		    opt ? opt : val);
-	    krb5_db2_dal_err_funcp(kcontext, krb5_err_have_str, EINVAL, buf);
+	    krb5_set_error_message(kcontext, EINVAL,
+				   "Unsupported argument \"%s\" for db2",
+				   opt ? opt : val);
 	    free(opt);
 	    free(val);
 	    return EINVAL;

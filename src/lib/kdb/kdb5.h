@@ -9,12 +9,13 @@
 #include <utime.h>
 #include <utime.h>
 #include <k5-int.h>
-#include "err_handle.h"
+#include "kdb.h"
 
 #define KDB_MAX_DB_NAME 128
 #define KDB_REALM_SECTION  "realms"
 #define KDB_MODULE_POINTER "database_module"
-#define KDB_MODULE_SECTION "db_modules"
+#define KDB_MODULE_DEF_SECTION "dbdefaults"
+#define KDB_MODULE_SECTION "dbmodules"
 #define KDB_LIB_POINTER    "db_library"
 #define KDB_DATABASE_CONF_FILE  DEFAULT_SECURE_PROFILE_PATH
 #define KDB_DATABASE_ENV_PROF KDC_PROFILE_ENV
@@ -29,29 +30,11 @@
 #define KRB5_DB_GET_PROFILE(kcontext)  ( (kcontext)->profile )
 #define KRB5_DB_GET_REALM(kcontext)    ( (kcontext)->default_realm )
 
-#ifndef KRB5_DB_LOCKMODE_SHARED
-#define KRB5_DB_LOCKMODE_SHARED       0x0001
-#endif
-
-#ifndef KRB5_DB_LOCKMODE_EXCLUSIVE
-#define KRB5_DB_LOCKMODE_EXCLUSIVE    0x0002
-#endif
-
-#ifndef KRB5_DB_LOCKMODE_DONTBLOCK
-#define KRB5_DB_LOCKMODE_DONTBLOCK    0x0004
-#endif
-
-#ifndef KRB5_DB_LOCKMODE_PERMANENT
-#define KRB5_DB_LOCKMODE_PERMANENT    0x0008
-#endif
-
 typedef struct _kdb_vftabl{
     short int maj_ver;
     short int min_ver;
 
-    short int is_thread_safe;
-
-    krb5_error_code (*init_library)(krb5_set_err_func_t);
+    krb5_error_code (*init_library)();
     krb5_error_code (*fini_library)();
     krb5_error_code (*init_module) ( krb5_context kcontext,
 				     char * conf_section,
@@ -198,14 +181,7 @@ typedef struct _kdb_vftabl{
 typedef struct _db_library {
     char name[KDB_MAX_DB_NAME];
     int reference_cnt;
-#ifdef HAVE_PTHREAD_H
-    pthread_mutex_t lib_lock;
-    pthread_cond_t unlocked; /*  To check whether some one has called db_unlock */
-    int recursive_cnt;               /* this is used as lock to help recursive locking */
-    pthread_t lock_holder;
-    int excl;
-#endif
-    void *dl_handle;
+    struct plugin_dir_handle dl_dir_handle;
     kdb_vftabl vftabl;
     struct _db_library *next, *prev;
 } *db_library;

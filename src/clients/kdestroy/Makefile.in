@@ -1,7 +1,8 @@
-thisconfigdir=./..
+thisconfigdir=../..
 myfulldir=clients/kdestroy
-mydir=kdestroy
+mydir=clients/kdestroy
 BUILDTOP=$(REL)..$(S)..
+DEFS=
 
 PROG_LIBPATH=-L$(TOPLIBD)
 PROG_RPATH=$(KRB5_LIBDIR)

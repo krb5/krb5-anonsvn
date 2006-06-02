@@ -1,7 +1,8 @@
-thisconfigdir=./..
+thisconfigdir=../..
 myfulldir=clients/kvno
-mydir=kvno
+mydir=clients/kvno
 BUILDTOP=$(REL)..$(S)..
+DEFS=
 
 PROG_LIBPATH=-L$(TOPLIBD)
 PROG_RPATH=$(KRB5_LIBDIR)

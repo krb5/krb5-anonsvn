@@ -56,7 +56,7 @@
 #include <stdio.h>
 #include <k5-int.h>
 #include <kadm5/admin.h>
-#include <krb5/adm_proto.h>
+#include <adm_proto.h>
 #include <time.h>
 #include "kdb5_util.h"
 
@@ -145,6 +145,17 @@ static struct _cmd_table *cmd_lookup(name)
 char **db5util_db_args = NULL;
 int    db5util_db_args_size = 0;
      
+static void extended_com_err_fn (const char *myprog, errcode_t code,
+				 const char *fmt, va_list args)
+{
+    const char *emsg;
+    emsg = krb5_get_error_message (util_context, code);
+    fprintf (stderr, "%s: %s ", myprog, emsg);
+    krb5_free_error_message (util_context, emsg);
+    vfprintf (stderr, fmt, args);
+    fprintf (stderr, "\n");
+}
+
 int main(argc, argv)
     int argc;
     char *argv[];
@@ -155,7 +166,9 @@ int main(argc, argv)
     int cmd_argc;
     krb5_error_code retval;
 
-    retval = krb5_init_context(&util_context);
+    set_com_err_hook(extended_com_err_fn);
+
+    retval = kadm5_init_krb5_context(&util_context);
     if (retval) {
 	    com_err (progname, retval, "while initializing Kerberos code");
 	    exit(1);
@@ -272,7 +285,7 @@ int main(argc, argv)
 	util_context->default_realm = temp;
     }
 
-    retval = kadm5_get_config_params(util_context, NULL, NULL,
+    retval = kadm5_get_config_params(util_context, 1,
 				     &global_params, &global_params);
     if (retval) {
 	 com_err(argv[0], retval, "while retreiving configuration parameters");
@@ -365,7 +378,8 @@ static int open_db_and_mkey()
     dbactive = FALSE;
     valid_master_key = 0;
 
-    if ((retval = krb5_db_open(util_context, db5util_db_args, KRB5_KDB_OPEN_RW))) {
+    if ((retval = krb5_db_open(util_context, db5util_db_args, 
+			       KRB5_KDB_OPEN_RW | KRB5_KDB_SRV_TYPE_OTHER))) {
 	com_err(progname, retval, "while initializing database");
 	exit_status++;
 	return(1);

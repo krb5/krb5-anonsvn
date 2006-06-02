@@ -27,6 +27,8 @@
 #ifndef __KHIMAIRA_CONFIGWND_H
 #define __KHIMAIRA_CONFIGWND_H
 
+#define CFGACTION_MAGIC 0x38f8
+
 void 
 khm_show_config_pane(khui_config_node node);
 
@@ -77,4 +79,10 @@ khm_cfg_plugins_proc(HWND hwnd,
                      UINT uMsg,
                      WPARAM wParam,
                      LPARAM lParam);
+
+INT_PTR CALLBACK
+khm_cfg_appearance_proc(HWND hwnd,
+                        UINT uMsg,
+                        WPARAM wParam,
+                        LPARAM lParam);
 #endif

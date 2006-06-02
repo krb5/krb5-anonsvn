@@ -49,8 +49,14 @@ void kmqint_init(void) {
     khc_load_schema(NULL, schema_kmqconfig);
     khc_open_space(NULL, KMQ_CONF_SPACE_NAME, KHM_PERM_READ, &hconfig);
     if(hconfig) {
-        khc_read_int32(hconfig, KMQ_CONF_QUEUE_DEAD_TIMEOUT_NAME, &kmq_queue_dead_timeout);
-        khc_read_int32(hconfig, KMQ_CONF_CALL_DEAD_TIMEOUT_NAME, &kmq_call_dead_timeout);
+        khm_int32 t = 0;
+
+        khc_read_int32(hconfig, KMQ_CONF_QUEUE_DEAD_TIMEOUT_NAME, &t);
+        kmq_queue_dead_timeout = t;
+
+        khc_read_int32(hconfig, KMQ_CONF_CALL_DEAD_TIMEOUT_NAME, &t);
+        kmq_call_dead_timeout = t;
+
         khc_close_space(hconfig);
     }
     kmqint_init_msg_types();
@@ -77,10 +83,10 @@ void kmqint_exit(void) {
 void kmqint_attach_this_thread(void) {
     kmq_queue * q;
 
+    EnterCriticalSection(&cs_kmq_global);
+
     q = (kmq_queue *) TlsGetValue(kmq_tls_queue);
     if(!q) {
-        EnterCriticalSection(&cs_kmq_global);
-
         q = PMALLOC(sizeof(kmq_queue));
 
         InitializeCriticalSection(&q->cs);
@@ -90,13 +96,14 @@ void kmqint_attach_this_thread(void) {
         q->wait_o = CreateEvent(NULL, FALSE, FALSE, NULL);
         q->load = 0;
         q->last_post = 0;
+        q->flags = 0;
 
         LPUSH(&queues, q);
 
         TlsSetValue(kmq_tls_queue, (LPVOID) q);
-
-        LeaveCriticalSection(&cs_kmq_global);
     }
+
+    LeaveCriticalSection(&cs_kmq_global);
 }
 
 /*! \internal
@@ -108,18 +115,11 @@ void kmqint_detach_this_thread(void) {
 
     q = (kmq_queue *) TlsGetValue(kmq_tls_queue);
     if(q) {
-        EnterCriticalSection(&cs_kmq_global);
-
-        LDELETE(&queues, q);
-        
-        DeleteCriticalSection(&q->cs);
-        CloseHandle(q->wait_o);
+        EnterCriticalSection(&q->cs);
+        q->flags |= KMQ_QUEUE_FLAG_DELETED;
+        LeaveCriticalSection(&q->cs);
 
         /* TODO: free up the queued messages */
-
-        TlsSetValue(kmq_tls_queue, (LPVOID) 0);
-
-        LeaveCriticalSection(&cs_kmq_global);
     }
 }
 

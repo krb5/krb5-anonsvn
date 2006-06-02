@@ -1,6 +1,7 @@
 #include    <unistd.h>
 #include    <string.h>
 #include    <stdlib.h>
+#include    "autoconf.h"
 #ifdef HAVE_MEMORY_H
 #include    <memory.h>
 #endif
@@ -8,7 +9,7 @@
 #include    <k5-int.h>
 #include <kadm5/admin.h>
 #include <kadm5/server_internal.h>
-#include    <krb5/kdb.h>
+#include    <kdb.h>
 #include    "import_err.h"
 #include    "kdb5_util.h"
 #include    "nstrtok.h"

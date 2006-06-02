@@ -43,7 +43,7 @@
 
 #include <k5-int.h>
 #include <kadm5/admin.h>
-#include <krb5/adm_proto.h>
+#include <adm_proto.h>
 #include <com_err.h>
 #include <stdarg.h>
 
@@ -129,7 +129,7 @@ int main(argc, argv)
 
      whoami = ((whoami = strrchr(argv[0], '/')) ? whoami + 1 : argv[0]);
 
-     retval = krb5_init_context(&context);
+     retval = krb5int_init_context_kdc(&context);
      if (retval) {
 	     com_err(whoami, retval, "while initializing krb5");
 	     exit(1);

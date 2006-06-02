@@ -1,9 +1,10 @@
-thisconfigdir=./..
+thisconfigdir=../..
 myfulldir=clients/kpasswd
-mydir=kpasswd
+mydir=clients/kpasswd
 BUILDTOP=$(REL)..$(S)..
 PROG_LIBPATH=-L$(TOPLIBD)
 PROG_RPATH=$(KRB5_LIBDIR)
+DEFS=
 
 kpasswd: kpasswd.o $(KRB5_BASE_DEPLIBS)
 	$(CC_LINK) -o kpasswd kpasswd.o $(KRB5_BASE_LIBS)
@@ -26,4 +27,4 @@ install-all install-kdc install-server install-client install-unix::
 all-windows:: $(OUTPRE)kpasswd.exe
 
 $(OUTPRE)kpasswd.exe: $(OUTPRE)kpasswd.obj $(KLIB) $(CLIB)
-	link $(EXE_LINKOPTS) -out:$@ $**
+	link $(EXE_LINKOPTS) -out:$@ $** $(SCLIB)

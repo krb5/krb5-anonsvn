@@ -85,7 +85,7 @@ kdb5_stash(argc, argv)
     if (strrchr(argv[0], '/'))
 	argv[0] = strrchr(argv[0], '/')+1;
 
-    retval = krb5_init_context(&context);
+    retval = kadm5_init_krb5_context(&context);
     if( retval )
     {
 	com_err(argv[0], retval, "while initializing krb5_context");
@@ -134,7 +134,8 @@ kdb5_stash(argc, argv)
 	exit_status++; return; 
     }
 
-    retval = krb5_db_open(context, db5util_db_args, KRB5_KDB_OPEN_RW);
+    retval = krb5_db_open(context, db5util_db_args, 
+			  KRB5_KDB_OPEN_RW | KRB5_KDB_SRV_TYPE_OTHER);
     if (retval) {
 	com_err(argv[0], retval, "while initializing the database '%s'",
 		dbname);

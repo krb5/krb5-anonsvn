@@ -80,8 +80,8 @@ kg_unseal_v1(context, minor_status, ctx, ptr, bodysize, message_buffer,
     char *data_ptr;
     krb5_timestamp now;
     unsigned char *plain;
-    int cksum_len = 0;
-    int plainlen;
+    unsigned int cksum_len = 0;
+    size_t plainlen;
     int direction;
     krb5_ui_4 seqnum;
     OM_uint32 retval;
@@ -527,7 +527,7 @@ kg_unseal(minor_status, context_handle, input_token_buffer,
 	}
     else
 	toktype2 = toktype;
-    err = g_verify_token_header((gss_OID) ctx->mech_used,
+    err = g_verify_token_header(ctx->mech_used,
 				&bodysize, &ptr, toktype2,
 				input_token_buffer->length,
 				!ctx->proto);

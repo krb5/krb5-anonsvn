@@ -56,7 +56,7 @@ LIBUTIL=-lutil
 AC_SUBST(LIBUTIL)
 dnl for kdc
 AC_CHECK_HEADERS(syslog.h stdarg.h sys/select.h sys/sockio.h ifaddrs.h unistd.h)
-AC_CHECK_FUNCS(openlog syslog closelog strftime vsprintf)
+AC_CHECK_FUNCS(openlog syslog closelog strftime vsprintf vasprintf vsnprintf)
 KRB5_NEED_PROTO([#include <string.h>
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
@@ -125,14 +125,73 @@ dnl from old include/configure.in
 AH_TEMPLATE([HAVE_STRUCT_SOCKADDR_STORAGE], 
 [Define if "struct sockaddr_storage" is available.])
 dnl
-AC_CONFIG_HEADER(include/krb5/autoconf.h)
+AC_CONFIG_HEADER(include/autoconf.h)
 AC_PROG_INSTALL
 AC_PROG_AWK
 AC_PROG_LEX
 AC_C_CONST
-AC_CHECK_FUNCS(strdup setvbuf inet_ntoa inet_aton seteuid setresuid setreuid setegid setresgid setregid setsid flock fchmod chmod strftime strptime geteuid setenv unsetenv getenv gethostbyname2 getifaddrs gmtime_r localtime_r pthread_mutex_lock sched_yield dlopen bswap16 bswap64 mkstemp)
+AC_HEADER_DIRENT
+AC_CHECK_FUNCS(strdup setvbuf inet_ntoa inet_aton seteuid setresuid setreuid setegid setresgid setregid setsid flock fchmod chmod strftime strptime geteuid setenv unsetenv getenv gethostbyname2 getifaddrs gmtime_r localtime_r pthread_mutex_lock sched_yield bswap16 bswap64 mkstemp getusershell lstat access ftime getcwd srand48 srand srandom stat strchr strerror strerror_r strstr timezone umask waitpid sem_init sem_trywait daemon)
 AC_HEADER_STDARG
-AC_CHECK_HEADERS(unistd.h paths.h regex.h regexp.h regexpr.h fcntl.h memory.h ifaddrs.h sys/filio.h sched.h byteswap.h machine/endian.h machine/byte_order.h sys/bswap.h endian.h)
+DECLARE_SYS_ERRLIST
+AC_CHECK_HEADERS(unistd.h paths.h regex.h regexpr.h fcntl.h memory.h ifaddrs.h sys/filio.h sched.h byteswap.h machine/endian.h machine/byte_order.h sys/bswap.h endian.h pwd.h arpa/inet.h alloca.h dlfcn.h limits.h pthread.h semaphore.h krb_db.h kdc.h)
+AC_CHECK_HEADER(regexp.h, [], [],
+[#define INIT char *sp = instring;
+#define GETC() (*sp++)
+#define PEEKC() (*sp)
+#define UNGETC(c) (--sp)
+#define RETURN(c) return(c)
+#define ERROR(c)
+])
+AC_CHECK_MEMBERS([struct sockaddr_in.sin_len, struct sockaddr.sa_len], , ,
+  [#include <sys/types.h>
+#include <netinet/in.h>])
+AC_CHECK_MEMBERS([struct stat.st_mtimensec,struct stat.st_mtimespec.tv_nsec,struct stat.st_mtim.tv_nsec],,,[#include <sys/types.h>
+#include <sys/stat.h>])
+KRB5_AC_REGEX_FUNCS
+AC_TYPE_OFF_T
+dnl
+dnl Fancy caching of perror result...
+AC_MSG_CHECKING(for perror declaration)
+AC_CACHE_VAL(krb5_cv_decl_perror,
+[AC_EGREP_HEADER(perror, errno.h, 
+  krb5_cv_decl_perror=yes, krb5_cv_decl_perror=no)])dnl
+AC_MSG_RESULT($krb5_cv_decl_perror)
+if test $krb5_cv_decl_perror = yes; then
+	AC_DEFINE(HDR_HAS_PERROR,1,[Define if errno.h declares perror])
+fi
+dnl
+KRB5_NEED_PROTO([#include <time.h>],strptime)
+CHECK_WAIT_TYPE
+CHECK_SIGPROCMASK
+AC_TYPE_GETGROUPS
+CHECK_SETJMP
+dnl
+dnl *rpcent return types needed for lib/rpc
+dnl
+AC_MSG_CHECKING([return type of setrpcent])
+AC_CACHE_VAL(k5_cv_type_setrpcent,
+[AC_TRY_COMPILE([#include <netdb.h>
+#ifdef __cplusplus
+extern "C"
+#endif
+extern void setrpcent();],
+[int i;], k5_cv_type_setrpcent=void, k5_cv_type_setrpcent=int)])dnl
+AC_MSG_RESULT($k5_cv_type_setrpcent)
+AC_DEFINE_UNQUOTED(SETRPCENT_TYPE, $k5_cv_type_setrpcent, [Define as return type of setrpcent])
+dnl
+AC_MSG_CHECKING([return type of endrpcent])
+AC_CACHE_VAL(k5_cv_type_endrpcent,
+[AC_TRY_COMPILE([#include <netdb.h>
+#ifdef __cplusplus
+extern "C"
+#endif
+extern void endrpcent();],
+[int i;], k5_cv_type_endrpcent=void, k5_cv_type_endrpcent=int)])dnl
+AC_MSG_RESULT($k5_cv_type_endrpcent)
+AC_DEFINE_UNQUOTED(ENDRPCENT_TYPE, $k5_cv_type_endrpcent, [Define as return type of endrpcent])
+dnl
+dnl
 dnl bswap_16 is a macro in byteswap.h under GNU libc
 AC_MSG_CHECKING(for bswap_16)
 AC_CACHE_VAL(krb5_cv_bswap_16,[
@@ -152,6 +211,26 @@ AC_MSG_RESULT($krb5_cv_bswap_64)
 if test "$krb5_cv_bswap_64" = yes; then
   AC_DEFINE(HAVE_BSWAP_64,1,[Define to 1 if bswap_64 is available via byteswap.h])
 fi
+dnl
+dnl Needed for ksu and some appl stuff.
+dnl
+case $krb5_cv_host in
+alpha*-dec-osf*)
+	AC_CHECK_LIB(security,setluid,
+		AC_DEFINE(HAVE_SETLUID,1,[Define if setluid provided in OSF/1 security library])
+		KSU_LIBS="-lsecurity"
+	)
+	;;
+esac
+AC_SUBST(KSU_LIBS)
+dnl
+if test $ac_cv_func_setenv = no || test $ac_cv_func_unsetenv = no \
+  || test $ac_cv_func_getenv = no; then
+  SETENVOBJ=setenv.o
+else
+  SETENVOBJ=
+fi
+AC_SUBST(SETENVOBJ)
 dnl
 dnl Check what the return types for gethostbyname_r and getservbyname_r are.
 dnl
@@ -320,7 +399,7 @@ AC_CHECK_HEADER(termios.h,dnl
   AC_DEFINE(POSIX_TERMIOS,1,[Define if termios.h exists and tcsetattr exists]))])
 dnl
 KRB5_SIGTYPE
-AC_CHECK_HEADERS(stdlib.h string.h stddef.h unistd.h sys/types.h sys/file.h sys/param.h sys/stat.h sys/time.h netinet/in.h sys/uio.h sys/filio.h sys/select.h time.h paths.h)
+AC_CHECK_HEADERS(stdlib.h string.h stddef.h sys/types.h sys/file.h sys/param.h sys/stat.h sys/time.h netinet/in.h sys/uio.h sys/filio.h sys/select.h time.h paths.h)
 AC_HEADER_STDARG
 KRB5_AC_INET6
 dnl
@@ -370,11 +449,6 @@ AC_MSG_RESULT($krb5_cv_has_ansi_stdio)
 if test $krb5_cv_has_ansi_stdio = yes; then
 AC_DEFINE(ANSI_STDIO,1,[Define if ANSI stdio is present (in particular "b" option to fopen)])
 fi
-dnl
-dnl Word sizes...
-AC_CHECK_SIZEOF(short)
-AC_CHECK_SIZEOF(int)
-AC_CHECK_SIZEOF(long)
 dnl
 dnl then from osconf.h, we have
 dnl
@@ -464,24 +538,14 @@ dnl
 AC_C_INLINE
 AH_TOP([
 #ifndef KRB5_AUTOCONF_H
-/* Leading comment stops autoconf/config.status from turning these
-   into #define statements.  But the preprocessor will still pay
-   attention to them.  (Comment removal is in translation phase 3;
-   processing of #undef is phase 4.)  */
-/*x*/#undef PACKAGE_NAME
-/*x*/#undef PACKAGE_VERSION
-/*x*/#undef PACKAGE_BUGREPORT
-/*x*/#undef PACKAGE_STRING
-/*x*/#undef PACKAGE_TARNAME
+#define KRB5_AUTOCONF_H
 ])
 AH_BOTTOM([
 #if defined(__GNUC__) && !defined(inline)
 /* Silence gcc pedantic warnings about ANSI C.  */
 # define inline __inline__
 #endif
-
-#define KRB5_AUTOCONF_H
-#endif
+#endif /* KRB5_AUTOCONF_H */
 ])
 dnl
 dnl Not used yet, but let's find out what we've got on the platforms
@@ -494,6 +558,37 @@ AC_CHECK_TYPES([uint32_t, int32_t, uint64_t, int64_t, uint_least32_t, uintptr_t,
 # include <inttypes.h>
 #endif
 ])
+dnl
+dnl stuff for util/profile
+dnl
+dnl AC_KRB5_TCL already done
+DO_TCL=
+test "$TCL_LIBS" != "" && DO_TCL=ok
+AC_SUBST(DO_TCL)
+dnl
+dnl Test for POSIX 2001 *printf support (X/Open System Interfaces extension
+dnl to ANSI/ISO C 1999 specification).  Specifically, positional
+dnl specifications; not checking for other features like %zx at present.
+AC_MSG_CHECKING(for POSIX printf positional specification support)
+AC_CACHE_VAL(ac_cv_printf_positional,[
+AC_TRY_RUN([
+#include <stdio.h>
+#include <string.h>
+const char expected[] = "200 100";
+int main () {
+    char buf[30];
+    sprintf(buf, "%2\$x %1\$d", 100, 512);
+    if (strcmp(expected, buf)) {
+	fprintf(stderr,"bad result: <%s> wanted: <%s>\n", buf, expected);
+	return 1;
+    }
+    return 0;
+}],
+  ac_cv_printf_positional=yes,
+  ac_cv_printf_positional=no,
+  AC_MSG_ERROR([Cannot test for printf positional argument support when cross compiling]))])
+dnl Nothing for autoconf.h for now.
+AC_MSG_RESULT($ac_cv_printf_positional)
 dnl
 dnl
 dnl Check for thread safety issues.
@@ -530,21 +625,17 @@ AC_SUBST(HOST_TYPE)
 dnl
 dnl
 if test "$COM_ERR_VERSION" = k5 ; then
-  AC_CONFIG_SUBDIRS(util/et)
+dnl  AC_CONFIG_SUBDIRS(util/et)
+  K5_GEN_MAKEFILE(util/et)
 fi
 if test "$SS_VERSION" = k5 ; then
   AC_CONFIG_SUBDIRS(util/ss)
 fi
-AC_CONFIG_SUBDIRS(util/profile util/pty)
 AC_CONFIG_SUBDIRS(lib/crypto lib/krb5 lib/des425 lib/apputils)
 if test -n "$KRB4_LIB"; then
   AC_CONFIG_SUBDIRS(lib/krb4)
 fi
-AC_CONFIG_SUBDIRS(lib/kdb lib/gssapi lib/rpc lib/kadm5)
-dnl if test -n "$KRB4_LIB"; then
-dnl   AC_CONFIG_SUBDIRS(krb524)
-dnl fi
-
-AC_CONFIG_SUBDIRS(kadmin clients plugins/kdb/db2 appl tests)
+AC_CONFIG_SUBDIRS(lib/gssapi lib/rpc lib/kadm5)
+AC_CONFIG_SUBDIRS(kadmin plugins/kdb/db2 appl tests)
 AC_CONFIG_FILES(krb5-config, [chmod +x krb5-config])
-V5_AC_OUTPUT_MAKEFILE(. util util/support util/send-pr lib kdc slave krb524 config-files gen-manpages include include/krb5 include/kerberosIV)
+V5_AC_OUTPUT_MAKEFILE(. util util/support util/profile util/send-pr lib lib/kdb kdc slave krb524 config-files gen-manpages include include/kerberosIV clients clients/klist clients/kinit clients/kvno clients/kdestroy clients/kpasswd clients/ksu)

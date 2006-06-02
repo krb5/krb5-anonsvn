@@ -11,6 +11,7 @@ static char *rcsid = "$Header$";
 
 #include <stdio.h>
 #include <string.h>
+#include "autoconf.h"
 #ifdef HAVE_UNISTD_H
 #include <unistd.h>
 #endif
@@ -39,6 +40,9 @@ struct auth_gssapi_data {
 extern int auth_debug_gssapi;
 char *whoami;
 
+#ifdef __GNUC__
+__attribute__((noreturn))
+#endif
 static void usage()
 {
      fprintf(stderr, "usage: %s {-t|-u} [-a] [-s num] [-m num] host service [count]\n",

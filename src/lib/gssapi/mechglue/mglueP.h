@@ -456,7 +456,7 @@ OM_uint32 generic_gss_release_oid
 
 OM_uint32 generic_gss_copy_oid
 	   (OM_uint32 *,	/* minor_status */
-	    gss_OID,		/* oid */
+	    const gss_OID_desc * const,		/* oid */
 	    gss_OID *		/* new_oid */
 	    );
 
@@ -467,20 +467,20 @@ OM_uint32 generic_gss_create_empty_oid_set
 
 OM_uint32 generic_gss_add_oid_set_member
 	   (OM_uint32 *,	/* minor_status */
-	    gss_OID,		/* member_oid */
+	    const gss_OID_desc * const,		/* member_oid */
 	    gss_OID_set *	/* oid_set */
 	   );
 
 OM_uint32 generic_gss_test_oid_set_member
 	   (OM_uint32 *,	/* minor_status */
-	    gss_OID,		/* member */
+	    const gss_OID_desc * const,		/* member */
 	    gss_OID_set,	/* set */
 	    int *		/* present */
 	   );
 
 OM_uint32 generic_gss_oid_to_str
  (OM_uint32 *,	/* minor_status */
-	    gss_OID,		/* oid */
+	    const gss_OID_desc * const,		/* oid */
 	    gss_buffer_t	/* oid_str */
 	   );
 

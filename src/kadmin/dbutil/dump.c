@@ -31,7 +31,7 @@
 #include <k5-int.h>
 #include <kadm5/admin.h>
 #include <kadm5/server_internal.h>
-#include <krb5/kdb.h>
+#include <kdb.h>
 #include <com_err.h>
 #include "kdb5_util.h"
 #if defined(HAVE_REGEX_H) && defined(HAVE_REGCOMP)
@@ -2158,7 +2158,7 @@ load_db(argc, argv)
     /*
      * Initialize the Kerberos context and error tables.
      */
-    if ((kret = krb5_init_context(&kcontext))) {
+    if ((kret = kadm5_init_krb5_context(&kcontext))) {
 	fprintf(stderr, ctx_err_fmt, programname);
 	free(dbname_tmp);
 	exit_status++;
@@ -2242,7 +2242,7 @@ load_db(argc, argv)
 	 newparams.mask |= KADM5_CONFIG_DBNAME;
 	 newparams.dbname = dbname_tmp;
 
-	 if ((kret = kadm5_get_config_params(kcontext, NULL, NULL,
+	 if ((kret = kadm5_get_config_params(kcontext, 1,
 					     &newparams, &newparams))) {
 	      com_err(argv[0], kret,
 		      "while retreiving new configuration parameters");
@@ -2268,7 +2268,8 @@ load_db(argc, argv)
     /*
      * Initialize the database.
      */
-    if ((kret = krb5_db_open(kcontext, db5util_db_args, KRB5_KDB_OPEN_RW))) {
+    if ((kret = krb5_db_open(kcontext, db5util_db_args, 
+			     KRB5_KDB_OPEN_RW | KRB5_KDB_SRV_TYPE_OTHER))) {
 	fprintf(stderr, dbinit_err_fmt,
 		programname, error_message(kret));
 	exit_status++;

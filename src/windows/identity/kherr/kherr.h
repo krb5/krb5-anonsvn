@@ -92,20 +92,22 @@
 /*! \brief Parameter types
  */
 enum kherr_parm_types {
-  KEPT_INT32 = 1,
-  KEPT_UINT32,
-  KEPT_INT64,
-  KEPT_UINT64,
-  KEPT_STRINGC,                 /*!< String constant */
-  KEPT_STRINGT                  /*!< String.  Will be freed using
-                                     free() when the event is freed */
+    KEPT_NONE = 0,
+    KEPT_INT32 = 1,
+    KEPT_UINT32,
+    KEPT_INT64,
+    KEPT_UINT64,
+    KEPT_STRINGC,               /*!< String constant */
+    KEPT_STRINGT,               /*!< String.  Will be freed using
+                                  free() when the event is freed */
+    KEPT_PTR                    /*!< Pointer type. */
 };
 
-#ifdef _WIN32
-typedef khm_ui_8 kherr_param;
-#else
-#error kherr_param undefined
-#endif
+
+typedef struct tag_kherr_param {
+    khm_octet type;
+    khm_ui_8  data;
+} kherr_param;
 
 /*! \brief Severity levels
 
@@ -114,16 +116,25 @@ typedef khm_ui_8 kherr_param;
 enum tag_kherr_severity {
   KHERR_FATAL = 0,              /*!< Fatal error.*/
   KHERR_ERROR,                  /*!< Non-fatal error.  We'll probably
-                                survive.  See the suggested action. */
+				  survive.  See the suggested action. */
   KHERR_WARNING,                /*!< Warning. Something almost broke
-                                 or soon will.  See the suggested
-                                 action. */
+				  or soon will.  See the suggested
+				  action. */
   KHERR_INFO,                   /*!< Informational. Something happened
                                   that we would like you to know
                                   about. */
-  KHERR_DEBUG_3 = 64,           /*!< Verbose debug level 3 (high) */
-  KHERR_DEBUG_2 = 65,           /*!< Verbose debug level 2 (medium) */
-  KHERR_DEBUG_1 = 66,           /*!< Verbose debug level 1 (low) */
+  KHERR_DEBUG_1 = 64,           /*!< Verbose debug level 1 (high)
+				  Events at this severity level are
+				  not required to be based on
+				  localized strings. */
+  KHERR_DEBUG_2 = 65,           /*!< Verbose debug level 2 (medium)
+				  Events at this severity level are
+				  not required to be based on
+				  localized strings. */
+  KHERR_DEBUG_3 = 66,           /*!< Verbose debug level 3 (low)
+				  Events at this severity level are
+				  not required to be based on
+				  localized strings. */
   KHERR_RESERVED_BANK = 127,    /*!< Internal use */
   KHERR_NONE = 128              /*!< Nothing interesting has happened
                                   so far */
@@ -255,10 +266,14 @@ enum kherr_event_flags {
                                 /*!< The event is a representation of
                                   a folded context. */
 
-    KHERR_RF_INERT          = 0x00040000
+    KHERR_RF_INERT          = 0x00040000,
                                 /*!< Inert event.  The event has
                                   already been dealt with and is no
                                   longer considered significant. */
+    KHERR_RF_COMMIT         = 0x00080000
+				/*!< Committed event.  The commit
+				  handlers for this event have already
+				  been called. */
 };
 
 /*! \brief Serial number for error contexts */
@@ -284,7 +299,7 @@ typedef struct tag_kherr_context {
                                   context object. */
 
     kherr_severity severity;    
-                                /*!< Severity level.  One of the
+				/*!< Severity level.  One of the
 				  severity levels listed below. This
 				  is the severity level of the context
 				  and is the maximum severity level of
@@ -367,8 +382,10 @@ enum kherr_ctx_event {
     KHERR_CTX_BEGIN  = 0x0001,  /*!< A new context was created */
     KHERR_CTX_DESCRIBE=0x0002,  /*!< A context was described */
     KHERR_CTX_END    = 0x0004,  /*!< A context was closed */
-    KHERR_CTX_ERROR  = 0x0008   /*!< A context switched to an error
+    KHERR_CTX_ERROR  = 0x0008,  /*!< A context switched to an error
                                   state */
+    KHERR_CTX_EVTCOMMIT = 0x0010 /*!< A event was committed into the
+				   context */
 };
 
 /*! \brief Context event handler
@@ -427,6 +444,15 @@ typedef void (KHMAPI * kherr_ctx_handler)(enum kherr_ctx_event,
     context stack.  At the time the handler is invoked, the context is
     still intact.  The pointer that is supplied should not be used to
     obtain a handle on the context.
+
+    <b>KHERR_CTX_EVTCOMMIT</b>: An event was committed into the error
+    context.  An event is committed when another event is reported
+    after the event, or if the context is closed.  Since the last
+    event that is reported can still be modified by adding new
+    information, the event remains open until it is no longer the last
+    event or the context is no longer active.  When this notification
+    is received, the last event in the context's event queue is the
+    event that was committed.
 
     \param[in] h Context event handler, of type ::kherr_ctx_handler
 
@@ -585,6 +611,7 @@ kherr_reportf_ex(enum kherr_severity severity,
 #endif
                  const wchar_t * long_desc_fmt,
                  ...);
+#define _reportf_ex kherr_reportf_ex
 
 /*! \brief Report a formatted message
 
@@ -596,6 +623,7 @@ kherr_reportf_ex(enum kherr_severity severity,
 KHMEXP kherr_event * __cdecl
 kherr_reportf(const wchar_t * long_desc_fmt,
               ...);
+#define _reportf kherr_reportf
 
 /*! \brief Create a parameter out of a transient string
 
@@ -610,32 +638,40 @@ kherr_reportf(const wchar_t * long_desc_fmt,
  */
 KHMEXP kherr_param kherr_dup_string(const wchar_t * s);
 
-/* convenience macros for specifying parameters for kherr_report */
-#define kherr_val(type,val) \
-    ((((kherr_param)(type)) << ((sizeof(kherr_param)-1)*8)) | (kherr_param) (val))
+__inline KHMEXP kherr_param
+kherr_val(khm_octet ptype, khm_ui_8 pvalue) {
+    kherr_param p;
 
-#define _int32(i)   kherr_val(KEPT_INT32, i)
-#define _uint32(ui) kherr_val(KEPT_UINT32, ui)
-#define _int64(i)   kherr_val(KEPT_INT64, i)
-#define _uint64(ui) kherr_val(KEPT_UINT64, ui)
-#define _cstr(cs)   kherr_val(KEPT_STRINGC, cs)
-#define _tstr(ts)   kherr_val(KEPT_STRINGT, ts)
+    p.type = ptype;
+    p.data = pvalue;
+
+    return p;
+}
+
+#define _int32(i)   kherr_val(KEPT_INT32, (khm_ui_8) i)
+#define _uint32(ui) kherr_val(KEPT_UINT32, (khm_ui_8) ui)
+#define _int64(i)   kherr_val(KEPT_INT64, (khm_ui_8) i)
+#define _uint64(ui) kherr_val(KEPT_UINT64, (khm_ui_8) ui)
+#define _cstr(cs)   kherr_val(KEPT_STRINGC, (khm_ui_8) cs)
+#define _tstr(ts)   kherr_val(KEPT_STRINGT, (khm_ui_8) ts)
+#define _cptr(p)    kherr_val(KEPT_PTR, (khm_ui_8) p)
+#define _vnull()    kherr_val(KEPT_NONE, 0)
 #define _dupstr(s)  kherr_dup_string(s)
 
 /* convenience macros for calling kherr_report */
 #ifdef KHERR_HMODULE
 
 #define _report_cs0(severity, long_description)                 \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, 0, 0, 0, 0, 0, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, _vnull(), _vnull(), _vnull(), _vnull(), 0, KHERR_HMODULE)
 
 #define _report_cs1(severity, long_description, p1)             \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, 0, 0, 0, 0, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, _vnull(), _vnull(), _vnull(), 0, KHERR_HMODULE)
 
 #define _report_cs2(severity, long_description, p1, p2)         \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, 0, 0, 0, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, _vnull(), _vnull(), 0, KHERR_HMODULE)
 
 #define _report_cs3(severity, long_description, p1, p2, p3)     \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, 0, 0, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, _vnull(), 0, KHERR_HMODULE)
 
 #define _report_cs4(severity, long_description, p1, p2, p3, p4) \
     kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, p4, 0, KHERR_HMODULE)
@@ -643,16 +679,16 @@ KHMEXP kherr_param kherr_dup_string(const wchar_t * s);
 #else
 
 #define _report_cs0(severity, long_description)                 \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, 0, 0, 0, 0, 0, NULL)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, _vnull(), _vnull(), _vnull(), _vnull(), 0, NULL)
 
 #define _report_cs1(severity, long_description, p1)             \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, 0, 0, 0, 0, NULL)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, _vnull(), _vnull(), _vnull(), 0, NULL)
 
 #define _report_cs2(severity, long_description, p1, p2)         \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, 0, 0, 0, NULL)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, _vnull(), _vnull(), 0, NULL)
 
 #define _report_cs3(severity, long_description, p1, p2, p3)     \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, 0, 0, NULL)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, _vnull(), 0, NULL)
 
 #define _report_cs4(severity, long_description, p1, p2, p3, p4) \
     kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_description), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, p4, 0, NULL)
@@ -660,16 +696,16 @@ KHMEXP kherr_param kherr_dup_string(const wchar_t * s);
 
 #ifdef _WIN32
 #define _report_sr0(severity, long_desc_id)                     \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, 0, 0, 0, 0, KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, _vnull(), _vnull(), _vnull(), _vnull(), KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
 
 #define _report_sr1(severity, long_desc_id, p1)                 \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, p1, 0, 0, 0, KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, p1, _vnull(), _vnull(), _vnull(), KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
 
 #define _report_sr2(severity, long_desc_id, p1, p2)             \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, 0, 0, KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, _vnull(), _vnull(), KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
 
 #define _report_sr3(severity, long_desc_id, p1, p2, p3)         \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, 0, KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, _vnull(), KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
 
 #define _report_sr4(severity, long_desc_id, p1, p2, p3, p4)     \
     kherr_report((severity), NULL, KHERR_FACILITY, NULL, MAKEINTRESOURCE(long_desc_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, p4, KHERR_RF_RES_LONG_DESC, KHERR_HMODULE)
@@ -677,32 +713,32 @@ KHMEXP kherr_param kherr_dup_string(const wchar_t * s);
 
 #ifdef _WIN32
 #define _report_mr0(severity, long_desc_msg_id)                     \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, 0, 0, 0, 0, KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, _vnull(), _vnull(), _vnull(), _vnull(), KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
 
 #define _report_mr1(severity, long_desc_msg_id, p1)                 \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, p1, 0, 0, 0, KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, p1, _vnull(), _vnull(), _vnull(), KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
 
 #define _report_mr2(severity, long_desc_msg_id, p1, p2)             \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, 0, 0, KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, _vnull(), _vnull(), KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
 
 #define _report_mr3(severity, long_desc_msg_id, p1, p2, p3)         \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, 0, KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, _vnull(), KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
 
 #define _report_mr4(severity, long_desc_msg_id, p1, p2, p3, p4)     \
     kherr_report((severity), NULL, KHERR_FACILITY, NULL, (wchar_t *)(long_desc_msg_id), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, p4, KHERR_RF_MSG_LONG_DESC, KHERR_HMODULE)
 #endif
 
 #define _report_ts0(severity, long_desc_ptr)                     \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, 0, 0, 0, 0, KHERR_RF_FREE_LONG_DESC, NULL)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, _vnull(), _vnull(), _vnull(), _vnull(), KHERR_RF_FREE_LONG_DESC, NULL)
 
 #define _report_ts1(severity, long_desc_ptr, p1)                 \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, p1, 0, 0, 0, KHERR_RF_FREE_LONG_DESC, NULL)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, p1, _vnull(), _vnull(), _vnull(), KHERR_RF_FREE_LONG_DESC, NULL)
 
 #define _report_ts2(severity, long_desc_ptr, p1, p2)             \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, p1, p2, 0, 0, KHERR_RF_FREE_LONG_DESC, NULL)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, p1, p2, _vnull(), _vnull(), KHERR_RF_FREE_LONG_DESC, NULL)
 
 #define _report_ts3(severity, long_desc_ptr, p1, p2, p3)         \
-    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, 0, KHERR_RF_FREE_LONG_DESC, NULL)
+    kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, _vnull(), KHERR_RF_FREE_LONG_DESC, NULL)
 
 #define _report_ts4(severity, long_desc_ptr, p1, p2, p3, p4)     \
     kherr_report((severity), NULL, KHERR_FACILITY, NULL, (long_desc_ptr), NULL, KHERR_FACILITY_ID, 0, p1, p2, p3, p4, KHERR_RF_FREE_LONG_DESC, NULL)
@@ -887,9 +923,14 @@ KHMEXP void KHMAPI kherr_get_progress_i(kherr_context * c, khm_ui_4 * num, khm_u
     The returned pointer is only valid as long as there is a hold on
     \a c.  Once the context is released with a call to
     kherr_release_context() all pointers to events in the context
-    becomes invalid.
+    become invalid.
 
-    Use kherr_get_next_event() to obtain the other events.
+    In addition, the last event in a context may still be "active".  A
+    thread can still modify the last event as long as the context is
+    active.
+
+    \see kherr_get_next_event(), kherr_get_prev_event(),
+    kherr_get_last_event()
  */
 KHMEXP kherr_event * KHMAPI kherr_get_first_event(kherr_context * c);
 
@@ -903,9 +944,54 @@ KHMEXP kherr_event * KHMAPI kherr_get_first_event(kherr_context * c);
     The returned pointer is only valid as long as there is a hold on
     \a c.  Once the context is released with a call to
     kherr_release_context() all pointers to events in the context
-    becomes invalid.
+    become invalid.
+
+    In addition, the last event in a context may still be "active".  A
+    thread can still modify the last event as long as the context is
+    active.
+
+    \see kherr_get_first_event(), kherr_get_prev_event(),
+    kherr_get_last_event()
  */
 KHMEXP kherr_event * KHMAPI kherr_get_next_event(kherr_event * e);
+
+/*! \brief Get the previous event
+
+    Returns a pointer to the event that was reported in the context
+    containing \a e prior to \a e being reported.
+
+    The returned pointer is only valid as long as there is a hold on
+    the error context.  Once the context is released with a call to
+    kherr_release_context() all pointers to events in the context
+    become invalid.
+
+    In addition, the last event in a context may still be "active". A
+    thread can still modify the last event as long as the context is
+    active.
+
+    \see kherr_get_first_event(), kherr_get_next_event(),
+    kherr_get_last_event()
+ */
+KHMEXP kherr_event * KHMAPI kherr_get_prev_event(kherr_event * e);
+
+/*! \brief Get the last event in an error context
+
+    Returns a pointer to the last error event that that was reported
+    to the context \a c.
+
+    The returned pointer is only valid as long as there is a hold on
+    the error context.  Once the context is released with a call to
+    kherr_release_context(), all pointers to events in the context
+    become invalid.
+
+    In addtion, the last event in a context may still be "active".  A
+    thread can still modify the last event as long as the context is
+    active.
+
+    \see kherr_get_first_event(), kherr_get_next_event(),
+    kherr_get_prev_event()
+ */
+KHMEXP kherr_event * KHMAPI kherr_get_last_event(kherr_context * c);
 
 /*! \brief Get the first child context of a context
 

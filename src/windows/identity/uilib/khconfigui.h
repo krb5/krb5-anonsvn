@@ -77,6 +77,11 @@ enum khui_wm_cfg_notifications {
       'Apply' button or the 'Ok' button.  The panels are responsible
       for applying the configuration changes and updating their flags
       using khui_cfg_set_flags(). */
+
+    WMCFG_SYNC_NODE_LIST = 4,
+    /*!< Sent from the UI library to the configuration window to
+      notify the window that the node list has changed.  This message
+      is sent synchronously before the node is removed. */
 };
 
 /*! \brief Registration information for a configuration node
@@ -131,11 +136,17 @@ typedef struct tag_khui_config_node_reg {
 /*! \brief Node represents a panel that is replicated for all child nodes */
 #define KHUI_CNFLAG_PLURAL        0x0004
 
-#define KHUI_CNFLAG_MODIFIED      0x0010
-#define KHUI_CNFLAG_APPLIED       0x0020
+/*! \brief System node
 
-#define KHUI_CNFLAGMASK_STATIC    0x000f
-#define KHUI_CNFLAGMASK_DYNAMIC   0x00f0
+    \note For internal use by the NetIDMgr application.  Do not use.
+*/
+#define KHUI_CNFLAG_SYSTEM        0x0010
+
+#define KHUI_CNFLAG_MODIFIED      0x0100
+#define KHUI_CNFLAG_APPLIED       0x0200
+
+#define KHUI_CNFLAGMASK_STATIC    0x00ff
+#define KHUI_CNFLAGMASK_DYNAMIC   0x0f00
 
 /*! \brief Maximum length of the name in characters
 
@@ -250,6 +261,10 @@ typedef struct tag_khui_config_init_data {
         of reg were invalid
     \retval KHM_ERROR_DUPLICATE A node with the same name exists as a
         child of the specified parent node.
+
+    \note The name (not the short or long description) of the node can
+        not be the same as the name of a custom action.  See
+        khui_action_create().
  */
 KHMEXP khm_int32 KHMAPI
 khui_cfg_register(khui_config_node parent,

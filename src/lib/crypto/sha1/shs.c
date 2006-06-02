@@ -1,8 +1,8 @@
+#include "shs.h"
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
 #include <string.h>
-#include "shs.h"
 
 /* The SHS f()-functions.  The f1 and f3 functions can be optimized to
    save one boolean operation each - thanks to Rich Schroeppel,
@@ -240,7 +240,7 @@ void SHSTransform(SHS_LONG *digest, const SHS_LONG *data)
 
 /* Update SHS for a block of data */
 
-void shsUpdate(SHS_INFO *shsInfo, const SHS_BYTE *buffer, int count)
+void shsUpdate(SHS_INFO *shsInfo, const SHS_BYTE *buffer, unsigned int count)
 {
     SHS_LONG tmp;
     int dataCount, canfill;

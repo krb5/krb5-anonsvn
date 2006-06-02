@@ -36,13 +36,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <k5-int.h>
-#include <krb5/kdb.h>
+#include <kdb.h>
 #include <kadm5/admin.h>
-#include <krb5/adm_proto.h>
+#include <adm_proto.h>
 
 
 #include <krb5.h>
-#include <krb5/kdb.h>
+#include <kdb.h>
 #include "kdb5_util.h"
 
 static int add_admin_princ(void *handle, krb5_context context,
@@ -73,14 +73,14 @@ int kadm5_create(kadm5_config_params *params)
 
      kadm5_config_params lparams;
 
-     if ((retval = krb5_init_context(&context)))
+     if ((retval = kadm5_init_krb5_context(&context)))
 	  exit(ERR);
 
      /*
       * The lock file has to exist before calling kadm5_init, but
       * params->admin_lockfile may not be set yet...
       */
-     if ((retval = kadm5_get_config_params(context, NULL, NULL,
+     if ((retval = kadm5_get_config_params(context, 1,
 					   params, &lparams))) {
 	  com_err(progname, retval, "while looking up the Kerberos configuration");
 	  return 1;

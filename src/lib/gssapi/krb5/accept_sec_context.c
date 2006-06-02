@@ -93,6 +93,7 @@ rd_and_store_for_creds(context, auth_context, inbuf, out_cred)
 {
     krb5_creds ** creds = NULL;
     krb5_error_code retval;
+    krb5_ccache template_ccache = NULL;
     krb5_ccache ccache = NULL;
     krb5_gss_cred_id_t cred = NULL;
     krb5_auth_context new_auth_ctx = NULL;
@@ -136,9 +137,10 @@ rd_and_store_for_creds(context, auth_context, inbuf, out_cred)
     /* Lots of kludging going on here... Some day the ccache interface
        will be rewritten though */
 
-    if ((retval = krb5_cc_resolve(context, "MEMORY:GSSAPI", &ccache)))
-        goto cleanup;
+    if ((retval = krb5_cc_resolve(context, "MEMORY:GSSAPI", &template_ccache)))
+	goto cleanup;
 
+    ccache = template_ccache; /* krb5_cc_gen_new will replace so make a copy */
     if ((retval = krb5_cc_gen_new(context, &ccache)))
         goto cleanup;
     
@@ -182,8 +184,9 @@ rd_and_store_for_creds(context, auth_context, inbuf, out_cred)
 	cred->prerfc_mech = 1; /* this cred will work with all three mechs */
 	cred->rfc_mech = 1;
 	cred->keytab = NULL; /* no keytab associated with this... */
-	cred->ccache = ccache; /* but there is a credential cache */
 	cred->tgt_expire = creds[0]->times.endtime; /* store the end time */
+	cred->ccache = ccache; /* the ccache containing the credential */
+	ccache = NULL; /* cred takes ownership so don't destroy */
     }
 
     /* If there were errors, there might have been a memory leak
@@ -195,8 +198,11 @@ cleanup:
     if (creds)
 	krb5_free_tgt_creds(context, creds);
 
-    if (!cred && ccache)
-	(void)krb5_cc_close(context, ccache);
+    if (template_ccache)
+	(void)krb5_cc_close(context, template_ccache);
+
+    if (ccache)
+	(void)krb5_cc_destroy(context, ccache);
 
     if (out_cred)
 	*out_cred = cred; /* return credential */
@@ -265,7 +271,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
        return(GSS_S_FAILURE);
    }
 
-   code = krb5_init_context(&context);
+   code = krb5_gss_init_context(&context);
    if (code) {
        *minor_status = code;
        return GSS_S_FAILURE;
@@ -336,7 +342,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
 
    ptr = (unsigned char *) input_token->value;
 
-   if (!(code = g_verify_token_header((gss_OID) gss_mech_krb5,
+   if (!(code = g_verify_token_header(gss_mech_krb5,
 				      &(ap_req.length),
 				      &ptr, KG_TOK_CTX_AP_REQ,
 				      input_token->length, 1))) {
@@ -348,7 +354,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
 					     input_token->length, 1))) {
        mech_used = gss_mech_krb5_wrong;
    } else if ((code == G_WRONG_MECH) &&
-	      !(code = g_verify_token_header((gss_OID) gss_mech_krb5_old,
+	      !(code = g_verify_token_header(gss_mech_krb5_old,
 					     &(ap_req.length), 
 					     &ptr, KG_TOK_CTX_AP_REQ,
 					     input_token->length, 1))) {
@@ -820,7 +826,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
        ctx->gss_flags |= GSS_C_PROT_READY_FLAG;
        ctx->established = 1;
 
-       token.length = g_token_size((gss_OID) mech_used, ap_rep.length);
+       token.length = g_token_size(mech_used, ap_rep.length);
 
        if ((token.value = (unsigned char *) xmalloc(token.length))
 	   == NULL) {
@@ -829,7 +835,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
 	   goto fail;
        }
        ptr3 = token.value;
-       g_make_token_header((gss_OID) mech_used, ap_rep.length,
+       g_make_token_header(mech_used, ap_rep.length,
 			   &ptr3, KG_TOK_CTX_AP_REP);
 
        TWRITE_STR(ptr3, ap_rep.data, ap_rep.length);
@@ -978,7 +984,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
        tmsglen = scratch.length;
        toktype = KG_TOK_CTX_ERROR;
 
-       token.length = g_token_size((gss_OID) mech_used, tmsglen);
+       token.length = g_token_size(mech_used, tmsglen);
        token.value = (unsigned char *) xmalloc(token.length);
        if (!token.value) {
 	   krb5_free_context(context);
@@ -986,7 +992,7 @@ krb5_gss_accept_sec_context(minor_status, context_handle,
        }
 
        ptr = token.value;
-       g_make_token_header((gss_OID) mech_used, tmsglen, &ptr, toktype);
+       g_make_token_header(mech_used, tmsglen, &ptr, toktype);
 
        TWRITE_STR(ptr, scratch.data, scratch.length);
        krb5_free_data_contents(context, &scratch);

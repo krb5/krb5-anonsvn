@@ -118,6 +118,11 @@ Makefiles-recurse: Makefiles-prerecurse
 Makefiles-prerecurse:
 Makefiles-postrecurse:
 
+generate-files-mac: generate-files-mac-postrecurse
+generate-files-mac-postrecurse: generate-files-mac-recurse
+generate-files-mac-recurse: generate-files-mac-prerecurse
+generate-files-mac-prerecurse:
+
 #
 # end recursion rule support
 ##############################
@@ -153,6 +158,7 @@ FAKELIBDIR=$(FAKEPREFIX)/lib
 # PTHREAD_CFLAGS set by configure, not included in CFLAGS so that we
 #		don't pull the pthreads library into shared libraries
 ALL_CFLAGS = $(DEFS) $(DEFINES) $(KRB_INCLUDES) $(LOCALINCLUDES) \
+	-DKRB5_DEPRECATED=1 -DKRB5_PRIVATE=1 \
 	$(CPPFLAGS) $(CFLAGS) $(PTHREAD_CFLAGS)
 
 CFLAGS = @CFLAGS@
@@ -164,8 +170,7 @@ DEFS = @DEFS@
 CC = @CC@
 LD = $(PURE) @LD@
 DEPLIBS = @DEPLIBS@
-KRB_INCLUDES = -I$(BUILDTOP)/include -I$(SRCTOP)/include \
-	-I$(BUILDTOP)/include/krb5 -I$(SRCTOP)/include/krb5
+KRB_INCLUDES = -I$(BUILDTOP)/include -I$(SRCTOP)/include
 LDFLAGS = @LDFLAGS@
 LD_UNRESOLVED_PREFIX = @LD_UNRESOLVED_PREFIX@
 LD_SHLIBDIR_PREFIX = @LD_SHLIBDIR_PREFIX@
@@ -205,7 +210,9 @@ FILE_MANDIR = $(KRB5MANROOT)/man5
 KRB5_LIBDIR = @libdir@
 KRB5_SHLIBDIR = @libdir@$(SHLIB_TAIL_COMP)
 KRB5_INCDIR = @includedir@
-KRB5_DB_MODULE_DIR = @libdir@/db-modules
+MODULE_DIR = @libdir@/krb5/plugins
+KRB5_DB_MODULE_DIR = $(MODULE_DIR)/kdb
+KRB5_LIBKRB5_MODULE_DIR = $(MODULE_DIR)/libkrb5
 KRB5_INCSUBDIRS = \
 	$(KRB5_INCDIR)/gssapi \
 	$(KRB5_INCDIR)/kerberosIV \
@@ -530,6 +537,7 @@ LDCOMBINE=@LDCOMBINE@
 # "-h $@", "-h lib$(LIBNAME).$(LIBMAJOR)", etc.
 SONAME=@SONAME@
 
+
 #
 # rules to make various types of object files
 #
@@ -539,7 +547,12 @@ PROFFLAGS=@PROFFLAGS@
 # platform-dependent temporary files that should get cleaned up
 EXTRA_FILES=@EXTRA_FILES@
 
+# The "env" at the end is because sometimes we add local environment
+# variable settings with "@RUN_ENV@ KRB5_CONFIG=foo ..."
+MAYBE_VALGRIND= # valgrind --tool=memcheck --log-file=$(BUILDTOP)/valgrind.out --trace-children=yes -v --leak-check=yes env
 
+#
+AUTOCONF_HEADER=$(SRCTOP)/include/autoconf.h.in
 
 ##
 ## end of pre.in

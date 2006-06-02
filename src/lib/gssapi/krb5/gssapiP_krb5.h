@@ -669,4 +669,9 @@ gss_krb5int_export_lucid_sec_context(OM_uint32 *minor_status,
 				     void **kctx);
 
 
+extern k5_mutex_t kg_kdc_flag_mutex;
+krb5_error_code krb5_gss_init_context (krb5_context *ctxp);
+
+krb5_error_code krb5_gss_use_kdc_context(void);
+
 #endif /* _GSSAPIP_KRB5_H_ */

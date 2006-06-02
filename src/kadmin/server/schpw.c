@@ -1,7 +1,7 @@
 #include "k5-int.h"
 #include <kadm5/admin.h>
 #include <syslog.h>
-#include <krb5/adm_proto.h>	/* krb5_klog_syslog */
+#include <adm_proto.h>	/* krb5_klog_syslog */
 #include <stdio.h>
 #include <errno.h>
 
@@ -260,7 +260,7 @@ process_chpw_request(context, server_handle, realm, s, keytab, sockin,
 
     krb5_klog_syslog(LOG_NOTICE, "chpw request from %s for %s: %s",
 		     inet_ntoa(((struct sockaddr_in *)&remote_addr)->sin_addr),
-		     clientstr, ret ? error_message(ret) : "success");
+		     clientstr, ret ? krb5_get_error_message (context, ret) : "success");
     krb5_free_unparsed_name(context, clientstr);
 
     if (ret) {

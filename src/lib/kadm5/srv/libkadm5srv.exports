@@ -13,6 +13,7 @@ hist_key
 hist_kvno
 hist_princ
 init_dict
+kadm5_set_use_password_server
 kadm5_chpass_principal
 kadm5_chpass_principal_3
 kadm5_chpass_principal_util
@@ -37,6 +38,7 @@ kadm5_get_principal
 kadm5_get_principals
 kadm5_get_privs
 kadm5_init
+kadm5_init_krb5_context
 kadm5_init_with_creds
 kadm5_init_with_password
 kadm5_init_with_skey

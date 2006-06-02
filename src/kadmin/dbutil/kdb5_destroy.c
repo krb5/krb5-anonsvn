@@ -33,7 +33,7 @@
 #include <stdio.h>
 #include "com_err.h"
 #include <kadm5/admin.h>
-#include <krb5/kdb.h>
+#include <kdb.h>
 #include "kdb5_util.h"
 
 extern int exit_status;
@@ -57,7 +57,7 @@ kdb5_destroy(argc, argv)
     krb5_context context;
     int force = 0;
 
-    retval1 = krb5_init_context(&context);
+    retval1 = kadm5_init_krb5_context(&context);
     if( retval1 )
     {
 	com_err(argv[0], retval1, "while initializing krb5_context");

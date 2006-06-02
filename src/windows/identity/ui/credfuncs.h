@@ -31,7 +31,8 @@ void KHMAPI
 kmsg_cred_completion(kmq_message *m);
 
 void 
-khm_cred_destroy_creds(void);
+khm_cred_destroy_creds(khm_boolean sync,
+                       khm_boolean quiet);
 
 void 
 khm_cred_renew_identity(khm_handle identity);
@@ -65,10 +66,10 @@ khm_cred_wait_for_dialog(DWORD timeout, khm_int32 * result,
                          wchar_t * ident, khm_size cb_ident);
 
 void
-khm_cred_begin_commandline(void);
+khm_cred_begin_startup_actions(void);
 
 void
-khm_cred_process_commandline(void);
+khm_cred_process_startup_actions(void);
 
 void
 khm_cred_refresh(void);

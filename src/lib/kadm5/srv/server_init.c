@@ -13,9 +13,11 @@ static char *rcsid = "$Header$";
 #include <stdlib.h>
 #include <errno.h>
 #include <com_err.h>
+#include "k5-int.h"		/* needed for gssapiP_krb5.h */
 #include <kadm5/admin.h>
 #include <krb5.h>
 #include "server_internal.h"
+#include "osconf.h"
 
 /*
  * Function check_handle
@@ -178,7 +180,7 @@ kadm5_ret_t kadm5_init(char *client_name, char *pass,
 	return ret;
     }
 
-    ret = (int) krb5_init_context(&(handle->context));
+    ret = (int) krb5int_init_context_kdc(&(handle->context));
     if (ret) {
 	 free_db_args(handle);
 	 free(handle);
@@ -217,6 +219,8 @@ kadm5_ret_t kadm5_init(char *client_name, char *pass,
 	  params_in = &params_local;
      }
 
+#if 0 /* Now that we look at krb5.conf as well as kdc.conf, we can
+	 expect to see admin_server being set sometimes.  */
 #define ILLEGAL_PARAMS (KADM5_CONFIG_ADMIN_SERVER)
      if (params_in && (params_in->mask & ILLEGAL_PARAMS)) {
 	  krb5_free_context(handle->context);
@@ -224,9 +228,9 @@ kadm5_ret_t kadm5_init(char *client_name, char *pass,
 	  free(handle);
 	  return KADM5_BAD_SERVER_PARAMS;
      }
+#endif
 
-     ret = kadm5_get_config_params(handle->context, (char *) NULL,
-				       (char *) NULL, params_in,
+     ret = kadm5_get_config_params(handle->context, 1, params_in,
 				       &handle->params);
      if (ret) {
 	  krb5_free_context(handle->context);
@@ -259,7 +263,8 @@ kadm5_ret_t kadm5_init(char *client_name, char *pass,
 	  return ret;
      }
 
-    ret = krb5_db_open(handle->context, db_args, KRB5_KDB_OPEN_RW);
+    ret = krb5_db_open(handle->context, db_args, 
+		       KRB5_KDB_OPEN_RW | KRB5_KDB_SRV_TYPE_ADMIN);
     if (ret) {
 	 krb5_free_context(handle->context);
 	 free_db_args(handle);
@@ -406,7 +411,8 @@ kadm5_ret_t kadm5_flush(void *server_handle)
      CHECK_HANDLE(server_handle);
 
      if ((ret = krb5_db_fini(handle->context)) ||
-	 (ret = krb5_db_open(handle->context, handle->db_args, KRB5_KDB_OPEN_RW)) ||
+	 (ret = krb5_db_open(handle->context, handle->db_args, 
+			     KRB5_KDB_OPEN_RW | KRB5_KDB_SRV_TYPE_ADMIN)) ||
 	 (ret = adb_policy_close(handle)) ||
 	 (ret = adb_policy_init(handle))) {
 	  (void) kadm5_destroy(server_handle);
@@ -419,4 +425,18 @@ int _kadm5_check_handle(void *handle)
 {
      CHECK_HANDLE(handle);
      return 0;
+}
+
+#include "gssapiP_krb5.h"
+krb5_error_code kadm5_init_krb5_context (krb5_context *ctx)
+{
+    static int first_time = 1;
+    if (first_time) {
+	krb5_error_code err;
+	err = krb5_gss_use_kdc_context();
+	if (err)
+	    return err;
+	first_time = 0;
+    }
+    return krb5int_init_context_kdc(ctx);
 }

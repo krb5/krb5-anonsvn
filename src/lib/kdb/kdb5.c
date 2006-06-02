@@ -1,14 +1,38 @@
+/*
+ * Copyright 2006 by the Massachusetts Institute of Technology.
+ * All Rights Reserved.
+ *
+ * Export of this software from the United States of America may
+ *   require a specific license from the United States Government.
+ *   It is the responsibility of any person or organization contemplating
+ *   export to obtain such a license before exporting.
+ * 
+ * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
+ * distribute this software and its documentation for any purpose and
+ * without fee is hereby granted, provided that the above copyright
+ * notice appear in all copies and that both that copyright notice and
+ * this permission notice appear in supporting documentation, and that
+ * the name of M.I.T. not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission.  Furthermore if you modify this software you must label
+ * your software as modified software and not distribute it in such a
+ * fashion that it might be confused with the original M.I.T. software.
+ * M.I.T. makes no representations about the suitability of
+ * this software for any purpose.  It is provided "as is" without express
+ * or implied warranty.
+ */
+
+/*
+ * This code was based on code donated to MIT by Novell for
+ * distribution under the MIT license.
+ */
+
 /* 
  * Include files
  */
 
-#if defined(ENABLE_THREADS) && defined(HAVE_PTHREAD_H)
-#include <pthread.h>
-#endif
-
 #include <stdio.h>
 #include <string.h>
-#include <dlfcn.h>
 #include <k5-int.h>
 #include <osconf.h>
 #include "kdb5.h"
@@ -27,12 +51,7 @@
  * internal static variable
  */
 
-#if defined(ENABLE_THREADS) && defined(HAVE_PTHREAD_H)
-/* static pthread_once_t db_inited = PTHREAD_ONCE_INIT; */
-static pthread_mutex_t db_lock = PTHREAD_MUTEX_INITIALIZER;
-#else
-/* static int db_inited = 0; */
-#endif
+static k5_mutex_t db_lock = K5_MUTEX_PARTIAL_INITIALIZER;
 
 #ifdef _KDB5_STATIC_LINK
 #undef _KDB5_DYNAMIC_LINK
@@ -47,122 +66,45 @@ static db_library lib_list;
 /*
  * Helper Functions
  */
-#if defined(ENABLE_THREADS) && defined(HAVE_PTHREAD_H)
 
-/* 
- * KNOWN ISSUES with locking: This code does not handle a scenario
- * where a library is thread-safe for different DB contexts, but not
- * with the same context. It locks the complete DB library. If this is
- * not the scenario, then lock has to be moved from db_library to
- * kdb5_dal_handle. For now doing a pessimistic locking.
- *
- * If any thread does a DB lock, all the other threads are barred from
- * accessing DB using this context (infact library because of the
- * previous defect).  This is with the assumption that, DB's lock code
- * will take care of excluding other processes/machines from using the
- * DB. But there could be a scenario where access by some other thread
- * using the same context might corrupt the database.
- */
+MAKE_INIT_FUNCTION(kdb_init_lock_list);
+MAKE_FINI_FUNCTION(kdb_fini_lock_list);
+
+int
+kdb_init_lock_list(void)
+{
+    return k5_mutex_finish_init(&db_lock);
+}
 
 static int
 kdb_lock_list()
 {
-    return pthread_mutex_lock(&db_lock);
+    int err;
+    err = CALL_INIT_FUNCTION (kdb_init_lock_list);
+    if (err)
+	return err;
+    return k5_mutex_lock(&db_lock);
+}
+
+void
+kdb_fini_lock_list(void)
+{
+    if (INITIALIZER_RAN(kdb_init_lock_list))
+	k5_mutex_destroy(&db_lock);
 }
 
 static int
 kdb_unlock_list()
 {
-    return pthread_mutex_unlock(&db_lock);
+    return k5_mutex_unlock(&db_lock);
 }
 
-static int
-kdb_init_lib_lock(db_library lib)
-{
-    krb5_error_code retval;
-    if ((retval = pthread_mutex_init(&lib->lib_lock, NULL))) {
-	return retval;
-    }
-
-    lib->lock_holder = pthread_self();
-    lib->excl = 0;
-    lib->recursive_cnt = 0;
-
-    return pthread_cond_init(&lib->unlocked, NULL);
-}
-
-static int
-kdb_destroy_lib_lock(db_library lib)
-{
-    krb5_error_code retval;
-    if ((retval = pthread_mutex_destroy(&lib->lib_lock))) {
-	return retval;
-    }
-
-    return pthread_cond_destroy(&lib->unlocked);
-}
-
-static int
-kdb_lock_lib_lock(db_library lib, krb5_boolean exclusive)
-{
-    /* Since, handle locked by one thread should not allow another
-       thread to continue.  */
-    krb5_error_code retval = 0;
-    pthread_t myid = pthread_self();
-
-    if ((retval = pthread_mutex_lock(&lib->lib_lock)))
-	return retval;
-
-    while ((exclusive && (lib->excl || lib->recursive_cnt)) ||
-	   (!pthread_equal(lib->lock_holder, myid)
-	    && !lib->vftabl.is_thread_safe && lib->recursive_cnt)) {
-	/* Exclusive lock held or some one using lock when exclusive
-	   is requested or library not-re-entrant.  */
-	if ((retval = pthread_cond_wait(&lib->unlocked, &lib->lib_lock)))
-	    return retval;
-    }
-
-    /* exclusive lock and recursive_cnt allow a thread to lock even it
-       already holds a lock */
-    if (exclusive)
-	lib->excl++;
-
-    lib->recursive_cnt++;
-
-    lib->lock_holder = myid;
-
-    return pthread_mutex_unlock(&lib->lib_lock);
-}
-
-static int
-kdb_unlock_lib_lock(db_library lib, krb5_boolean exclusive)
-{
-    krb5_error_code retval = 0;
-
-    if ((retval = pthread_mutex_lock(&lib->lib_lock)))
-	return retval;
-
-    lib->recursive_cnt--;
-    if (exclusive)
-	lib->excl--;
-
-    if ((retval = pthread_cond_broadcast(&lib->unlocked)))
-	return retval;
-
-    return pthread_mutex_unlock(&lib->lib_lock);
-}
-
-#else /* no PTHREAD */
-
-/* program is not using pthread. So, threads wont be there. No need to lock */
-#define kdb_lock_list() 0
-#define kdb_unlock_list() 0
 #define kdb_init_lib_lock(a) 0
-#define kdb_destroy_lib_lock(a) 0
+#define kdb_destroy_lib_lock(a) (void)0
 #define kdb_lock_lib_lock(a, b) 0
-#define kdb_unlock_lib_lock(a, b) 0
+#define kdb_unlock_lib_lock(a, b) (void)0
 
-#endif /* end of HAVE_PTHREAD_H */
+/* Caller must free result*/
 
 static char *
 kdb_get_conf_section(krb5_context kcontext)
@@ -219,11 +161,12 @@ kdb_get_library_name(krb5_context kcontext)
 	goto clean_n_exit;
     }
 
+#define DB2_NAME "db2"
     /* we got the module section. Get the library name from the module */
     status = profile_get_string(kcontext->profile, KDB_MODULE_SECTION, value,
 				KDB_LIB_POINTER,
 				/* default to db2 */
-				"db2",
+				DB2_NAME,
 				&lib);
 
     if (status) {
@@ -324,7 +267,7 @@ kdb_load_library(krb5_context kcontext, char *lib_name, db_library * lib)
     {
 	sprintf(buf, "Program not built to support %s database type\n",
 		lib_name);
-	status = -1;
+	status = KRB5_KDB_DBTYPE_NOSUP;
 	krb5_db_set_err(kcontext, krb5_err_have_str, status, buf);
 	goto clean_n_exit;
     }
@@ -333,11 +276,11 @@ kdb_load_library(krb5_context kcontext, char *lib_name, db_library * lib)
 
     kdb_setup_opt_functions(*lib);
 
-    if ((status = (*lib)->vftabl.init_library(krb5_set_err))) {
+    if ((status = (*lib)->vftabl.init_library())) {
 	/* ERROR. library not initialized cleanly */
 	sprintf(buf, "%s library initialization failed, error code %ld\n",
 		lib_name, status);
-	status = -1;
+	status = KRB5_KDB_DBTYPE_INIT;
 	krb5_db_set_err(kcontext, krb5_err_have_str, status, buf);
 	goto clean_n_exit;
     }
@@ -349,7 +292,7 @@ kdb_load_library(krb5_context kcontext, char *lib_name, db_library * lib)
     return status;
 }
 
-#else
+#else /* KDB5_STATIC_LINK*/
 
 static char *db_dl_location[] = DEFAULT_KDB_LIB_PATH;
 #define db_dl_n_locations (sizeof(db_dl_location) / sizeof(db_dl_location[0]))
@@ -358,10 +301,8 @@ static krb5_error_code
 kdb_load_library(krb5_context kcontext, char *lib_name, db_library * lib)
 {
     krb5_error_code status = 0;
-    char    dl_name[1024];
     int     ndx;
-    void   *vftabl_addr;
-    char   *err_str = NULL;
+    void  **vftabl_addrs = NULL;
     /* N.B.: If this is "const" but not "static", the Solaris 10
        native compiler has trouble building the library because of
        absolute relocations needed in read-only section ".rodata".
@@ -370,10 +311,14 @@ kdb_load_library(krb5_context kcontext, char *lib_name, db_library * lib)
     static const char *const dbpath_names[] = {
 	KDB_MODULE_SECTION, "db_module_dir", NULL,
     };
+    const char *filebases[2];
     char **profpath = NULL;
     char **path = NULL;
 
-    if (!strcmp("db2", lib_name) && (kdb_db2_pol_err_loaded == 0)) {
+    filebases[0] = lib_name;
+    filebases[1] = NULL;
+
+    if (!strcmp(DB2_NAME, lib_name) && (kdb_db2_pol_err_loaded == 0)) {
 	initialize_adb_error_table();
 	kdb_db2_pol_err_loaded = 1;
     }
@@ -410,56 +355,55 @@ kdb_load_library(krb5_context kcontext, char *lib_name, db_library * lib)
 	memcpy(path, profpath, ndx * sizeof(profpath[0]));
     memcpy(path + ndx, db_dl_location, db_dl_n_locations * sizeof(char *));
     status = 0;
-
-    for (ndx = 0; path[ndx]; ndx++) {
-	sprintf(dl_name, "%s/%s.so", path[ndx], lib_name);
-	(*lib)->dl_handle = dlopen(dl_name, RTLD_NOW);
-	if ((*lib)->dl_handle) {
-	    /* found the module */
-	    sprintf(dl_name, "krb5_db_vftabl_%s", lib_name);
-
-	    dlerror();
-	    vftabl_addr = dlsym((*lib)->dl_handle, dl_name);
-	    if (vftabl_addr) {
-		memcpy(&(*lib)->vftabl, vftabl_addr, sizeof(kdb_vftabl));
-
-		kdb_setup_opt_functions(*lib);
-
-		if ((status = (*lib)->vftabl.init_library(krb5_set_err))) {
-		    /* ERROR. library not initialized cleanly */
-		    goto clean_n_exit;
-
-		}
-	    } else {
-		status = -1;
-		krb5_set_err(kcontext, krb5_err_have_str, status, dlerror());
-		goto clean_n_exit;
-	    }
-	    break;
-	} else {
-	    /* set the error. Later if we find everything fine.. we will reset this */
-	    err_str = dlerror();
-/* 	    fprintf(stderr, "Error loading library %s\n", t); */
-	}
-    }
-
-    if (!(*lib)->dl_handle) {
-	/* library not found in the given list. Error str is already set */
-	status = -1;
-	krb5_set_err(kcontext, krb5_err_have_str, status, err_str);
+    
+    if ((status = krb5int_open_plugin_dirs ((const char **) path, 
+                                            filebases, 
+                                            &(*lib)->dl_dir_handle, &kcontext->err))) {
+        char *err_str = krb5_get_error_message(kcontext, status);
+	status = KRB5_KDB_DBTYPE_NOTFOUND;
+	krb5_set_error_message (kcontext, status,
+				"Unable to find requested database type: %s", err_str);
+	krb5_free_error_message (kcontext, err_str);
 	goto clean_n_exit;
     }
 
-  clean_n_exit:
+    if ((status = krb5int_get_plugin_dir_data (&(*lib)->dl_dir_handle, "kdb_function_table",
+                                               &vftabl_addrs, &kcontext->err))) {
+        char *err_str = krb5_get_error_message(kcontext, status);
+        status = KRB5_KDB_DBTYPE_INIT;
+        krb5_set_error_message (kcontext, status,
+                                "plugin symbol 'kdb_function_table' lookup failed: %s", err_str);
+        krb5_free_error_message (kcontext, err_str);
+	goto clean_n_exit;
+    }
+
+    if (vftabl_addrs[0] == NULL) {
+	/* No plugins! */
+	status = KRB5_KDB_DBTYPE_NOTFOUND;
+	krb5_set_error_message (kcontext, status, 
+                                "Unable to find requested database type");
+	goto clean_n_exit;
+    }
+
+    memcpy(&(*lib)->vftabl, vftabl_addrs[0], sizeof(kdb_vftabl));
+    kdb_setup_opt_functions(*lib);
+    
+    if ((status = (*lib)->vftabl.init_library())) {
+        /* ERROR. library not initialized cleanly */
+        goto clean_n_exit;
+    }    
+    
+clean_n_exit:
+    if (vftabl_addrs != NULL) { krb5int_free_plugin_dir_data (vftabl_addrs); }
     /* Both of these DTRT with NULL.  */
     profile_free_list(profpath);
     free(path);
     if (status) {
-	if (*lib) {
+        if (*lib) {
 	    kdb_destroy_lib_lock(*lib);
-	    if ((*lib)->dl_handle) {
-		dlclose((*lib)->dl_handle);
-	    }
+            if (PLUGIN_DIR_OPEN((&(*lib)->dl_dir_handle))) {
+                krb5int_close_plugin_dirs (&(*lib)->dl_dir_handle);
+            }
 	    free(*lib);
 	    *lib = NULL;
 	}
@@ -538,10 +482,10 @@ kdb_free_library(db_library lib)
 	}
 
 	/* close the library */
-	if (lib->dl_handle) {
-	    dlclose(lib->dl_handle);
-	}
-
+        if (PLUGIN_DIR_OPEN((&lib->dl_dir_handle))) {
+            krb5int_close_plugin_dirs (&lib->dl_dir_handle);
+        }
+        
 	kdb_destroy_lib_lock(lib);
 
 	if (lib->prev == NULL) {
@@ -581,7 +525,7 @@ kdb_setup_lib_handle(krb5_context kcontext)
 
     library = kdb_get_library_name(kcontext);
     if (library == NULL) {
-	status = -1;
+	status = KRB5_KDB_DBTYPE_NOTFOUND;
 	goto clean_n_exit;
     }
 
@@ -628,27 +572,19 @@ kdb_free_lib_handle(krb5_context kcontext)
 /*
  *      External functions... DAL API
  */
-void
-krb5_db_clr_error()
-{
-    krb5_clr_error();
-}
-
 krb5_error_code
 krb5_db_open(krb5_context kcontext, char **db_args, int mode)
 {
     krb5_error_code status = 0;
     char   *section = NULL;
     kdb5_dal_handle *dal_handle;
-    char    buf[KRB5_MAX_ERR_STR];
 
     section = kdb_get_conf_section(kcontext);
     if (section == NULL) {
-	sprintf(buf,
+	status = KRB5_KDB_SERVER_INTERNAL_ERR;
+	krb5_set_error_message (kcontext, status,
 		"unable to determine configuration section for realm %s\n",
 		kcontext->default_realm ? kcontext->default_realm : "[UNSET]");
-	status = -1;
-	krb5_set_err(kcontext, krb5_err_have_str, status, buf);
 	goto clean_n_exit;
     }
 
@@ -718,15 +654,13 @@ krb5_db_create(krb5_context kcontext, char **db_args)
     krb5_error_code status = 0;
     char   *section = NULL;
     kdb5_dal_handle *dal_handle;
-    char    buf[KRB5_MAX_ERR_STR];
 
     section = kdb_get_conf_section(kcontext);
     if (section == NULL) {
-	sprintf(buf,
+	status = KRB5_KDB_SERVER_INTERNAL_ERR;
+	krb5_set_error_message (kcontext, status,
 		"unable to determine configuration section for realm %s\n",
 		kcontext->default_realm);
-	status = -1;
-	krb5_set_err(kcontext, krb5_err_have_str, status, buf);
 	goto clean_n_exit;
     }
 
@@ -791,15 +725,13 @@ krb5_db_destroy(krb5_context kcontext, char **db_args)
     krb5_error_code status = 0;
     char   *section = NULL;
     kdb5_dal_handle *dal_handle;
-    char    buf[KRB5_MAX_ERR_STR];
 
     section = kdb_get_conf_section(kcontext);
     if (section == NULL) {
-	sprintf(buf,
+	status = KRB5_KDB_SERVER_INTERNAL_ERR;
+	krb5_set_error_message (kcontext, status,
 		"unable to determine configuration section for realm %s\n",
 		kcontext->default_realm);
-	status = -1;
-	krb5_set_err(kcontext, krb5_err_have_str, status, buf);
 	goto clean_n_exit;
     }
 

@@ -54,10 +54,14 @@ lib$(LIBBASE)$(SHLIBEXT): lib$(LIBBASE)$(SHLIBVEXT)
 	$(LN_S) lib$(LIBBASE)$(SHLIBVEXT) $@
 
 binutils.versions: $(SHLIB_EXPORT_FILE) Makefile
-	echo >  binutils.versions "HIDDEN { local: __*; _rest*; _save*; *; };"
-	echo >> binutils.versions "$(LIBBASE)_$(LIBMAJOR)_MIT {"
+	echo >  binutils.versions "$(LIBBASE)_$(LIBMAJOR)_MIT {"
 	sed  >> binutils.versions < $(SHLIB_EXPORT_FILE) "s/$$/;/"
 	echo >> binutils.versions "};"
+	echo >> binutils.versions "HIDDEN { local: __*; _rest*; _save*; *; };"
+
+darwin.exports: $(SHLIB_EXPORT_FILE) Makefile
+	sed > darwin-exports.tmp < $(SHLIB_EXPORT_FILE) "s/^/_/"
+	$(MV) darwin-exports.tmp darwin.exports
 
 osf1.exports: $(SHLIB_EXPORT_FILE) Makefile
 	$(RM) osf1.tmp osf1.exports
@@ -72,7 +76,7 @@ osf1.exports: $(SHLIB_EXPORT_FILE) Makefile
 	  if test "$$f" != "." ; then \
 	    a="-fini $$f $$a"; \
 	  else :; fi; \
-	done; echo " $$a" >> osf1.tmp; \
+	done; echo " $$a" >> osf1.tmp
 	mv -f osf1.tmp osf1.exports
 
 hpux10.exports: $(SHLIB_EXPORT_FILE) Makefile

@@ -51,6 +51,8 @@ HWND hwnd_notifier = NULL;
 
 BOOL notifier_ready = FALSE;
 
+khm_boolean notifier_modal_loop = FALSE;
+
 khui_alert * current_alert = NULL;
 
 khui_alert * alert_queue[KHUI_ALERT_QUEUE_MAX];
@@ -133,6 +135,27 @@ alert_show_normal(khui_alert * a);
 static khm_int32
 alert_enqueue(khui_alert * a);
 
+/* These are defined for APPVER >= 0x501.  We are defining them here
+   so that we can build with APPVER = 0x500 and use the same binaries
+   with Win XP. */
+
+#ifndef NIN_BALLOONSHOW
+#define NIN_BALLOONSHOW (WM_USER + 2)
+#endif
+
+#ifndef NIN_BALLOONHIDE
+#define NIN_BALLOONHIDE (WM_USER + 3)
+#endif
+
+#ifndef NIN_BALLOONTIMEOUT
+#define NIN_BALLOONTIMEOUT (WM_USER + 4)
+#endif
+
+#ifndef NIN_BALLOONUSERCLICK
+#define NIN_BALLOONUSERCLICK (WM_USER + 5)
+#endif
+
+
 /**********************************************************************
   Notifier
 ***********************************************************************
@@ -181,6 +204,23 @@ notifier_wnd_proc(HWND hwnd,
                         rv = alert_show(a);
                         check_for_queued_alerts();
                         khui_alert_release(a);
+                    }
+                }
+                break;
+
+            case KMSG_ALERT_SHOW_MODAL:
+                {
+                    khui_alert * a;
+
+                    a = (khui_alert *) m->vparam;
+                    a->flags |= KHUI_ALERT_FLAG_MODAL;
+                    rv = alert_show(a);
+                    khui_alert_release(a);
+
+                    if (KHM_SUCCEEDED(rv)) {
+                        notifier_modal_loop = TRUE;
+
+                        khm_message_loop_int(&notifier_modal_loop);
                     }
                 }
                 break;
@@ -235,7 +275,6 @@ notifier_wnd_proc(HWND hwnd,
             khm_show_main_window();
             break;
 
-#if (_WIN32_IE >= 0x0501)
         case NIN_BALLOONUSERCLICK:
             if (current_alert) {
                 if ((current_alert->flags & KHUI_ALERT_FLAG_DEFACTION) &&
@@ -251,6 +290,7 @@ notifier_wnd_proc(HWND hwnd,
                 }
             }
             /* fallthrough */
+        case NIN_BALLOONHIDE:
         case NIN_BALLOONTIMEOUT:
             khm_notify_icon_change(KHERR_NONE);
             if (current_alert) {
@@ -258,7 +298,6 @@ notifier_wnd_proc(HWND hwnd,
                 current_alert = NULL;
             }
             break;
-#endif
         }
     } else if (uMsg == WM_TIMER) {
         if (wParam == KHUI_TRIGGER_TIMER_ID) {
@@ -445,7 +484,16 @@ alert_show_normal(khui_alert * a) {
         khui_alert_add_command(a, KHUI_PACTION_CLOSE);
     }
 
-    if (!is_alert_queue_empty()) {
+    /* if there are other alerts queued up, we should add a 'Next
+       alert...' button that when clicked, would show the next queued
+       alert.  However, we only do this if the current alert doesn't
+       actually require a command response.  Otherwise, clicking the
+       'next' button will be the equivalent of cancelling out of the
+       alert without selecting any of the commands. */
+    if (!is_alert_queue_empty() &&
+        a->n_alert_commands == 1 &&
+        a->alert_commands[0] == KHUI_PACTION_CLOSE) {
+
         khui_alert_add_command(a, KHUI_PACTION_NEXT);
     }
 
@@ -457,13 +505,14 @@ alert_show_normal(khui_alert * a) {
         CreateWindowEx(WS_EX_DLGMODALFRAME | WS_EX_CONTEXTHELP,
                        MAKEINTATOM(atom_alerter),
                        title,
-                       WS_DLGFRAME | WS_POPUPWINDOW | WS_CLIPCHILDREN |
-                       WS_VISIBLE,
+                       WS_DLGFRAME | WS_POPUPWINDOW | WS_CLIPCHILDREN,
                        0, 0, 300, 300, // bogus values
                        khm_hwnd_main,
                        (HMENU) NULL,
                        khm_hInstance,
                        (LPVOID) a);
+
+    ShowWindow(hwa, SW_SHOW);
 
     return KHM_ERROR_SUCCESS;
 }
@@ -491,8 +540,9 @@ alert_show(khui_alert * a) {
 
     /* depending on the state of the main window, we
        need to either show a window or a balloon */
-    if(khm_is_main_window_active() &&
-       !(a->flags & KHUI_ALERT_FLAG_REQUEST_BALLOON))
+    if ((a->flags & KHUI_ALERT_FLAG_MODAL) ||
+        (khm_is_main_window_active() &&
+         !(a->flags & KHUI_ALERT_FLAG_REQUEST_BALLOON)))
         return alert_show_normal(a);
     else
         return alert_show_minimized(a);
@@ -676,7 +726,9 @@ alerter_wnd_proc(HWND hwnd,
                         CreateWindowEx(0,
                                        L"BUTTON",
                                        caption,
-                                       WS_VISIBLE | WS_CHILD,
+                                       WS_VISIBLE | WS_CHILD |
+                                       /* the first button is the default */
+                                       ((i==0)? BS_DEFPUSHBUTTON: 0),
                                        x,y,width,height,
                                        hwnd,
                                        (HMENU)(INT_PTR) (action->cmd),
@@ -719,6 +771,8 @@ alerter_wnd_proc(HWND hwnd,
 
             khui_alert_lock(d->alert);
             d->alert->flags &= ~KHUI_ALERT_FLAG_DISPLAY_WINDOW;
+            if (d->alert->flags & KHUI_ALERT_FLAG_MODAL)
+                notifier_modal_loop = FALSE;
             khui_alert_unlock(d->alert);
 
             khui_alert_release(d->alert);
@@ -934,6 +988,8 @@ alerter_wnd_proc(HWND hwnd,
                              SWP_NOACTIVATE | SWP_NOCOPYBITS |
                              SWP_NOMOVE | SWP_NOOWNERZORDER |
                              SWP_NOZORDER);
+
+                InvalidateRect(hwnd, NULL, TRUE);
 
                 x = d->x_message;
                 y = d->dy_client - d->dy_bb;
