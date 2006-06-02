@@ -1,4 +1,4 @@
-thisconfigdir=./..
+thisconfigdir=../../..
 myfulldir=lib/gssapi/mechglue
 mydir=mechglue
 BUILDTOP=$(REL)..$(S)..$(S)..
