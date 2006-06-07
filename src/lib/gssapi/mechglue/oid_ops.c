@@ -243,9 +243,9 @@ generic_gss_oid_to_str(minor_status, oid, oid_str)
     numshift = 0;
     cp = (unsigned char *) oid->elements;
     number = (unsigned long) cp[0];
-    sprintf(numstr, "%ld ", number/40);
+    sprintf(numstr, "%lu ", (unsigned long)number/40);
     string_length += strlen(numstr);
-    sprintf(numstr, "%ld ", number%40);
+    sprintf(numstr, "%lu ", (unsigned long)number%40);
     string_length += strlen(numstr);
     for (i=1; i<oid->length; i++) {
 	if ((OM_uint32) (numshift+7) < (sizeof (OM_uint32)*8)) {/* XXX */
@@ -256,7 +256,7 @@ generic_gss_oid_to_str(minor_status, oid, oid_str)
 	    return(GSS_S_FAILURE);
 	}
 	if ((cp[i] & 0x80) == 0) {
-	    sprintf(numstr, "%ld ", number);
+	    sprintf(numstr, "%lu ", (unsigned long)number);
 	    string_length += strlen(numstr);
 	    number = 0;
 	    numshift = 0;
@@ -270,16 +270,16 @@ generic_gss_oid_to_str(minor_status, oid, oid_str)
     if ((bp = (char *) malloc(string_length))) {
 	strcpy(bp, "{ ");
 	number = (OM_uint32) cp[0];
-	sprintf(numstr, "%ld ", number/40);
+	sprintf(numstr, "%lu ", (unsigned long)number/40);
 	strcat(bp, numstr);
-	sprintf(numstr, "%ld ", number%40);
+	sprintf(numstr, "%lu ", (unsigned long)number%40);
 	strcat(bp, numstr);
 	number = 0;
 	cp = (unsigned char *) oid->elements;
 	for (i=1; i<oid->length; i++) {
 	    number = (number << 7) | (cp[i] & 0x7f);
 	    if ((cp[i] & 0x80) == 0) {
-		sprintf(numstr, "%ld ", number);
+		sprintf(numstr, "%lu ", (unsigned long)number);
 		strcat(bp, numstr);
 		number = 0;
 	    }
@@ -299,7 +299,7 @@ generic_gss_str_to_oid(minor_status, oid_str, oid)
     gss_buffer_t	oid_str;
     gss_OID		*oid;
 {
-    char	*cp, *bp, *startp;
+    unsigned char	*cp, *bp, *startp;
     int		brace;
     long	numbuf;
     long	onumbuf;
@@ -316,7 +316,7 @@ generic_gss_str_to_oid(minor_status, oid_str, oid)
 	return (GSS_S_CALL_INACCESSIBLE_WRITE);
 
     brace = 0;
-    bp = (char *) oid_str->value;
+    bp = oid_str->value;
     cp = bp;
     /* Skip over leading space */
     while ((bp < &cp[oid_str->length]) && isspace(*bp))
@@ -333,7 +333,7 @@ generic_gss_str_to_oid(minor_status, oid_str, oid)
     /*
      * The first two numbers are chewed up by the first octet.
      */
-    if (sscanf(bp, "%ld", &numbuf) != 1) {
+    if (sscanf((char *)bp, "%ld", &numbuf) != 1) {
 	*minor_status = EINVAL;
 	return(GSS_S_FAILURE);
     }
@@ -341,7 +341,7 @@ generic_gss_str_to_oid(minor_status, oid_str, oid)
 	bp++;
     while ((bp < &cp[oid_str->length]) && isspace(*bp))
 	bp++;
-    if (sscanf(bp, "%ld", &numbuf) != 1) {
+    if (sscanf((char *)bp, "%ld", &numbuf) != 1) {
 	*minor_status = EINVAL;
 	return(GSS_S_FAILURE);
     }
@@ -352,7 +352,7 @@ generic_gss_str_to_oid(minor_status, oid_str, oid)
 	bp++;
     nbytes++;
     while (isdigit(*bp)) {
-	if (sscanf(bp, "%d", &numbuf) != 1) {
+	if (sscanf((char *)bp, "%ld", &numbuf) != 1) {
 	    return(GSS_S_FAILURE);
 	}
 	while (numbuf) {
@@ -377,13 +377,13 @@ generic_gss_str_to_oid(minor_status, oid_str, oid)
 	    (*oid)->length = nbytes;
 	    op = (unsigned char *) (*oid)->elements;
 	    bp = startp;
-	    (void) sscanf(bp, "%d", &numbuf);
+	    (void) sscanf((char *)bp, "%ld", &numbuf);
 	    while (isdigit(*bp))
 		bp++;
 	    while (isspace(*bp) || *bp == '.')
 		bp++;
 	    onumbuf = 40*numbuf;
-	    (void) sscanf(bp, "%d", &numbuf);
+	    (void) sscanf((char *)bp, "%ld", &numbuf);
 	    onumbuf += numbuf;
 	    *op = (unsigned char) onumbuf;
 	    op++;
@@ -392,7 +392,7 @@ generic_gss_str_to_oid(minor_status, oid_str, oid)
 	    while (isspace(*bp) || *bp == '.')
 		bp++;
 	    while (isdigit(*bp)) {
-		(void) sscanf(bp, "%d", &numbuf);
+		(void) sscanf((char *)bp, "%ld", &numbuf);
 		nbytes = 0;
 		/* Have to fill in the bytes msb-first */
 		onumbuf = numbuf;
@@ -447,7 +447,7 @@ generic_gss_str_to_oid(minor_status, oid_str, oid)
  * PERFORMANCE OF THIS SOFTWARE.
  */
 OM_uint32
-gss_copy_oid_set(
+gssint_copy_oid_set(
     OM_uint32 *minor_status,
     const gss_OID_set_desc * const oidset,
     gss_OID_set *new_oidset

@@ -10,11 +10,9 @@
 #ifndef _GSS_MECHGLUEP_H
 #define _GSS_MECHGLUEP_H
 
+#include "autoconf.h"
 #include "mechglue.h"
-
-#define	g_OID_equal(o1, o2) \
-	(((o1)->length == (o2)->length) && \
-	(memcmp((o1)->elements, (o2)->elements, (o1)->length) == 0))
+#include "gssapiP_generic.h"
 
 #define	g_OID_copy(o1, o2)					\
 do {								\
@@ -449,48 +447,7 @@ OM_uint32 gssint_create_copy_buffer(
 	int			/* NULL terminate buffer ? */
 );
 
-OM_uint32 generic_gss_release_oid
-	   (OM_uint32 *,	/* minor_status */
-	    gss_OID *		/* oid */
-	   );
-
-OM_uint32 generic_gss_copy_oid
-	   (OM_uint32 *,	/* minor_status */
-	    const gss_OID_desc * const,		/* oid */
-	    gss_OID *		/* new_oid */
-	    );
-
-OM_uint32 generic_gss_create_empty_oid_set
-	   (OM_uint32 *,	/* minor_status */
-	    gss_OID_set *	/* oid_set */
-	   );
-
-OM_uint32 generic_gss_add_oid_set_member
-	   (OM_uint32 *,	/* minor_status */
-	    const gss_OID_desc * const,		/* member_oid */
-	    gss_OID_set *	/* oid_set */
-	   );
-
-OM_uint32 generic_gss_test_oid_set_member
-	   (OM_uint32 *,	/* minor_status */
-	    const gss_OID_desc * const,		/* member */
-	    gss_OID_set,	/* set */
-	    int *		/* present */
-	   );
-
-OM_uint32 generic_gss_oid_to_str
- (OM_uint32 *,	/* minor_status */
-	    const gss_OID_desc * const,		/* oid */
-	    gss_buffer_t	/* oid_str */
-	   );
-
-OM_uint32 generic_gss_str_to_oid
-	   (OM_uint32 *,	/* minor_status */
-	    gss_buffer_t,	/* oid_str */
-	    gss_OID *		/* oid */
-	   );
-
-OM_uint32 gss_copy_oid_set(
+OM_uint32 gssint_copy_oid_set(
 	OM_uint32 *,			/* minor_status */
 	const gss_OID_set_desc *,	/* oid set */
 	gss_OID_set *			/* new oid set */

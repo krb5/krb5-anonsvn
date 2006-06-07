@@ -1,4 +1,29 @@
 /*
+ * Copyright (C) 2006 by the Massachusetts Institute of Technology.
+ * All rights reserved.
+ *
+ * Export of this software from the United States of America may
+ *   require a specific license from the United States Government.
+ *   It is the responsibility of any person or organization contemplating
+ *   export to obtain such a license before exporting.
+ * 
+ * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
+ * distribute this software and its documentation for any purpose and
+ * without fee is hereby granted, provided that the above copyright
+ * notice appear in all copies and that both that copyright notice and
+ * this permission notice appear in supporting documentation, and that
+ * the name of M.I.T. not be used in advertising or publicity pertaining
+ * to distribution of the software without specific, written prior
+ * permission.  Furthermore if you modify this software you must label
+ * your software as modified software and not distribute it in such a
+ * fashion that it might be confused with the original M.I.T. software.
+ * M.I.T. makes no representations about the suitability of
+ * this software for any purpose.  It is provided "as is" without express
+ * or implied warranty.
+ *
+ */
+
+/*
  * Copyright 2004 Sun Microsystems, Inc.  All rights reserved.
  * Use is subject to license terms.
  *
@@ -18,6 +43,10 @@
 #include	"gssapiP_spnego.h"
 #include	<mglueP.h>
 #include	<gssapi_err_generic.h>
+
+#undef g_token_size
+#undef g_verify_token_header
+#undef g_make_token_header
 
 #define HARD_ERROR(v) ((v) != GSS_S_COMPLETE && (v) != GSS_S_CONTINUE_NEEDED)
 typedef const gss_OID_desc *gss_OID_const;
@@ -222,7 +251,7 @@ spnego_gss_acquire_cred(void *ctx,
 	}
 
 	if (actual_mechs && amechs != GSS_C_NULL_OID_SET) {
-		(void) gss_copy_oid_set(minor_status, amechs, actual_mechs);
+		(void) gssint_copy_oid_set(minor_status, amechs, actual_mechs);
 	}
 	(void) gss_release_oid_set(minor_status, &amechs);
 
@@ -491,8 +520,8 @@ init_ctx_cont(OM_uint32 *minor_status, gss_ctx_id_t *ctx, gss_buffer_t buf,
 		goto cleanup;
 	if (acc_negState == ACCEPT_DEFECTIVE_TOKEN &&
 	    supportedMech == GSS_C_NO_OID &&
-	    responseToken == GSS_C_NO_BUFFER &&
-	    mechListMIC == GSS_C_NO_BUFFER) {
+	    *responseToken == GSS_C_NO_BUFFER &&
+	    *mechListMIC == GSS_C_NO_BUFFER) {
 		/* Reject "empty" token. */
 		ret = GSS_S_DEFECTIVE_TOKEN;
 	}
@@ -631,7 +660,7 @@ init_ctx_reselect(OM_uint32 *minor_status, spnego_gss_ctx_id_t sc,
 	sc->mic_reqd = 1;
 	*negState = REQUEST_MIC;
 	*tokflag = CONT_TOKEN_SEND;
-	ret = GSS_S_CONTINUE_NEEDED;
+	return GSS_S_CONTINUE_NEEDED;
 }
 
 /*
@@ -1691,7 +1720,7 @@ get_available_mechs(OM_uint32 *minor_status,
 		 */
 		(void) gss_release_oid_set(&tmpmin, rmechs);
 		if (stat == GSS_S_COMPLETE) {
-			(void) gss_copy_oid_set(&tmpmin,
+			(void) gssint_copy_oid_set(&tmpmin,
 					goodmechs, rmechs);
 			(void) gss_release_oid_set(&tmpmin, &goodmechs);
 		}
