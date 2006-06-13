@@ -371,37 +371,50 @@ static OM_uint32 k5glue_validate_cred
     k5glue_export_name,					\
     NULL			/* store_cred */
 
-struct gss_config krb5_mechanism = {
+static struct gss_config krb5_mechanism = {
+    100, "kerberos_v5",
     { GSS_MECH_KRB5_OID_LENGTH, GSS_MECH_KRB5_OID },
     KRB5_GSS_CONFIG_INIT
 };
 
-struct gss_config krb5_mechanism_old = {
+static struct gss_config krb5_mechanism_old = {
+    200, "kerberos_v5 (pre-RFC OID)",
     { GSS_MECH_KRB5_OLD_OID_LENGTH, GSS_MECH_KRB5_OLD_OID },
     KRB5_GSS_CONFIG_INIT
 };
 
-struct gss_config krb5_mechanism_wrong = {
+static struct gss_config krb5_mechanism_wrong = {
+    300, "kerberos_v5 (wrong OID)",
     { GSS_MECH_KRB5_WRONG_OID_LENGTH, GSS_MECH_KRB5_WRONG_OID },
     KRB5_GSS_CONFIG_INIT
 };
 
-#ifdef KRB5_MECH_MODULE
-gss_mechanism
-gss_mech_initialize(const gss_OID oid)
-{
-    if (oid == NULL)
-	return NULL;
+static gss_mechanism krb5_mech_configs[] = {
+    &krb5_mechanism, &krb5_mechanism_old, &krb5_mechanism_wrong, NULL
+};
 
-    if (g_OID_equal(oid, &krb5_mechanism.mech_type))
-	return &krb5_mechanism;
-
-    if (g_OID_equal(oid, &krb5_mechanism_old.mech_type))
-	return &krb5_mechanism_old;
-
-    return NULL;
+#ifdef MS_BUG_TEST
+static gss_mechanism krb5_mech_configs_hack[] = {
+    &krb5_mechanism, &krb5_mechanism_old, NULL
 }
 #endif
+
+#if 1
+#define gssint_get_mech_configs krb5_gss_get_mech_configs
+#endif
+
+gss_mechanism *
+gssint_get_mech_configs(void)
+{
+#ifdef MS_BUG_TEST
+    char *envstr = getenv("MS_FORCE_NO_MSOID");
+
+    if (envstr != NULL && strcmp(envstr, "1") == 0) {
+	return krb5_mech_configs_hack;
+    }
+#endif
+    return krb5_mech_configs;
+}
 
 static OM_uint32
 k5glue_accept_sec_context(ctx, minor_status, context_handle, verifier_cred_handle,

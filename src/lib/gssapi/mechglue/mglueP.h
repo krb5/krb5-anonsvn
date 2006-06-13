@@ -106,6 +106,8 @@ typedef	OM_uint32	    (*gss_acquire_cred_with_password_sfct)(
  */
  
 typedef struct gss_config {
+    OM_uint32	    priority;
+    char *	    mechNameStr;
     gss_OID_desc    mech_type;
     void *	    context;
     OM_uint32       (*gss_acquire_cred)

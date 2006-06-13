@@ -153,8 +153,10 @@ get_negTokenResp(OM_uint32 *, unsigned char *, unsigned int,
  * { iso(1) org(3) dod(6) internet(1) security(5)
  *  mechanism(5) spnego(2) }
  */
-struct gss_config spnego_mechanism =
-{{SPNEGO_OID_LENGTH, SPNEGO_OID},
+static struct gss_config spnego_mechanism =
+{
+	400, "spnego",
+	{SPNEGO_OID_LENGTH, SPNEGO_OID},
 	NULL,
 	spnego_gss_acquire_cred,
 	spnego_gss_release_cred,
@@ -188,22 +190,19 @@ struct gss_config spnego_mechanism =
 	NULL,				/* gss_store_cred */
 };
 
-#if 0
-gss_mechanism
-gss_mech_initialize(const gss_OID oid)
-{
-	dsyslog("Entering gss_mech_initialize\n");
+static gss_mechanism spnego_mech_configs[] = {
+	&spnego_mechanism, NULL
+};
 
-	if (oid == NULL ||
-		!g_OID_equal(oid, &spnego_mechanism.mech_type)) {
-		dsyslog("invalid spnego mechanism oid.\n");
-		return (NULL);
-	}
-
-	dsyslog("Leaving gss_mech_initialize\n");
-	return (&spnego_mechanism);
-}
+#if 1
+#define gssint_get_mech_configs spnego_gss_get_mech_configs
 #endif
+
+gss_mechanism *
+gssint_get_mech_configs(void)
+{
+	return spnego_mech_configs;
+}
 
 /*ARGSUSED*/
 OM_uint32

@@ -60,6 +60,7 @@
 static gss_mech_info searchMechList(const gss_OID);
 static void loadConfigFile(const char *);
 static void updateMechList(void);
+static void register_mech(gss_mechanism, const char *, void *);
 
 static OM_uint32 build_mechSet(void);
 static void init_hardcoded(void);
@@ -507,80 +508,75 @@ updateMechList(void)
 } /* updateMechList */
 
 /*
+ * Register a mechanism.  Called with g_mechListLock held.
+ */
+static void
+register_mech(gss_mechanism mech, const char *namestr, void *dl_handle)
+{
+	gss_mech_info cf, new_cf;
+
+	new_cf = malloc(sizeof(*new_cf));
+	if (new_cf == NULL)
+		return;
+
+	memset(new_cf, 0, sizeof(*new_cf));
+	new_cf->kmodName = NULL;
+	new_cf->uLibName = strdup(namestr);
+	new_cf->mechNameStr = strdup(mech->mechNameStr);
+	new_cf->mech_type = &mech->mech_type;
+	new_cf->mech = mech;
+	new_cf->next = NULL;
+
+	if (g_mechList == NULL) {
+		g_mechList = new_cf;
+		g_mechListTail = new_cf;
+		return;
+	} else if (mech->priority < g_mechList->mech->priority) {
+		new_cf->next = g_mechList;
+		g_mechList = new_cf;
+		return;
+	}
+	for (cf = g_mechList; cf != NULL; cf = cf->next) {
+		if (cf->next == NULL ||
+		    mech->priority < cf->next->mech->priority) {
+			new_cf->next = cf->next;
+			cf->next = new_cf;
+			if (g_mechListTail == cf) {
+				g_mechListTail = new_cf;
+			}
+			break;
+		}
+	}
+}
+
+/*
  * Initialize the hardcoded mechanisms.  This function is called with
  * g_mechListLock held.
  */
 static void
 init_hardcoded(void)
 {
-	extern struct gss_config krb5_mechanism;
-	extern struct gss_config krb5_mechanism_old;
-	extern struct gss_config krb5_mechanism_wrong;
-	extern struct gss_config spnego_mechanism;
+	extern gss_mechanism *krb5_gss_get_mech_configs(void);
+	extern gss_mechanism *spnego_gss_get_mech_configs(void);
+	gss_mechanism *cflist;
 	static int inited;
 	gss_mech_info cf;
 
 	if (inited)
 		return;
 
-	cf = malloc(sizeof(*cf));
-	if (cf == NULL)
+	cflist = krb5_gss_get_mech_configs();
+	if (cflist == NULL)
 		return;
-	memset(cf, 0, sizeof(*cf));
-	cf->uLibName = strdup("<hardcoded internal>");
-	cf->mechNameStr = "spnego";
-	cf->mech_type = &spnego_mechanism.mech_type;
-	cf->mech = &spnego_mechanism;
-	cf->next = NULL;
-	g_mechList = cf;
-	g_mechListTail = cf;
-
-	cf = malloc(sizeof(*cf));
-	if (cf == NULL)
-		return;
-	memset(cf, 0, sizeof(*cf));
-	cf->uLibName = strdup("<hardcoded internal>");
-	cf->mechNameStr = "kerberos_v5";
-	cf->mech_type = &krb5_mechanism.mech_type;
-	cf->mech = &krb5_mechanism;
-	cf->next = NULL;
-	g_mechListTail->next = cf;
-	g_mechListTail = cf;
-
-	cf = malloc(sizeof(*cf));
-	if (cf == NULL)
-		return;
-	memset(cf, 0, sizeof(*cf));
-	cf->uLibName = strdup("<hardcoded internal>");
-	cf->mechNameStr = "kerberos_v5 (pre-RFC OID)";
-	cf->mech_type = &krb5_mechanism_old.mech_type;
-	cf->mech = &krb5_mechanism_old;
-	cf->next = NULL;
-	g_mechListTail->next = cf;
-	g_mechListTail = cf;
-
-#ifdef MS_BUG_TEST
-	{
-		char *envstr = getenv("MS_FORCE_NO_MSOID");
-
-		if (envstr != NULL && strcmp(envstr, "1") == 0) {
-			inited = 1;
-			return;
-		}
+	for ( ; *cflist != NULL; cflist++) {
+		register_mech(*cflist, "<builtin krb5>", NULL);
 	}
-#endif
-	cf = malloc(sizeof(*cf));
-	if (cf == NULL)
+	cflist = spnego_gss_get_mech_configs();
+	if (cflist == NULL)
 		return;
-	memset(cf, 0, sizeof(*cf));
-	cf->uLibName = strdup("<hardcoded internal>");
-	cf->mechNameStr = "kerberos_v5 (wrong OID)";
-	cf->mech_type = &krb5_mechanism_wrong.mech_type;
-	cf->mech = &krb5_mechanism_wrong;
-	cf->next = NULL;
-	g_mechListTail->next = cf;
-	g_mechListTail = cf;
-
+	for ( ; *cflist != NULL; cflist++) {
+		register_mech(*cflist, "<builtin spnego>", NULL);
+	}
 	inited = 1;
 }
 
