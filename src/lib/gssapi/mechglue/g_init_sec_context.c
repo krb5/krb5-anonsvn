@@ -75,6 +75,8 @@ OM_uint32 *		time_rec;
     if (minor_status == NULL)
 	return (GSS_S_CALL_INACCESSIBLE_WRITE);
     *minor_status = 0;
+    output_token->length = 0;
+    output_token->value = NULL;
 
     /* clear output values */
     if (actual_mech_type)
