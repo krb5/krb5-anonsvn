@@ -25,7 +25,7 @@
 #include <string.h>
 #include <errno.h>
 
-OM_uint32
+OM_uint32 KRB5_CALLCONV
 gss_canonicalize_name(minor_status,
 				input_name,
 				mech_type,

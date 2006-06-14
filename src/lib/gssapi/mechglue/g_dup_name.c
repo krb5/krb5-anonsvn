@@ -19,7 +19,7 @@
 #include <string.h>
 #include <errno.h>
 
-OM_uint32
+OM_uint32 KRB5_CALLCONV
 gss_duplicate_name(minor_status,
 		src_name,
 		dest_name)

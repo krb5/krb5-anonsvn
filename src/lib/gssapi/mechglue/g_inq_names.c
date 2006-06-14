@@ -72,7 +72,7 @@ gss_OID_set *	name_types;
     
     return (GSS_S_BAD_MECH);
 }
-OM_uint32
+OM_uint32 KRB5_CALLCONV
 gss_inquire_mechs_for_name(minor_status, input_name, mech_set)
 
     OM_uint32 *		minor_status;

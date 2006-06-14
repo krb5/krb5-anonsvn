@@ -99,7 +99,7 @@ gssint_mechglue_fini(void)
  * function used to reclaim the memory used by a gss_OID structure.
  * This routine requires direct access to the mechList.
  */
-OM_uint32
+OM_uint32 KRB5_CALLCONV
 gss_release_oid(minor_status, oid)
 OM_uint32 *minor_status;
 gss_OID *oid;
@@ -149,7 +149,7 @@ gss_OID *oid;
  * To avoid reading the configuration file each call, we will save a
  * a mech oid set, and only update it once the file has changed.
  */
-OM_uint32
+OM_uint32 KRB5_CALLCONV
 gss_indicate_mechs(minorStatus, mechSet)
 OM_uint32 *minorStatus;
 gss_OID_set *mechSet;
