@@ -1,0 +1,9 @@
+Contained herein are:
+
+- trunk: trunk copy with various developmental and debugging code
+- ptest.c and Makefile: hacked up version of kvno instrumented for
+  various debugging purposes
+- setup.sh: script to use the pre-install build environment artifacts
+  for testing purposes
+
+The trunk may be of interest.  It's doubtful whether the rest is.
