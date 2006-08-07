@@ -1,0 +1,182 @@
+# Copyright (c) 2004 Massachusetts Institute of Technology
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+
+# This file documents the versions of the API for NetIDMgr.  The
+# syntax of the file is:
+#
+# Version=<api-version number>
+# AppVersion=<netidmgr-version>
+# Date=<release date> | NOTRELEASED
+# # <comments>
+# <symbol-name>
+# # comment
+# Schema:<path-to-schema>
+# # comment
+
+
+#----------------------------------------------------------------
+Version=1
+AppVersion=0.1.0.0
+Date=NOTRELEASED
+# Original Khimaira API.
+
+#----------------------------------------------------------------
+Version=2
+AppVersion=0.1.1.0
+Date=Nov 01, 2005
+# Alpha 1 release of NetIDMgr, along with KFW 3.0.0 beta
+
+#----------------------------------------------------------------
+Version=3
+AppVersion=0.1.2.0
+Date=Nov 30, 2005
+# Alpha 2 release of NetIDMgr, along with KFW 3.0.0 beta 2
+
+#----------------------------------------------------------------
+Version=4
+AppVersion=1.0.0.0
+Date=Dec 05, 2005
+# Released with KfW 3.0.0
+
+#----------------------------------------------------------------
+Version=5
+AppVersion=1.1.0.0
+Date=(TBD)
+# Released with KFW 3.1.0
+
++khui_alert_show_modal(),KMSG_ALERT_SHOW_MODAL, KHUI_ALERT_FLAG_MODAL
+# Support for modal alert boxes
+
++KHUI_PACTION_YES, KHUI_PACTION_NO, KHUI_PACTION_YESALL, KHUI_PACTION_NOALL, KHUI_PACTION_KEEP, KHUI_PACTION_REMOVE, KHUI_PACTION_DISCARD
+# Additional pseudo actions
+
+!tag_khui_action, khui_action
+# Membership extension for supporting custom actions.  Type changes
+# from 'int' to khm_int32.
+
++khui_action_create(), khui_action_get_data(), khui_action_delete()
+# Support for creating custom actions
+
+!kmq_msg_subscription, tag_kmq_msg_subscription
+# Add 'magic' field.
+
++KHUI_MENU_NONE
+# New identifier for unspecified menu commands.
+
++khui_menu_insert_action(), khui_menu_get_action(), khui_menu_get_size(), khui_menu_remove_action()
+# Functions for manipulating custom menus
+
++khui_menu_insert_paction()
+# Exported, but not exposed as an API.  For inserting actions by
+# reference in to menus.
+
+-khui_menu_add_action(), khui_menu_add_paction()
+# Removed deprecated functions.  Temporarily provided as macros. The
+# replacements are khui_menu_insert_action() and
+# khui_menu_insert_paction() respectively.
+
++kmq_create_hwnd_subscription()
+# Ad-hoc subscriptions can now be obtained for Win32 windows.
+
+-khui_create_gloabl_accel_table()
+# Exported but no longer exposed.
+
+-khui_action_list_length()
+# Exported but no longer exposed.
+
++kmm_enable_plugin()
+# New API for enabling or disabling plugins
+
+!kmm_plugin_info
+# Added 'flags' field.
+
++KCDB_ATTR_FLAG_TRANSIENT
+# New flag for transient attributes.
+
++kherr_get_prev_event(), kherr_get_last_event()
+# For more efficient traversal of the event lists for use by error context handlers.
+
++KHERR_RF_COMMIT
+# Flag for error events to signal that the error event has been committed.
+
++khui_action_trigger()
+# Function for triggerring an action.
+
++khui_action_set_hwnd()
+# internal API.  Should not be used by anyone.  Basically sets the HWND that should receive event notifications from the UI library.
+
++KEPT_PTR
+# error library data type for pointers
+
++_cptr
+# type cast macro for pointer types
+
+!khc_open_space
+# name parameter is now a const string
+
+!KCDB_ATTRNAME_ISSUE
+# Fixed typo
+
+!kherr_val
+# is now an inline function instead of a macro
+
+!kherr_param
+# is now a structure instead of an integer type
+
++KEPT_NONE
+# new constant signifying a NULL parameter
+
+!_int32, _uint32, _int64, _uint64, _cstr, _tstr, _cptr
+# appropriate typecasts added
+
++vnull
+# macro to insert a NULL parameter
+
+!_report_cs0, _report_cs1, _report_cs2, _report_cs3
+!_report_sr0, _report_sr1, _report_sr2, _report_sr3
+!_report_mr0, _report_mr1, _report_mr2, _report_mr3
+!_report_ts0, _report_ts1, _report_ts2, _report_ts3
+# modified to use _vnull() instead of 0 for NULL parameters
+
++KCONF_FLAG_WRITEIFMOD
+# new flag for khc_open_space() indicating that the specified handle should only write to a configuration space if the value read from the handle is different from the value being written
+
++KCONF_FLAG_IFMODCI
+# indicates that the string comparison function used for KCONF_FLAG_WRITEIFMOD should be case insensitive.
+
+!khc_write_int32(), khc_write_int64(), khc_write_string(), khc_write_multi_string()
+# Change of behavior.  If the configuration handle has KCONF_FLAG_WRITEIFMOD flag set, only writes if the value being written to is different from the value being read.
+
+!khc_read_string(), khc_read_multi_string(), khc_read_int32(), khc_read_int64(), khc_read_binary(), khc_write_string(), khc_write_int32(), khc_write_int64(), khc_write_binary(), khc_get_type(), khc_value_exists(), khc_remove_value()
+# The value name parameter is now a constant pointer
+
+!khc_load_schema(), khc_unload_schema()
+# The schema pointer is now a constant pointer
+
+-Schema:NetIDMgr\PluginManager\Modules\<module name>\Flags
+-Schema:NetIDMgr\PluginManager\Plugins\<plugin name>\Flags
+# Deprecated.  Replaced by separate values for each of the bits in Flags.  This allows each setting to be deployed independently via GPO.
+
++Schema:NetIDMgr\PluginManager\Modules\<module name>\Disabled
++Schema:NetIDMgr\PluginManager\Plugins\<plugin name>\Disabled
+# If non-zero, the corresponding module or plug-in is disabled.

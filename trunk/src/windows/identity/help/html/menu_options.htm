@@ -1,0 +1,73 @@
+<html>
+<head>
+  <title>Options Menu</title>
+  <meta name="description" content="options menu">
+  <meta name="keywords" content="options menu">
+  <link rel="stylesheet" type="text/css" href="nidmgr.css">
+</head>
+<body>
+
+<h1>Options Menu</h1>
+
+<p>
+Click an item on the menu to go to the description of the action, or
+choose from the list below.  You can activate the by pressing <span
+class="pre">Alt + O</span> and you can activate each action by
+pressing the highlited character.
+</p>
+
+<p>
+Actions which have an associated hot key show this hot key to the
+right of the action.  You can use the hot key to trigger the action
+without invoking the <span class="pre">Options</span> menu.
+</p>
+
+<map id="menumap">
+
+<area shape = "rect" coords = "12,24,139,48" href = "#general">
+<area shape = "rect" coords = "11,46,144,68" href = "#apperance">
+<area shape = "rect" coords = "11,68,142,89" href = "#identities">
+<area shape = "rect" coords = "12,91,139,111" href = "#notifications">
+<area shape = "rect" coords = "14,111,134,133" href = "#plugins">
+<area shape = "rect" coords = "12,141,139,208" href = "#pluginspec">
+
+</map>
+
+<p>
+<img src="images/screen_menu_options.bmp" usemap="#menumap"/>
+</p>
+
+<ul>
+
+<li><a name="general" /><span class="title">General ...</span>: Opens
+the NetIDMgr general configuration panel.  This panel allows you to
+configure settings related to the startup/shutdown of NetIDMgr in
+addition to debugging and monitoring options.</li>
+
+<li><a name="apperance" /><span class="title">Appearance ...</span>:
+Provides options for customizing the appearance of the credentials
+window.  Currently, the only options provided are for selecting the
+font used for the credentials list.</li>
+
+<li><a name="identities" /><span class="title">Identities ...</span>:
+Opens the identities configuration panel.  These options control
+credentials defaults for all identities or for specific identities.</li>
+
+<li><a name="notifications" /><span class="title">Notifications
+...</span>: The notifications configuration panel controls the
+settings used by the NetIDMgr timer that triggers warnings and
+identity renewals.</li>
+
+<li><a name="plugins" /><span class="title">Plugins ...</span>:
+Options for enabling or disabling specific plugins and also for
+viewing information about loaded plugins.</li>
+
+<li><a name="pluginspec" /><span class="title">Plugin specific
+configuration panels</span>: Each registered plugin can register one
+or more configuration panels which will appear on the <span
+class="pre">Options</span> menu.</li>
+
+</ul>
+
+</body>
+</html>
