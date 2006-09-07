@@ -1,9 +1,12 @@
 Contained herein are:
 
 - trunk: trunk copy with various developmental and debugging code
-- ptest.c and Makefile: hacked up version of kvno instrumented for
-  various debugging purposes
+- ptest.c: hacked up version of kvno instrumented for
+  various debugging purposes (takes a hostname as a single arg)
+- Makefile: builds ptest, krb5 src, etags, etc.
 - setup.sh: script to use the pre-install build environment artifacts
   for testing purposes
 
-The trunk may be of interest.  It's doubtful whether the rest is.
+The trunk may be of interest.  It's doubtful whether the rest is.  The
+ptest code in particular is all hacked up and may or may not have
+relevance or functionality at any given time.
