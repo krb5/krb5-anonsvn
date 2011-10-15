@@ -328,6 +328,17 @@ typedef struct krb5_kdcpreauth_rock_st *krb5_kdcpreauth_rock;
 typedef struct krb5_kdcpreauth_moddata_st *krb5_kdcpreauth_moddata;
 typedef struct krb5_kdcpreauth_modreq_st *krb5_kdcpreauth_modreq;
 
+typedef krb5_error_code
+(*krb5_kdb_get_string)(krb5_context context,
+                       krb5_kdcpreauth_rock rock,
+                       const char *key,
+                       char **value_out);
+
+typedef void
+(*krb5_kdb_free_string)(krb5_context context,
+                        krb5_kdcpreauth_rock rock,
+                        char *string);
+
 /* Before using a callback after version 1, modules must check the vers
  * field of the callback structure. */
 typedef struct krb5_kdcpreauth_callbacks_st {
@@ -368,13 +379,10 @@ typedef struct krb5_kdcpreauth_callbacks_st {
 
     /* Retrieve a string attribute from the client DB entry, or NULL if no such
      * attribute is set.  Free the result with the free_string callback. */
-    krb5_error_code (*get_string)(krb5_context context,
-                                  krb5_kdcpreauth_rock rock, const char *key,
-                                  char **value_out);
+    krb5_kdb_get_string get_string;
 
     /* Free the result of get_string. */
-    void (*free_string)(krb5_context context, krb5_kdcpreauth_rock rock,
-                        char *string);
+    krb5_kdb_free_string free_string;
 
     /* Get a pointer to the client DB entry (returned as a void pointer to
      * avoid a dependency on a libkdb5 type). */
