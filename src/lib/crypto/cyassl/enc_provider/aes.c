@@ -1,36 +1,60 @@
 /* -*- mode: c; c-basic-offset: 4; indent-tabs-mode: nil -*- */
-/* lib/crypto/cyassl/enc_provider/aes.c
- *
+/* lib/crypto/cyassl/enc_provider/aes.c */
+/*
  * Copyright (C) 2012 by the Massachusetts Institute of Technology.
  * All rights reserved.
  *
- * Export of this software from the United States of America may
- *   require a specific license from the United States Government.
- *   It is the responsibility of any person or organization contemplating
- *   export to obtain such a license before exporting.
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
  *
- * WITHIN THAT CONSTRAINT, permission to use, copy, modify, and
- * distribute this software and its documentation for any purpose and
- * without fee is hereby granted, provided that the above copyright
- * notice appear in all copies and that both that copyright notice and
- * this permission notice appear in supporting documentation, and that
- * the name of M.I.T. not be used in advertising or publicity pertaining
- * to distribution of the software without specific, written prior
- * permission.  Furthermore if you modify this software you must label
- * your software as modified software and not distribute it in such a
- * fashion that it might be confused with the original M.I.T. software.
- * M.I.T. makes no representations about the suitability of
- * this software for any purpose.  It is provided "as is" without express
- * or implied warranty.
+ * * Redistributions of source code must retain the above copyright
+ *   notice, this list of conditions and the following disclaimer.
+ *
+ * * Redistributions in binary form must reproduce the above copyright
+ *   notice, this list of conditions and the following disclaimer in
+ *   the documentation and/or other materials provided with the
+ *   distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+ * COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
+ * OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 #include "crypto_int.h"
 #include <cyassl/ctaocrypt/aes.h>
 
-/*
- * misc.c is borrowed from CTaoCrypt proper for ease of updating.
- */
-#include "misc.c"
+static inline void
+xor_words(word* first, const word* second, word32 len) 
+{
+    word32 i;
+
+    for (i = 0; i < len; i++) {
+        first[i] ^= second[i];
+    }    
+}
+
+static inline void
+xor_buf(byte* buffer, const byte* m, word32 len)
+{
+    if ( ((word)buffer | (word)m | len) & (WORD_SIZE == 0) ) {
+        xor_words( (word*)buffer, (const word*)m, len / WORD_SIZE);
+    } else {
+        word32 i;
+        for (i = 0; i < len; i++) {
+            buffer[i] ^= m[i];
+        }
+    }
+}
 
 /*
  * krb5int_aes_encrypt: Encrypt data buffer using AES CBC-CTS. With
@@ -243,7 +267,7 @@ krb5int_aes_decrypt(krb5_key key, const krb5_data *ivec,
 
         /* Decrypt second to last block (N-2) into plainN2 */
         AesCbcDecrypt(&aes, plainN2, blockN2, AES_BLOCK_SIZE);
-        xorbuf(plainN2, lastCBlock, AES_BLOCK_SIZE);
+        xor_buf(plainN2, lastCBlock, AES_BLOCK_SIZE);
 
         /* Pad last block (C:N-1) with the last B-M bits of decrypted 
            second-to-last block (plainN2)
@@ -257,12 +281,12 @@ krb5int_aes_decrypt(krb5_key key, const krb5_data *ivec,
 
         /* Redo correct xor between decrypted C:N-2 and C:N-1 for 
            correct AES-CBC */
-        xorbuf(plainN2, blockN1, AES_BLOCK_SIZE);
+        xor_buf(plainN2, blockN1, AES_BLOCK_SIZE);
 
         /* Decrypt last block (N-1) into plainN1 */
         AesCbcDecrypt(&aes, plainN1, blockN1, AES_BLOCK_SIZE);
-        xorbuf(plainN1, blockN2, AES_BLOCK_SIZE);   /* undo incorrect XOR */
-        xorbuf(plainN1, lastCBlock, AES_BLOCK_SIZE);   /* do correct XOR */
+        xor_buf(plainN1, blockN2, AES_BLOCK_SIZE);   /* undo incorrect XOR */
+        xor_buf(plainN1, lastCBlock, AES_BLOCK_SIZE);   /* do correct XOR */
        
         /* Put last 2 blocks back in data buffer in reverse order */
         krb5int_c_iov_put_block(data, num_data, plainN1, AES_BLOCK_SIZE, 

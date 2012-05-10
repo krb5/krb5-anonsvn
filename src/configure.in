@@ -152,15 +152,13 @@ openssl)
   ;;
 cyassl)
   CYASSL_URL="http://www.yassl.com/download.html"
-  AC_MSG_CHECKING([for cyassl])
   LIBS="$LIBS -lcyassl"
-  AC_TRY_LINK([#include <cyassl/openssl/ssl.h>], [CyaSSL_Init(); ],
+  AC_CHECK_LIB([cyassl], [CyaSSL_Init],
      [ cyassl_linked=yes ], [ cyassl_linked=no ])
   if test "x$cyassl_linked" == "xno" ; then
      AC_MSG_ERROR([CyaSSL isn't found. You can get it from $CYASSL_URL
      If it's already installed, please check that it is installed in the correct location.])
   fi
-  AC_MSG_RESULT([yes])
   ;;
 nss)
   if test "${CRYPTO_IMPL_CFLAGS+set}" != set; then
@@ -218,7 +216,7 @@ builtin|openssl)
   PKINIT_CRYPTO_IMPL=openssl
   ;;
 cyassl)
-  PKINIT_CRYPTO_IMPL=
+#PKINIT_CRYPTO_IMPL=
   ;;
 nss)
   if test "${PKINIT_CRYPTO_IMPL_CFLAGS+set}" != set; then
